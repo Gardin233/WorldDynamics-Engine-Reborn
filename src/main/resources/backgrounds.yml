@@ -1,0 +1,58 @@
+# 是否启用角色背景机制。
+enabled: true
+
+# 是否要求玩家首次进入服务器后，必须先完成背景选择才能正常移动。
+# 开启后，只要玩家尚未完成“儿童时期 + 成年时期”的全部选择，就会持续被限制移动。
+forceSelectionOnFirstJoin: false
+
+stages:
+  childhood:
+    backgrounds:
+      farm_child:
+        title: "农家孩子"
+        lore:
+          - "%player_name%从小在田埂与作物之间长大。"
+          - "对耕作与土地的熟悉早已成为本能。"
+        skillLevelBonuses:
+          "auraskills/farming": 1
+      mine_child:
+        title: "矿镇少年"
+        lore:
+          - "%player_name%在矿道边缘长大，对石头、矿脉和洞穴毫不陌生。"
+          - "儿时的生活让%player_name%更早接触了采掘。"
+        skillLevelBonuses:
+          "auraskills/mining": 1
+      river_child:
+        title: "河湾渔童"
+        lore:
+          - "%player_name%在河湾边长大，熟悉潮汐、水流与鱼群。"
+          - "抛竿与收线是%player_name%童年的日常。"
+        skillLevelBonuses:
+          "auraskills/fishing": 1
+
+  adulthood:
+    backgrounds:
+      frontier_farmer:
+        title: "边境垦殖者"
+        lore:
+          - "成年后，%player_name%选择在边境开垦荒地。"
+          - "恶劣环境锤炼了%player_name%的劳作技巧。"
+        skillLevelBonuses:
+          "auraskills/farming": 1
+          "auraskills/foraging": 1
+      militia_veteran:
+        title: "民兵老兵"
+        lore:
+          - "%player_name%曾在地方民兵中服役，熟悉战斗与纪律。"
+          - "长期训练让%player_name%比常人更善于应对冲突。"
+        skillLevelBonuses:
+          "auraskills/fighting": 1
+          "auraskills/defense": 1
+      guild_craftsman:
+        title: "行会匠人"
+        lore:
+          - "%player_name%成年后进入行会，从学徒一步步成长。"
+          - "对材料与工艺的把握让%player_name%在制作上更有天赋。"
+        skillLevelBonuses:
+          "auraskills/excavation": 1
+          "auraskills/alchemy": 1

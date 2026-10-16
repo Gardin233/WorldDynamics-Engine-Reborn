@@ -1,0 +1,66 @@
+# 食物分类与饮食戒律效果。修改后使用 /wde reload，无需重启。
+enabled: true
+
+effects:
+  durationSeconds: 30
+  # 等级范围 0～10，0 不提供该效果；I 级填写 1。
+  # 同一次饮食判定作为一个来源，重复进食替换并刷新该来源，不自我叠加。
+  # 统一处理器会将不同戒律来源的同类型等级相加，并覆盖旧效果。
+  strengthLevel: 1
+  weaknessLevel: 1
+
+# 每个物品仅对应一个分类：
+# VEGETARIAN 素食、MEAT 肉食、HUMAN_MEAT 人肉、BLOOD 血食。
+# 未映射物品不判定，不奖惩；其他药水默认不判定。
+# CE 优先识别完整 ID，未映射 CE 物品不会按原版底材分类。
+# 人肉同时检查肉食与食人戒律；血食仅检查血食戒律。
+# 任意相关戒律违规则虚弱，否则力量；无个人信仰或无相关规则不奖惩。
+mapping:
+  vanilla:
+    APPLE: VEGETARIAN
+    GOLDEN_APPLE: VEGETARIAN
+    ENCHANTED_GOLDEN_APPLE: VEGETARIAN
+    BREAD: VEGETARIAN
+    CARROT: VEGETARIAN
+    GOLDEN_CARROT: VEGETARIAN
+    POTATO: VEGETARIAN
+    BAKED_POTATO: VEGETARIAN
+    POISONOUS_POTATO: VEGETARIAN
+    BEETROOT: VEGETARIAN
+    BEETROOT_SOUP: VEGETARIAN
+    MUSHROOM_STEW: VEGETARIAN
+    SUSPICIOUS_STEW: VEGETARIAN
+    MELON_SLICE: VEGETARIAN
+    PUMPKIN_PIE: VEGETARIAN
+    COOKIE: VEGETARIAN
+    CAKE: VEGETARIAN
+    DRIED_KELP: VEGETARIAN
+    SWEET_BERRIES: VEGETARIAN
+    GLOW_BERRIES: VEGETARIAN
+    CHORUS_FRUIT: VEGETARIAN
+    # 本表的素食指不含肉类，不代表严格纯素；奶与蜂蜜可由服主调整。
+    HONEY_BOTTLE: VEGETARIAN
+    MILK_BUCKET: VEGETARIAN
+    BEEF: MEAT
+    COOKED_BEEF: MEAT
+    PORKCHOP: MEAT
+    COOKED_PORKCHOP: MEAT
+    CHICKEN: MEAT
+    COOKED_CHICKEN: MEAT
+    MUTTON: MEAT
+    COOKED_MUTTON: MEAT
+    RABBIT: MEAT
+    COOKED_RABBIT: MEAT
+    RABBIT_STEW: MEAT
+    COD: MEAT
+    COOKED_COD: MEAT
+    SALMON: MEAT
+    COOKED_SALMON: MEAT
+    TROPICAL_FISH: MEAT
+    PUFFERFISH: MEAT
+    ROTTEN_FLESH: MEAT
+    SPIDER_EYE: MEAT
+  craftengine:
+    # 对接当前项目的掉落物品；食品本身还需在 CraftEngine 中配置为可食用。
+    "world_dynamics_engine:blood": BLOOD
+    "world_dynamics_engine:blood_meat": HUMAN_MEAT

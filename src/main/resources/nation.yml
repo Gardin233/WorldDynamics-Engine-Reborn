@@ -1,0 +1,20 @@
+# 国家模块配置。
+
+# 插件内允许设置的国家政体列表。
+validGovernmentTypes:
+  - DICTATORSHIP
+  - DEMOCRACY
+  - NOBLE_COUNCIL
+
+# 国家民主制的自动换届周期（现实日）。
+nationElectionIntervalDays: 7
+
+# 国家民主制单轮领袖投票持续时长（现实日）。
+nationElectionDurationDays: 2
+
+# 全国征召兵和各城镇镇长主动传送到当前军队统帅的实时位置。
+# 统帅必须在线且仍属于本国；每次由国库支付默认货币费用，玩家不能调整。
+# 传送被取消时尝试原额退回国库；支持 /wde reload。
+rally:
+  enabled: true
+  cost: "250.00"

@@ -1,0 +1,27 @@
+# 城镇模块配置。
+
+# 插件内允许设置的城镇政体列表。
+validTownGovernmentTypes:
+  - DICTATORSHIP
+  - REPUBLIC
+
+# 共和制城镇两次选举之间默认间隔的现实天数。
+townElectionIntervalDays: 7
+
+# 一次城镇选举默认持续的现实天数。
+townElectionDurationDays: 2
+
+# 城镇征召兵人数上限占城镇人口的比例。0.5 代表最多为人口的 50%。
+townConscriptLimitRatio: 0.5
+
+# 是否允许城镇参与常规战争。
+# false 时，城镇不能通过 Towny 的常规战争逻辑切换为非中立状态。
+# 该限制只用于屏蔽“城镇 vs 城镇 / 城镇 vs 国家”的常规战争，不影响独立战争类机制。
+allowRegularWarParticipation: false
+
+# 本镇征召兵主动传送到当前 Towny 镇长的实时位置。
+# 镇长必须在线且仍属于本镇；每次由城镇金库支付默认货币费用，玩家不能调整。
+# 传送被取消时尝试原额退回金库；支持 /wde reload。
+rally:
+  enabled: true
+  cost: "100.00"

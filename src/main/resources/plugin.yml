@@ -1,0 +1,62 @@
+name: WorldDynamicsEngine-Reborn
+version: '${project.version}'
+main: com.thatguycy.worlddynamicsengine.WorldDynamicsEngine
+api-version: '1.21'
+softdepend: [Towny, Vault, VaultUnlocked, AuraSkills, CraftEngine, RealisticSeasons]
+authors: [Gardin233]
+prefix: 万邦演变引擎:重生
+description: "面向 Paper 与 Towny 的国家治理、外交、战争和战后秩序扩展插件。"
+website: https://github.com/stoleyourharvs/WorldDynamics-Engine
+commands:
+  wde:
+    description: Main root command for WorldDynamicsEngine:Reborn
+    usage: /wde
+permissions:
+  wde.player:
+    description: Access all normal WDER gameplay commands; in-game role checks still apply.
+    default: true
+  wde.admin:
+    description: Full WDER administrative control.
+    default: op
+    children:
+      wde.player: true
+      wde.admin.system: true
+      wde.admin.nation: true
+      wde.admin.town: true
+      wde.admin.org: true
+      wde.admin.war: true
+      wde.admin.ideology: true
+      wde.admin.background: true
+      wde.admin.economy: true
+      wde.debug: true
+      wde.reload: true
+  wde.admin.system:
+    description: Save, synchronize, configure and reload WDER.
+    default: op
+  wde.admin.nation:
+    description: Manage nation government, leaders, elections and diplomacy.
+    default: op
+  wde.admin.town:
+    description: Manage town government, leaders, elections, tax and conscripts.
+    default: op
+  wde.admin.org:
+    description: Manage organizations, memberships and sovereign subjects.
+    default: op
+  wde.admin.war:
+    description: Manage WDER wars, scores, treaties and truces.
+    default: op
+  wde.admin.ideology:
+    description: Manage ideologies and player, town and nation affiliations.
+    default: op
+  wde.admin.background:
+    description: Administratively set and reset player backgrounds.
+    default: op
+  wde.admin.economy:
+    description: Manage organization balances.
+    default: op
+  wde.debug:
+    description: Inspect plugin integrations and balances.
+    default: op
+  wde.reload:
+    description: Reload WDER configuration.
+    default: op

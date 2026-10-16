@@ -1,0 +1,9 @@
+# Towny 旅馆床位费，使用 /wde reload 热重载。
+enabled: true
+
+# 未通过命令定价的床使用此金额与币种；每次成功入睡收费。
+# 本镇居民免费。default 表示 economy.exchangeRates 第一项默认货币。
+# 指定其他币种要求 VaultUnlocked 经济提供者真实支持该币种，不进行兑换。
+defaultFee:
+  amount: "25.00"
+  currency: "default"

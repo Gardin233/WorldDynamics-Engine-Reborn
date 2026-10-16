@@ -1,0 +1,85 @@
+# 全局配置文件。
+# 国家相关配置现已拆分至 nation.yml
+# 城镇相关配置现已拆分至 town.yml
+# 国家集团相关配置现已拆分至 organization.yml
+# 意识形态相关配置现已拆分至 ideology.yml
+
+config-version: 7
+moduleConfigMigrated: true
+
+# 插件运行所使用的主框架，当前支持与 Towny 集成的 "towny"。
+framework: towny
+
+# 是否启用政府相关功能。
+govEnabled: true
+
+# 是否启用国家集团相关功能。
+orgEnabled: true
+
+# 是否启用军队相关功能。
+armyEnabled: true
+
+# 数据存储配置。
+storage:
+  # 可选值：sqlite / mysql
+  # 默认使用 sqlite，本地单文件部署更简单。
+  type: sqlite
+
+  sqlite:
+    # sqlite 数据库文件，相对插件目录。
+    file: data/worlddynamics-engine.db
+
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: worlddynamics_engine
+    username: root
+    password: ""
+    # 追加到 JDBC URL 的参数。
+    parameters: useSSL=false&characterEncoding=utf8&serverTimezone=UTC
+
+# 经济相关配置。
+economy:
+  # 插件预期使用的默认货币标识。
+  # 重要约束：
+  # 1. 该值必须与 economy.exchangeRates 中“第一项”的货币标识完全一致。
+  # 2. 由于 Towny 侧仍使用普通 Vault，程序运行时会把 exchangeRates 第一项视为默认货币。
+  # 3. 国家集团账户、国家集团余额显示、国家集团存取款统一使用这个默认货币，不支持国家集团账户多币种分账。
+  defaultCurrency: USD
+
+  # 汇率表。所有数值都  以默认货币为基准。
+  # 重要约束：
+  # 1. 第一项必须就是默认货币。
+  # 2. 第一项的货币标识必须与上方 defaultCurrency 保持一致。
+  # 3. 如果两者不一致，程序仍会以第一项作为运行时默认货币，并在控制台给出警告。
+  # 4. 所有货币标识严格区分大小写，必须与经济插件返回的标识一致，例如 USD 不等于 usd。
+  # 5. 仅小写 default 作为默认货币别名；错误大小写或不可用币种不会回退读取默认余额。
+  # 示例：default=1.0, gems=100.0 表示 1 gems = 100 default。
+  # 本插件当前仅负责登记和读取这些汇率，便于后续转换逻辑使用。
+  exchangeRates:
+    USD: "1.0"
+    CC: "0.01"
+
+  # 扣费配置。amount 为数值，currency 为实际调用的货币标识。
+  charges:
+    diplomacyVisitNeutralNone:
+      amount: "1000.00"
+      currency: USD
+    diplomacyVisitFriendly:
+      amount: "750.00"
+      currency: USD
+    diplomacyFormTrade:
+      amount: "1000.00"
+      currency: USD
+  townyResidentTaxOverride:
+    # 是否接替 Towny 原版“城镇向居民收税”机制。
+    # 开启后：
+    # 1. 固定税制下，程序会优先使用默认货币交税，不足部分再用其他已配置货币按汇率补全。
+    # 2. 财产税比例税制下，程序会先计算居民全部货币折算后的财富总额，再按税率计算应缴金额，
+    #    并从多货币余额中尽可能扣足，最终统一折算为默认货币打入城镇金库。
+    enabled: true
+    # 当居民总余额不足以缴清全额税款时，是否在控制台记录“部分收税”日志。
+    logPartialCollection: true
+
+# 语言代码。当前支持：en、es、zh_cn
+locale: zh_cn

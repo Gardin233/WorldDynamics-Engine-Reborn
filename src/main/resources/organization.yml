@@ -1,0 +1,119 @@
+# 国家集团模块配置。
+
+# 插件内允许设置的国家集团类型列表。
+validOrganizationTypes:
+  - TRADE_ALLIANCE
+  - MILITARY_ALLIANCE
+  - SOVEREIGN_EMPIRE
+  - IDEOLOGICAL_ALLIANCE
+
+# 国家集团经济配置。
+# 注意：
+# 1. 国家集团账户继续沿用原 Vault 单一货币机制。
+# 2. 国家集团余额显示、deposit、withdraw 全部固定使用全局默认货币。
+# 3. 全局默认货币以 config.yml 中 economy.exchangeRates 第一项为准。
+economy:
+  charges:
+    # 创建国家集团所需的费用，从创建者所属国家的 Towny 国家国库扣除。
+    orgFormation:
+      amount: "25000.00"
+      currency: USD 
+    # 国家集团每个维护周期需要支付的固定维护费。
+    # 国家集团账户固定使用全局默认货币；若这里填写了其他货币，将按汇率折算为默认货币后扣除。
+    orgMaintenance:
+      amount: "500.00"
+      currency: default
+  maintenance:
+    # 国家集团维护费结算周期，单位为小时。设置为 0 或更小值可关闭维护费。
+    intervalHours: 24
+
+# 单个国家可加入的国家集团数量上限，设置为 -1 表示不限制。
+nationOrgLimit: -1
+
+ideologicalAlliance:
+  # 意识形态联盟创建时会绑定创建国当前意识形态。
+  # 之后仅允许相同意识形态的国家加入；其他类型的联盟没有这个机制。
+  # 意识形态联盟改信折扣：每 1 名集团总人口可降低多少比例的改信费用。
+  # 例如 0.001 代表每 1 人降低 0.1%，500 人时达到 50% 折扣上限。
+  conversionCostDiscountPerResident: 0.001
+  # 意识形态联盟改信折扣上限，0.50 代表最多降低 50%。
+  maxConversionCostDiscount: 0.50
+  peaceTreaty:
+    # 若被宣战的战争盟主与联盟意识形态相同，则和平条款消耗提高到 1.5 倍。
+    sameReligionClauseCostMultiplier: 1.50
+    # 若被宣战的战争盟主是异教徒，则和平条款消耗降为 0.75 倍。
+    hereticClauseCostMultiplier: 0.75
+
+sovereignEmpire:
+  subjectControl:
+    # 从仆国镇压度结算周期，单位为小时。设置为 0 或更小值可关闭该机制。
+    intervalHours: 24
+    # 新加入主权帝国的从仆国初始镇压度。
+    defaultSuppression: 50
+    # 当某组从仆国总能力高于主席国时，每个周期降低的镇压度。
+    suppressionDecrease: 10
+    # 当某组从仆国总能力低于主席国时，每个周期提升的镇压度。
+    suppressionIncrease: 10
+    # 主席国强制更换仆从国领袖后，减少的镇压度。
+    forcedLeaderChangeSuppressionReduction: 50
+    # 主席国强制要求一笔贡金后，减少的镇压度。
+    forcedTributeSuppressionReduction: 30
+    # 从仆国成功提升一级自治等级后，镇压度会被重置为该值。
+    autonomyPromotionResetSuppression: 90
+    # 主席国成功降低从仆国一级自治等级后，镇压度会被重置为该值。
+    autonomyDemotionResetSuppression: 10
+    # 不同自治等级下，从仆国可设置给下属城镇的最高税收。
+    # fixed 为固定税上限；wealthPercentage 为财产税比例上限。
+    taxCaps:
+      dominion:
+        fixed: 5000.0
+        wealthPercentage: 25.0
+      protectorate:
+        fixed: 3000.0
+        wealthPercentage: 15.0
+      puppet:
+        fixed: 1500.0
+        wealthPercentage: 8.0
+    autonomyUpgradeCost:
+      # 当从仆国镇压度归零后，提升一级自治等级所需费用。
+      # 路径：傀儡国 -> 保护国 -> 自治领 -> 和平独立；最后一步使用相同费用，且要求该国未参战。
+      amount: "10000.00"
+      currency: default
+  tribute:
+    # 是否启用主权帝国向一般从仆国征收贡税的机制。
+    enabled: true
+    # 贡税结算周期，单位为小时。设置为 0 或更小值可关闭贡税。
+    intervalHours: 24
+    # 每个结算周期，国家集团会向每个一般从仆国征收的固定贡税。
+    # 卫戍国不会被征收这笔贡税。
+    amount: "0.00"
+    currency: default
+  warParticipation:
+    # 主权国家战斗期间，仅对卫戍国执行统帅附近巡检的周期，单位为秒。
+    # 被主席国调遣的一般从仆国仍履行参战义务，但不受此巡检 Debuff。
+    # 设置为 0 或更小值可关闭卫戍国的“统帅附近巡检惩罚”。
+    checkIntervalSeconds: 180
+    # 巡检时，视为“在宗主国军队统帅附近”的最大距离，单位为方块。
+    commanderRadius: 200.0
+  forcedTribute:
+    # 主席国主动向单个从仆国强制要求的一次性贡金。
+    # 金额按自治等级分别配置；执行成功后会降低该从仆国的镇压度。
+    byTier:
+      dominion:
+        amount: "4000.00"
+        currency: default
+      protectorate:
+        amount: "8000.00"
+        currency: default
+      puppet:
+        amount: "12000.00"
+        currency: default
+  independenceWar:
+    # 是否启用从仆国独立战争机制。
+    enabled: true
+    # 最多结算多少个周期后判定本次独立战争结果。
+    maxCycles: 12
+    # 周期、击杀分和防守方复活冻结统一使用 war.yml -> scoring。
+    # 独立国为防守方，宗主阵营为进攻方。
+    # 达到最大周期后，从仆国至少领先多少分时视为独立成功。
+    successLead: 100

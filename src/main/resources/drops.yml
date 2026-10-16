@@ -1,0 +1,22 @@
+# 玩家死亡掉落池。
+playerDrops:
+  # 默认关闭，配置完成后可启用。
+  enabled: true
+  # 每次玩家死亡时，从池中进行的抽取次数。
+  rolls: 3
+  # 每次抽取会从列表中等概率选取一项，再独立判定该项的掉落概率。
+  # 每次抽取最多掉落一个池条目；多次抽中同一条目会重复掉落。
+  pool:
+  # - type: vanilla
+  #   material: DIAMOND
+  #   amount: 1
+  #   # 取值范围 0.0 到 1.0；0.10 表示 10%。
+  #   dropChance: 0.10
+  - type: craftengine
+    id: world_dynamics_engine:blood
+    amount: 1
+    dropChance: 1
+  - type: craftengine
+    id: world_dynamics_engine:blood_meat
+    amount: 1
+    dropChance: 1

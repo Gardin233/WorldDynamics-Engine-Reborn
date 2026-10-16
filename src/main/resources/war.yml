@@ -1,0 +1,53 @@
+# 战争模块配置。
+
+peaceTreaty:
+  # 单份和平条约中可消耗的总分数上限。
+  maxProposalPoints: 100
+  clauses:
+    reparations:
+      # 索要赔款时，每 1% 国库赔款所需的分数。
+      pointsPerPercent: 1
+      # 索要赔款的最高比例。
+      maxPercent: 20
+    forceConversionPoints: 15
+    transferTownPoints: 20
+    dissolveAlliancePoints: 30
+    expelFromAlliancePoints: 15
+    liberateSubjectPoints: 25
+    unconditionalPassagePoints: 10
+    humiliatePoints: 5
+    lootCapitalPoints: 20
+    tributePoints: 25
+    allowIndependencePoints: 40
+  tribute:
+    # 和平条约中的长期贡金，默认按税收额度的 5% 在 Towny 每日税收周期结算一次。
+    taxRatePercent: 5.0
+
+scoring:
+  # 所有 WDER 战争统一周期，单位秒。每周期累加，不覆盖先前分数。
+  cycleSeconds: 300
+  # 所有战争有效击杀的分数，双方相同。
+  killPoints: 1.0
+  # 仅防守方复活后冻结，期间不计入占领人数。进攻方不冻结。
+  defenderRespawnLockSeconds: 30
+  # 每个国家原始占领权重固定50：多城首都25，其余25按非首都人口分配。
+  # 单城国家或独立城镇权重50。全面和约按阵营参战国家数归一化为50。
+  # 单独谋和保留针对对方国家的原始占领分与击杀分，不借用其他国家领土分。
+  # 防守领土按进攻人数/双方人数分给进攻方，余数给防守方；无人时防守方得全额。
+  # 进攻方本土不提供进攻方占领分；防守方反攻按敌方城镇权重和人数比例获得额外分。
+
+truce:
+  # 和平条约或单独谋和生效后，至少持续多久的停战期（小时）。
+  baseHours: 24
+  # 在保底时间之外，按条约分数百分比最多额外增加多少小时停战期。
+  maxAdditionalHours: 168
+  realisticSeasons:
+    # 开启后，新停战期优先按指定世界的 RealisticSeasons 日期计算。
+    enabled: false
+    # 所有国家统一采用此世界日期，与参战玩家所在世界无关。
+    world: world
+    # 保底停战期（日历天），加上额外天数乘以条约分数百分比，向上取整。
+    baseDays: 1
+    maxAdditionalDays: 7
+    # 依赖、世界或日历不可用时，按上方现实小时配置计时。
+    # 已有日历停战期保留创建时的世界及日历截止点；读取失败使用其现实时间备用截止点。
