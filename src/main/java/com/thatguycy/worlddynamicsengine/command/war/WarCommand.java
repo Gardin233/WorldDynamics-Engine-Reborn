@@ -41,13 +41,27 @@ public final class WarCommand implements CommandExecutor {
             send(player, "war_usage"); return true;
         }
         WarReason reason = WarReason.parse(args[4]);
-        if (reason == null || reason == WarReason.INDEPENDENCE) { send(player, "war_reason_invalid"); return true; }
+        if (reason == null) { send(player, "war_reason_invalid"); return true; }
         if ("town".equalsIgnoreCase(args[2])) {
             if (town == null || town.getMayor() == null || !town.getMayor().getUUID().equals(player.getUniqueId())) {
                 send(player, "common_no_authority"); return true;
             }
-            boolean started = plugin.getOrgManager().startTownWar(town, TownyAPI.getInstance().getTown(args[3]), reason);
-            send(player, started ? "war_declared" : "war_declaration_blocked", args[3], plugin.getLocaleMessage(reason.messageKey()));
+            if (reason == WarReason.INDEPENDENCE) {
+                var result = plugin.getOrgManager().declareTownIndependence(town, args[3], plugin.getNationManager());
+                if (result.isSuccess()) send(player, "war_declared", args[3], plugin.getLocaleMessage(reason.messageKey()));
+                else send(player, result.getFailureMessageKey(), result.getFailureMessageArgs());
+                return true;
+            }
+            var targetTown = TownyAPI.getInstance().getTown(args[3]);
+            if (targetTown == null) {
+                send(player, "town_not_found", args[3]); return true;
+            }
+            var result = plugin.getOrgManager().startTownWarDetailed(town, targetTown, reason);
+            if (result.isStarted()) {
+                send(player, "war_declared", args[3], plugin.getLocaleMessage(reason.messageKey()));
+            } else {
+                send(player, result.getFailureMessageKey(), result.getFailureMessageArgs());
+            }
             return true;
         }
         if (!"nation".equalsIgnoreCase(args[2]) || nation == null) { send(player, "war_usage"); return true; }
@@ -63,28 +77,76 @@ public final class WarCommand implements CommandExecutor {
                 && (group.isSovereignEmpire() || plugin.getOrgManager().isMilitaryAlliance(group))) {
             target = group.getChairmanNationName();
         }
-        if (nation.getName().equalsIgnoreCase(target) || plugin.getNationManager().getNation(target) == null
-                || !plugin.getOrgManager().validWarReason(reason, target)) {
+        if (nation.getName().equalsIgnoreCase(target)) {
             send(player, "war_reason_invalid"); return true;
+        }
+        if (plugin.getNationManager().getNation(target) == null) {
+            send(player, "nation_not_found_with_name", target); return true;
+        }
+        String reasonError = plugin.getOrgManager().warReasonFailure(reason, nation.getName(), target);
+        if (reasonError != null) {
+            send(player, reasonError); return true;
         }
         var alliances = plugin.getOrgManager().getMilitaryAlliancesByNation(nation.getName());
         if (!alliances.isEmpty()) {
             var alliance = alliances.getFirst();
             var result = plugin.getOrgManager().startMilitaryWarVote(alliance, nation.getName(), target,
                     plugin.getNationManager(), reason);
-            String status = switch (result.getStatus()) {
-                case APPROVED -> "war_vote_approved";
-                case PENDING -> "war_vote_pending";
-                default -> "war_declaration_blocked";
-            };
-            send(player, status);
+            sendMilitaryWarVoteResult(player, alliance, target, result);
         } else {
             var result = plugin.getOrgManager().handleMilitaryAllianceWar(nation.getName(), target,
                     plugin.getNationManager(), reason);
-            send(player, result.getHostilePairsApplied() > 0 ? "war_declared" : "war_declaration_blocked",
-                    target, plugin.getLocaleMessage(reason.messageKey()));
+            if (result.isSuccess()) {
+                send(player, "war_declared", target, plugin.getLocaleMessage(reason.messageKey()));
+            } else {
+                send(player, result.getFailureMessageKey(), result.getFailureMessageArgs());
+            }
         }
         return true;
+    }
+
+    private void sendMilitaryWarVoteResult(Player player,
+                                           com.thatguycy.worlddynamicsengine.model.WDEorg alliance,
+                                           String target,
+                                           com.thatguycy.worlddynamicsengine.manager.organization.OrgManager.MilitaryWarVoteResult result) {
+        String key = "war_declaration_blocked";
+        Object[] args = new Object[0];
+        switch (result.getStatus()) {
+            case APPROVED -> key = "war_vote_approved";
+            case PENDING -> key = "war_vote_pending";
+            case ALREADY_PENDING -> {
+                key = "org_war_vote_already_pending";
+                args = new Object[]{target};
+            }
+            case ACTIVE_WAR -> {
+                key = "org_war_vote_already_active";
+                args = new Object[]{target};
+            }
+            case TRUCE -> {
+                key = "org_war_vote_target_truce";
+                args = new Object[]{target};
+            }
+            case PEACE_PROTECTED -> {
+                if (plugin.getOrgManager().isNationNeutral(target)) {
+                    key = "diplomacy_target_nation_peace_protected";
+                    args = new Object[]{target};
+                } else {
+                    key = "org_neutral_war_forbidden";
+                }
+            }
+            case INVALID -> {
+                if (result.getFailureMessageKey() != null) {
+                    key = result.getFailureMessageKey();
+                } else if (alliance != null && alliance.hasMemberNation(target)) {
+                    key = "war_target_same_military_alliance";
+                    args = new Object[]{target};
+                } else {
+                    key = "war_declaration_blocked";
+                }
+            }
+            case NOT_FOUND, REJECTED -> key = "war_declaration_blocked";
+        }
+        send(player, key, args);
     }
 
     private boolean handleFocus(Player player, String[] args) {

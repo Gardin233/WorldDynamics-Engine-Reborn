@@ -113,21 +113,20 @@ public class DiplomacyCommand implements CommandExecutor {
             return true;
         }
 
-        if ("unfriendly".equalsIgnoreCase(relation) && (nationManager.isNationPeaceProtected(targetNationName)
-                || nationManager.isNationPeaceProtected(senderNation.getName()))) {
-            sender.sendMessage(ChatColor.RED + msg("org_neutral_war_forbidden"));
-            return true;
-        }
         if ("unfriendly".equals(relation)) {
             if (args.length != 5) {
                 sender.sendMessage(ChatColor.RED + msg("war_reason_required"));
                 return true;
             }
             var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
-            if (!orgManager.validWarReason(reason, targetNationName)
-                    || orgManager.handleMilitaryAllianceWar(senderNation.getName(), targetNationName, nationManager, reason)
-                    .getHostilePairsApplied() == 0) {
-                sender.sendMessage(ChatColor.RED + msg("war_declaration_blocked"));
+            String reasonError = orgManager.warReasonFailure(reason, senderNation.getName(), targetNationName);
+            if (reasonError != null) {
+                sender.sendMessage(ChatColor.RED + msg(reasonError));
+                return true;
+            }
+            var warResult = orgManager.handleMilitaryAllianceWar(senderNation.getName(), targetNationName, nationManager, reason);
+            if (!warResult.isSuccess()) {
+                sender.sendMessage(ChatColor.RED + msg(warResult.getFailureMessageKey(), warResult.getFailureMessageArgs()));
                 return true;
             }
         }

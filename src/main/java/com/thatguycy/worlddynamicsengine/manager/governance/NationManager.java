@@ -78,8 +78,18 @@ public class NationManager {
 
     public void removeNation(String name) {
         nations.remove(name);
+        for (WDEnation remaining : nations.values()) {
+            Set<String> passage = readNationStringSet(remaining, "unconditionalPassageTargets");
+            passage.removeIf(target -> name.equalsIgnoreCase(target));
+            if (passage.isEmpty()) remaining.getSettings().remove("unconditionalPassageTargets");
+            else remaining.setSetting("unconditionalPassageTargets", new ArrayList<>(passage));
+            List<Map<String, Object>> tributes = readNationMapList(remaining, "peaceTreatyTributes");
+            tributes.removeIf(entry -> name.equalsIgnoreCase(String.valueOf(entry.get("beneficiaryNation"))));
+            if (tributes.isEmpty()) remaining.getSettings().remove("peaceTreatyTributes");
+            else remaining.setSetting("peaceTreatyTributes", tributes);
+        }
         for (WDEtown town : townManager.getAllTowns()) {
-            if (name.equalsIgnoreCase(town.getNationName())) town.setNationName("None");
+            if (name.equalsIgnoreCase(town.getNationName())) townManager.updateTownNation(town.getTownName(), "None");
         }
         townManager.saveTowns();
         refreshTownHierarchy();
@@ -92,6 +102,7 @@ public class NationManager {
             nations.put(newName, nation);
         }
         for (WDEtown town : townManager.getAllTowns()) {
+            com.thatguycy.worlddynamicsengine.manager.war.TownOwnershipHistory.renameNation(town, oldName, newName);
             if (oldName.equalsIgnoreCase(town.getNationName())) town.setNationName(newName);
         }
         townManager.saveTowns();

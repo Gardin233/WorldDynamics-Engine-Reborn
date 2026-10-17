@@ -393,7 +393,8 @@ public class TownCommand implements CommandExecutor {
             if (!playerTown.getName().equalsIgnoreCase(town.getTownName())) {
                 if (playerTown.hasNation()) {
                     Nation nation = playerTown.getNation();
-                    return nation.isKing(resident) && nation.getName().equalsIgnoreCase(town.getNationName());
+                    Town targetTown = TownyUniverse.getInstance().getTown(town.getTownName());
+                    return nation.isKing(resident) && targetTown != null && targetTown.getNationOrNull() == nation;
                 }
                 return false;
             }

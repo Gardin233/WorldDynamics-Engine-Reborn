@@ -222,6 +222,11 @@ public class PlayerMenuManager implements Listener {
                         .map(WDEnation::getNationName).filter(n -> !n.equalsIgnoreCase(nation)).toList(), 0,
                         target -> chooseWarReason(player, null, "nation", target), () -> openWarMenu(player)));
         if (plugin.isRegularTownWarParticipationAllowed()) {
+            if (home.getNationOrNull() != null && home.getMayor() != null
+                    && home.getMayor().getUUID().equals(player.getUniqueId())) {
+                button(menu, 46, Material.IRON_BARS, plugin.getLocaleMessage(WarReason.INDEPENDENCE.messageKey()), List.of(),
+                        () -> chooseWarReason(player, null, "town", home.getNationOrNull().getName()));
+            }
             button(menu, 48, Material.ORANGE_BANNER, text("war.declare_town"), List.of(), () ->
                     managementChoices(player, text("war.declare_town"), plugin.getTownManager().getAllTowns().stream()
                             .map(WDEtown::getTownName).filter(t -> !t.equalsIgnoreCase(home.getName())).toList(), 0,
@@ -305,8 +310,19 @@ public class PlayerMenuManager implements Listener {
     }
 
     private void chooseWarReason(Player player, WDEorg organization, String scope, String target) {
+        var home = playerTown(player);
+        String actor = home == null || home.getNationOrNull() == null ? null : home.getNationOrNull().getName();
+        var targetTown = "town".equalsIgnoreCase(scope)
+                ? com.palmergames.bukkit.towny.TownyAPI.getInstance().getTown(target) : null;
+        String targetNation = targetTown == null || targetTown.getNationOrNull() == null
+                ? ("town".equalsIgnoreCase(scope) ? null : target) : targetTown.getNationOrNull().getName();
         List<String> reasons = Arrays.stream(com.thatguycy.worlddynamicsengine.model.war.WarReason.values())
-                .filter(r -> plugin.getOrgManager().validWarReason(r, target))
+                .filter(r -> !("town".equalsIgnoreCase(scope) && targetTown == null) || r == WarReason.INDEPENDENCE)
+                .filter(r -> !("town".equalsIgnoreCase(scope) && r == WarReason.DESTROY_THREAT))
+                .filter(r -> plugin.getOrgManager().warReasonFailure(r,
+                        r == WarReason.INDEPENDENCE && "town".equalsIgnoreCase(scope) && home != null
+                                ? "town:" + home.getName() : actor,
+                        r == WarReason.INDEPENDENCE && "town".equalsIgnoreCase(scope) ? target : targetNation) == null)
                 .map(Enum::name).toList();
         Runnable refresh = organization == null ? () -> openWarMenu(player)
                 : () -> openOrganization(player, organization.getOrganizationName());
@@ -335,7 +351,9 @@ public class PlayerMenuManager implements Listener {
         boolean local = town.getName().equalsIgnoreCase(name)
                 && (player.getName().equalsIgnoreCase(record.getTownLeader())
                     || town.getMayor() != null && player.getUniqueId().equals(town.getMayor().getUUID()));
-        return local || !direct && record.getNationName().equalsIgnoreCase(kingNation(player));
+        var target = com.palmergames.bukkit.towny.TownyAPI.getInstance().getTown(name);
+        var targetNation = target == null ? null : target.getNationOrNull();
+        return local || !direct && targetNation != null && targetNation.getName().equalsIgnoreCase(kingNation(player));
     }
 
     private boolean nationRole(Player player, String name, String role) {
@@ -781,6 +799,7 @@ public class PlayerMenuManager implements Listener {
     private void openOrganizationMembers(Player player, WDEorg org, int page) {
         if (!orgPermission(player, org, "viewer")) { player.sendMessage(text("stale")); return; }
         List<String> members = new ArrayList<>(org.getMemberNationNames());
+        if (org.isSovereignEmpire()) members.removeIf(member -> !plugin.getOrgManager().isSovereignSubjectNation(org, member));
         Menu menu = menu(player, text(org.isSovereignEmpire() ? "orgmenu.subjects" : "orgmenu.members"));
         int start = paginate(menu, members.size(), page, p -> openOrganizationMembers(player, org, p));
         for (int i = start; i < Math.min(start + 45, members.size()); i++) {
@@ -859,15 +878,17 @@ public class PlayerMenuManager implements Listener {
 
     private void openOrganizationWars(Player player, WDEorg org, int page) {
         if (!orgPermission(player, org, "viewer")) { player.sendMessage(text("stale")); return; }
-        Menu menu = menu(player, text(org.isSovereignEmpire() ? "orgmenu.independence_wars" : "orgmenu.wars"));
+        Menu menu = menu(player, text("orgmenu.wars"));
         if (org.isSovereignEmpire()) {
-            var wars = plugin.getOrgManager().getActiveIndependenceWars(org);
+            var wars = plugin.getOrgManager().getActiveMilitaryWars(null).stream()
+                    .filter(w -> w.getAttackerNationNames().stream().anyMatch(org::hasMemberNation)
+                            || w.getDefenderNationNames().stream().anyMatch(org::hasMemberNation)).toList();
             int start = paginate(menu, wars.size(), page, p -> openOrganizationWars(player, org, p));
             for (int i = start; i < Math.min(start + 45, wars.size()); i++) {
                 var war = wars.get(i);
-                button(menu, i - start, Material.IRON_BARS, war.getRebelNationName(), List.of(text("orgmenu.independence_score",
-                        decimal(war.getRebelScore()), decimal(war.getEmpireScore()), war.getElapsedCycles())), () ->
-                        openSovereignSubject(player, org.getOrganizationName(), war.getRebelNationName()));
+                button(menu, i - start, Material.MAP, text("orgmenu.war_pair", war.getAttackerNationName(), war.getDefenderNationName()),
+                        List.of(text("orgmenu.war_score", decimal(war.getAttackerScore()), decimal(war.getDefenderScore()))),
+                        () -> openPeaceTreaty(player, null));
             }
         } else {
             var wars = plugin.getOrgManager().getActiveMilitaryWars(org);
@@ -940,12 +961,10 @@ public class PlayerMenuManager implements Listener {
             if (record == null) { player.sendMessage(text("stale")); return; }
             managementChoices(player, text("management.towns"), record.getTownNames(), 0, value -> openTownManagement(player, value), refresh);
         });
-        var war = manager.getActiveIndependenceWar(org, nation);
+        var war = manager.getActiveMilitaryWars(null).stream().filter(w -> w.getReason() == WarReason.INDEPENDENCE
+                && w.getAttackerNationName().equalsIgnoreCase(nation)).findFirst().orElse(null);
         List<String> warInfo = new ArrayList<>(war == null ? List.of(text("orgmenu.no_independence_war"))
-                : List.of(text("orgmenu.independence_score", decimal(war.getRebelScore()), decimal(war.getEmpireScore()), war.getElapsedCycles())));
-        warInfo.add(text("orgmenu.independence_cycle", plugin.getOrganizationConfig().getInt("sovereignEmpire.independenceWar.cycleSeconds", 300),
-                plugin.getOrganizationConfig().getInt("sovereignEmpire.independenceWar.maxCycles", 12)));
-        warInfo.add(text("orgmenu.independence_lead", plugin.getOrganizationConfig().getDouble("sovereignEmpire.independenceWar.successLead", 100)));
+                : List.of(text("orgmenu.war_score", decimal(war.getAttackerScore()), decimal(war.getDefenderScore()))));
         warInfo.add(text("orgmenu.independence_treaty_hint"));
         button(menu, 24, Material.IRON_BARS, text("orgmenu.independence_status"), warInfo, null);
         if (chairman.getAsBoolean()) {
@@ -1006,7 +1025,7 @@ public class PlayerMenuManager implements Listener {
     }
 
     public void openPeaceTreaty(Player player, String organization) {
-        String actor = kingNation(player);
+        String actor = treatyActor(player);
         if (actor == null || !plugin.orgEnabled) {
             player.sendMessage(text("peace.no_authority"));
             return;
@@ -1032,8 +1051,15 @@ public class PlayerMenuManager implements Listener {
                 && player.getUniqueId().equals(nation.getKing().getUUID()) ? nation.getName() : null;
     }
 
+    private String treatyActor(Player player) {
+        var town = playerTown(player);
+        if (town != null && town.getMayor() != null && town.getMayor().getUUID().equals(player.getUniqueId())
+                && plugin.getOrgManager().isTownInActiveWar(town.getName())) return "town:" + town.getName();
+        return kingNation(player);
+    }
+
     private boolean treatyAuthority(Player player, TreatyDraft draft) {
-        if (plugin.orgEnabled && draft.actor.equals(kingNation(player))) return true;
+        if (plugin.orgEnabled && draft.actor.equals(treatyActor(player))) return true;
         player.sendMessage(text("peace.no_authority"));
         player.closeInventory();
         return false;
@@ -1045,21 +1071,66 @@ public class PlayerMenuManager implements Listener {
                 draft.target.targetNation(), draft.type, new ArrayList<>(draft.clauses.values()), plugin.getNationManager());
     }
 
+    private List<OrgManager.PeaceTreatyMenuClauseOption> treatyOptions(
+            TreatyDraft draft, OrgManager.PeaceTreatyProposalState.ProposalType direction) {
+        return plugin.getOrgManager().getPeaceTreatyMenuClauseOptions(
+                plugin.getOrgManager().getOrganization(draft.target.organization()), draft.actor,
+                draft.target.targetNation(), direction,
+                direction == draft.type ? new ArrayList<>(draft.clauses.values()) : List.of(), plugin.getNationManager());
+    }
+
+    private boolean canIncludeTreatyClause(TreatyDraft draft, OrgManager.PeaceTreatyClauseState clause) {
+        return plugin.getOrgManager().canIncludePeaceTreatyMenuClause(
+                plugin.getOrgManager().getOrganization(draft.target.organization()), draft.actor,
+                draft.target.targetNation(), draft.type, new ArrayList<>(draft.clauses.values()),
+                clause, plugin.getNationManager());
+    }
+
     private void openTreaty(Player player, TreatyDraft draft) {
         if (!treatyAuthority(player, draft)) return;
+        var currentTarget = plugin.getOrgManager().getPeaceTreatyMenuTargets(draft.actor, plugin.getNationManager())
+                .stream().filter(t -> t.equals(draft.target)).findFirst().orElse(null);
+        if (currentTarget == null) {
+            player.sendMessage(text("stale"));
+            openPeaceTreaty(player, draft.organization);
+            return;
+        }
+        // 先保留独立前置条款，再逐项移除因状态变化或分数上限失效的草稿内容。
+        var selected = new ArrayList<>(plugin.getOrgManager().normalizePeaceTreatyClauses(draft.actor,
+                draft.target.targetNation(), draft.type, new ArrayList<>(draft.clauses.values()), plugin.getNationManager()));
+        if (selected.size() != draft.clauses.size()) player.sendMessage(text("peace.dissolution_cancelled"));
+        selected.sort(Comparator.comparing(clause ->
+                clause.getType() != OrgManager.PeaceTreatyClauseState.ClauseType.ALLOW_INDEPENDENCE));
+        draft.clauses.clear();
+        for (var clause : selected) {
+            if (canIncludeTreatyClause(draft, clause)) draft.clauses.put(clause.getType(), clause);
+        }
+        if (draft.clauses.size() != selected.size()) player.sendMessage(text("stale"));
+        var options = treatyOptions(draft, draft.type);
+        if (options.isEmpty() && draft.clauses.isEmpty()) {
+            var other = draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND
+                    ? OrgManager.PeaceTreatyProposalState.ProposalType.SURRENDER
+                    : OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND;
+            if (!treatyOptions(draft, other).isEmpty()) {
+                draft.type = other;
+                options = treatyOptions(draft, other);
+            }
+        }
         Menu menu = menu(player, text("peace.title"));
         OrgManager.PeaceTreatyMenuPreview preview = treatyPreview(draft);
         button(menu, 4, Material.NETHER_STAR, text("peace.score", String.format(Locale.ROOT, "%.2f", preview.scoreDifference())),
                 List.of(text("peace.cost", preview.points()), text("peace.target", draft.target.targetNation()),
                         text("peace.score_hint")), null);
-        button(menu, 12, draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND ? Material.LIME_DYE : Material.GRAY_DYE,
+        if (!treatyOptions(draft, OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND).isEmpty())
+            button(menu, 12, draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND ? Material.LIME_DYE : Material.GRAY_DYE,
                 text("peace.demand"), List.of(text("peace.demand_hint")), () -> {
                     if (draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND) return;
                     draft.type = OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND;
                     draft.clauses.clear();
                     openTreaty(player, draft);
                 });
-        button(menu, 14, draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.SURRENDER ? Material.LIME_DYE : Material.GRAY_DYE,
+        if (!treatyOptions(draft, OrgManager.PeaceTreatyProposalState.ProposalType.SURRENDER).isEmpty())
+            button(menu, 14, draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.SURRENDER ? Material.LIME_DYE : Material.GRAY_DYE,
                 text("peace.give"), List.of(text("peace.give_hint")), () -> {
                     if (draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.SURRENDER) return;
                     draft.type = OrgManager.PeaceTreatyProposalState.ProposalType.SURRENDER;
@@ -1072,11 +1143,11 @@ public class PlayerMenuManager implements Listener {
         button(menu, 16, Material.BLUE_BANNER, text("peace.defender_pages"), List.of(), null);
         drawTreatyNations(player, menu, draft, true);
         drawTreatyNations(player, menu, draft, false);
-        var types = OrgManager.PeaceTreatyClauseState.ClauseType.values();
-        int pages = Math.max(1, (types.length + 14) / 15);
+        var types = new ArrayList<>(options.stream().map(OrgManager.PeaceTreatyMenuClauseOption::type).toList());
+        int pages = Math.max(1, (types.size() + 14) / 15);
         draft.clausePage = Math.max(0, Math.min(draft.clausePage, pages - 1));
-        for (int i = draft.clausePage * 15; i < Math.min(types.length, draft.clausePage * 15 + 15); i++) {
-            var type = types[i];
+        for (int i = draft.clausePage * 15; i < Math.min(types.size(), draft.clausePage * 15 + 15); i++) {
+            var type = types.get(i);
             int index = i % 15;
             button(menu, 20 + index / 5 * 9 + index % 5,
                     draft.clauses.containsKey(type) ? Material.ENCHANTED_BOOK : Material.BOOK,
@@ -1084,17 +1155,17 @@ public class PlayerMenuManager implements Listener {
                     () -> openTreatyClause(player, draft, type, new LinkedHashMap<>(
                             draft.clauses.containsKey(type) ? clauseParameters(draft.clauses.get(type)) : Map.of())));
         }
-        button(menu, 48, Material.ARROW, text("peace.clause_previous"), List.of(), () -> {
+        if (draft.clausePage > 0) button(menu, 48, Material.ARROW, text("peace.clause_previous"), List.of(), () -> {
             draft.clausePage = Math.max(0, draft.clausePage - 1); openTreaty(player, draft);
         });
-        button(menu, 50, Material.ARROW, text("peace.clause_next"), List.of(), () -> {
+        if (draft.clausePage < pages - 1) button(menu, 50, Material.ARROW, text("peace.clause_next"), List.of(), () -> {
             draft.clausePage = Math.min(pages - 1, draft.clausePage + 1); openTreaty(player, draft);
         });
         button(menu, 49, Material.PAPER, text("page", draft.clausePage + 1, pages), List.of(text("peace.clause_pages")), null);
         button(menu, 47, Material.BARRIER, text("cancel"), List.of(), player::closeInventory);
         List<String> submitLore = new ArrayList<>(List.of(text("peace.submit_hint"), text("peace.cost", preview.points())));
         if (preview.error() != null) submitLore.add(plugin.formatLocaleMessage(preview.error()));
-        button(menu, 51, Material.LIME_DYE, text("peace.agree"), submitLore, () -> {
+        if (preview.error() == null) button(menu, 51, Material.LIME_DYE, text("peace.agree"), submitLore, () -> {
             if (!treatyAuthority(player, draft)) return;
             var latest = treatyPreview(draft);
             if (latest.error() != null) {
@@ -1110,7 +1181,11 @@ public class PlayerMenuManager implements Listener {
     }
 
     private void drawTreatyNations(Player player, Menu menu, TreatyDraft draft, boolean attackers) {
-        List<String> nations = attackers ? draft.target.attackers() : draft.target.defenders();
+        var validTargets = plugin.getOrgManager().getPeaceTreatyMenuTargets(draft.actor, plugin.getNationManager());
+        List<String> nations = (attackers ? draft.target.attackers() : draft.target.defenders()).stream()
+                .filter(name -> validTargets.stream().anyMatch(t -> t.organization().equals(draft.target.organization())
+                        && t.targetNation().equals(name) && t.attackers().equals(draft.target.attackers())
+                        && t.defenders().equals(draft.target.defenders()))).toList();
         int pages = Math.max(1, (nations.size() + 5) / 6);
         int page = Math.max(0, Math.min(attackers ? draft.attackerPage : draft.defenderPage, pages - 1));
         if (attackers) draft.attackerPage = page; else draft.defenderPage = page;
@@ -1141,13 +1216,13 @@ public class PlayerMenuManager implements Listener {
                 head.setItemMeta(meta);
             }
         }
-        button(menu, attackers ? 45 : 52, Material.ARROW, text("previous"),
+        if (page > 0) button(menu, attackers ? 45 : 52, Material.ARROW, text("previous"),
                 List.of(text(attackers ? "peace.attacker_pages" : "peace.defender_pages"), text("page", page + 1, pages)), () -> {
                     if (attackers) draft.attackerPage = Math.max(0, page - 1);
                     else draft.defenderPage = Math.max(0, page - 1);
                     openTreaty(player, draft);
                 });
-        button(menu, attackers ? 46 : 53, Material.ARROW, text("next"), List.of(), () -> {
+        if (page < pages - 1) button(menu, attackers ? 46 : 53, Material.ARROW, text("next"), List.of(), () -> {
             if (attackers) draft.attackerPage = Math.min(pages - 1, page + 1);
             else draft.defenderPage = Math.min(pages - 1, page + 1);
             openTreaty(player, draft);
@@ -1184,45 +1259,51 @@ public class PlayerMenuManager implements Listener {
     private void openTreatyClause(Player player, TreatyDraft draft, OrgManager.PeaceTreatyClauseState.ClauseType type,
                                   Map<String, Object> params) {
         if (!treatyAuthority(player, draft)) return;
+        var option = treatyOptions(draft, draft.type).stream().filter(entry -> entry.type() == type).findFirst().orElse(null);
+        if (option == null) {
+            openTreaty(player, draft);
+            return;
+        }
         Menu menu = menu(player, clauseTitle(type));
         button(menu, 4, Material.WRITTEN_BOOK, clauseTitle(type), List.of(text("peace.effects." + type.name().toLowerCase(Locale.ROOT))), null);
         if (type == OrgManager.PeaceTreatyClauseState.ClauseType.REPARATIONS) {
-            int max = Math.max(1, plugin.getWarConfig().getInt("peaceTreaty.clauses.reparations.maxPercent", 20));
+            int max = option.maxPercent();
             int percent = Math.max(1, Math.min(max, new OrgManager.PeaceTreatyClauseState(type, params).getInt("percent")));
             params.put("percent", percent);
             button(menu, 22, Material.GOLD_INGOT, text("peace.percent", percent), List.of(), null);
-            button(menu, 20, Material.RED_DYE, text("peace.minus"), List.of(), () -> {
+            if (percent > 1) button(menu, 20, Material.RED_DYE, text("peace.minus"), List.of(), () -> {
                 params.put("percent", Math.max(1, percent - 1)); openTreatyClause(player, draft, type, params);
             });
-            button(menu, 24, Material.LIME_DYE, text("peace.plus"), List.of(), () -> {
+            if (percent < max) button(menu, 24, Material.LIME_DYE, text("peace.plus"), List.of(), () -> {
                 params.put("percent", Math.min(max, percent + 1)); openTreatyClause(player, draft, type, params);
             });
         } else if (type == OrgManager.PeaceTreatyClauseState.ClauseType.TRANSFER_TOWN) {
-            String source = draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND
-                    ? draft.target.targetNation() : draft.actor;
+            if (!option.towns().contains(params.get("town"))) params.remove("town");
+            if (!option.destinations().contains(params.get("destinationNation"))) params.remove("destinationNation");
             button(menu, 20, Material.GRASS_BLOCK, text("peace.town", params.getOrDefault("town", "-")), List.of(), () ->
-                    chooseTreatyValue(player, draft, type, params, "town", plugin.getTownManager().getAllTowns().stream()
-                            .filter(t -> source.equalsIgnoreCase(t.getNationName())).map(WDEtown::getTownName).sorted().toList(), 0));
-            List<String> beneficiaries = draft.target.attackers().contains(draft.actor)
-                    == (draft.type == OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND)
-                    ? draft.target.attackers() : draft.target.defenders();
+                    chooseTreatyValue(player, draft, type, params, "town", 0));
             button(menu, 24, Material.PLAYER_HEAD, text("peace.destination", params.getOrDefault("destinationNation", "-")), List.of(), () ->
-                    chooseTreatyValue(player, draft, type, params, "destinationNation", beneficiaries, 0));
+                    chooseTreatyValue(player, draft, type, params, "destinationNation", 0));
         } else if (type == OrgManager.PeaceTreatyClauseState.ClauseType.LIBERATE_SUBJECT) {
+            if (!option.subjects().contains(params.get("subjectNation"))) params.remove("subjectNation");
             button(menu, 22, Material.IRON_BARS, text("peace.subject", params.getOrDefault("subjectNation", "-")), List.of(), () ->
-                    chooseTreatyValue(player, draft, type, params, "subjectNation", plugin.getNationManager().getAllNations()
-                            .stream().map(WDEnation::getNationName).sorted().toList(), 0));
+                    chooseTreatyValue(player, draft, type, params, "subjectNation", 0));
         }
-        button(menu, 30, Material.LIME_DYE, text("peace.include"), List.of(), () -> {
+        if (canIncludeTreatyClause(draft, new OrgManager.PeaceTreatyClauseState(type, params)))
+            button(menu, 30, Material.LIME_DYE, text("peace.include"), List.of(), () -> {
             if (!treatyAuthority(player, draft)) return;
             if ((type == OrgManager.PeaceTreatyClauseState.ClauseType.TRANSFER_TOWN
                     && (!params.containsKey("town") || !params.containsKey("destinationNation")))
                     || (type == OrgManager.PeaceTreatyClauseState.ClauseType.LIBERATE_SUBJECT && !params.containsKey("subjectNation"))) {
                 player.sendMessage(text("peace.incomplete")); return;
             }
-            draft.clauses.put(type, new OrgManager.PeaceTreatyClauseState(type, params)); openTreaty(player, draft);
+            var clause = new OrgManager.PeaceTreatyClauseState(type, params);
+            if (!canIncludeTreatyClause(draft, clause)) {
+                openTreatyClause(player, draft, type, params); return;
+            }
+            draft.clauses.put(type, clause); openTreaty(player, draft);
         });
-        button(menu, 32, Material.RED_DYE, text("peace.remove"), List.of(), () -> {
+        if (draft.clauses.containsKey(type)) button(menu, 32, Material.RED_DYE, text("peace.remove"), List.of(), () -> {
             draft.clauses.remove(type); openTreaty(player, draft);
         });
         back(menu, () -> openTreaty(player, draft));
@@ -1230,12 +1311,23 @@ public class PlayerMenuManager implements Listener {
     }
 
     private void chooseTreatyValue(Player player, TreatyDraft draft, OrgManager.PeaceTreatyClauseState.ClauseType type,
-                                   Map<String, Object> params, String key, List<String> choices, int page) {
+                                   Map<String, Object> params, String key, int page) {
         if (!treatyAuthority(player, draft)) return;
+        var option = treatyOptions(draft, draft.type).stream().filter(entry -> entry.type() == type).findFirst().orElse(null);
+        if (option == null) {
+            openTreaty(player, draft);
+            return;
+        }
+        List<String> currentChoices = switch (key) {
+            case "town" -> option.towns();
+            case "destinationNation" -> option.destinations();
+            case "subjectNation" -> option.subjects();
+            default -> List.of();
+        };
         Menu menu = menu(player, clauseTitle(type));
-        int start = paginate(menu, choices.size(), page, p -> chooseTreatyValue(player, draft, type, params, key, choices, p));
-        for (int i = start; i < Math.min(start + 45, choices.size()); i++) {
-            String value = choices.get(i);
+        int start = paginate(menu, currentChoices.size(), page, p -> chooseTreatyValue(player, draft, type, params, key, p));
+        for (int i = start; i < Math.min(start + 45, currentChoices.size()); i++) {
+            String value = currentChoices.get(i);
             button(menu, i - start, Material.PAPER, value, List.of(), () -> {
                 params.put(key, value); openTreatyClause(player, draft, type, params);
             });
@@ -1270,7 +1362,7 @@ public class PlayerMenuManager implements Listener {
     }
 
     public void openPeaceInbox(Player player, String organization) {
-        String actor = kingNation(player);
+        String actor = treatyActor(player);
         if (actor == null || !plugin.orgEnabled) {
             player.sendMessage(text("peace.no_authority"));
             return;
@@ -1279,7 +1371,7 @@ public class PlayerMenuManager implements Listener {
     }
 
     private void openPeaceInboxPage(Player player, String actor, String organization, int page) {
-        if (!actor.equals(kingNation(player)) || !plugin.orgEnabled) {
+        if (!actor.equals(treatyActor(player)) || !plugin.orgEnabled) {
             player.sendMessage(text("peace.no_authority")); player.closeInventory(); return;
         }
         var incoming = plugin.getOrgManager().getIncomingPeaceTreaties(actor).stream()
@@ -1296,7 +1388,7 @@ public class PlayerMenuManager implements Listener {
     }
 
     private void openReceivedTreaty(Player player, String actor, OrgManager.PeaceTreatyMenuIncoming incoming, int requestedPage) {
-        if (!actor.equals(kingNation(player)) || !plugin.orgEnabled) {
+        if (!actor.equals(treatyActor(player)) || !plugin.orgEnabled) {
             player.sendMessage(text("peace.no_authority")); player.closeInventory(); return;
         }
         var proposal = incoming.proposal();
@@ -1318,8 +1410,8 @@ public class PlayerMenuManager implements Listener {
             if (!clause.getString("subjectNation").isBlank()) lore.add(text("peace.subject", clause.getString("subjectNation")));
             button(menu, 20 + index / 5 * 9 + index % 5, Material.ENCHANTED_BOOK, clauseTitle(clause.getType()), lore, null);
         }
-        button(menu, 45, Material.ARROW, text("previous"), List.of(), () -> openReceivedTreaty(player, actor, incoming, page - 1));
-        button(menu, 53, Material.ARROW, text("next"), List.of(), () -> openReceivedTreaty(player, actor, incoming, page + 1));
+        if (page > 0) button(menu, 45, Material.ARROW, text("previous"), List.of(), () -> openReceivedTreaty(player, actor, incoming, page - 1));
+        if (page < pages - 1) button(menu, 53, Material.ARROW, text("next"), List.of(), () -> openReceivedTreaty(player, actor, incoming, page + 1));
         button(menu, 49, Material.PAPER, text("page", page + 1, pages), List.of(), null);
         button(menu, 47, Material.RED_DYE, text("peace.reject"), List.of(), () -> reviewReceivedTreaty(player, actor, incoming, false));
         button(menu, 51, Material.LIME_DYE, text("peace.agree"), List.of(), () ->
@@ -1330,7 +1422,7 @@ public class PlayerMenuManager implements Listener {
     }
 
     private void reviewReceivedTreaty(Player player, String actor, OrgManager.PeaceTreatyMenuIncoming incoming, boolean accept) {
-        if (!actor.equals(kingNation(player)) || !plugin.orgEnabled) {
+        if (!actor.equals(treatyActor(player)) || !plugin.orgEnabled) {
             player.sendMessage(text("peace.no_authority")); player.closeInventory(); return;
         }
         // Never accept a replacement proposal using an older inventory's confirmation.

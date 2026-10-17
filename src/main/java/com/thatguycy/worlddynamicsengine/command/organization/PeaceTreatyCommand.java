@@ -156,7 +156,7 @@ public class PeaceTreatyCommand {
                         parameters.put("subjectNation", parts[1]);
                     }
                 }
-                case FORCE_CONVERSION, DISSOLVE_ALLIANCE, EXPEL_FROM_ALLIANCE, UNCONDITIONAL_PASSAGE, HUMILIATE, LOOT_CAPITAL, TRIBUTE, ALLOW_INDEPENDENCE -> {
+                case FORCE_CONVERSION, DISSOLVE_ALLIANCE, EXPEL_FROM_ALLIANCE, UNCONDITIONAL_PASSAGE, HUMILIATE, LOOT_CAPITAL, TRIBUTE, FORCE_VASSALIZE, ALLOW_INDEPENDENCE -> {
                 }
             }
 
@@ -200,6 +200,10 @@ public class PeaceTreatyCommand {
                 return null;
             }
             Nation nation = resident.getTown().getNationOrNull();
+            if (resident.getTown().getMayor() != null && resident.getTown().getMayor().equals(resident)
+                    && orgManager.isTownInActiveWar(resident.getTown().getName())) {
+                return "town:" + resident.getTown().getName();
+            }
             return nation == null ? null : nation.getName();
         } catch (Exception ignored) {
             return null;

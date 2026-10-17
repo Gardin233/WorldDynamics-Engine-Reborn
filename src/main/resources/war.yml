@@ -1,5 +1,14 @@
 # 战争模块配置。
 
+reasons:
+  reconquest:
+    # 同一次连续持有时长必须严格超过此天数，短期反复占有不累计。
+    minimumDays: 7
+    # REAL_TIME 为现实天；REALISTIC_SEASONS 为季节日历天。
+    # 未记录到兼容日历的持有区间按现实天回退；旧数据从升级后开始记录。
+    clock: REAL_TIME
+    world: world
+
 peaceTreaty:
   # 单份和平条约中可消耗的总分数上限。
   maxProposalPoints: 100
@@ -18,6 +27,8 @@ peaceTreaty:
     humiliatePoints: 5
     lootCapitalPoints: 20
     tributePoints: 25
+    # 强制让步国成为受益国所主持主权帝国的傀儡国。
+    forceVassalizePoints: 70
     allowIndependencePoints: 40
   tribute:
     # 和平条约中的长期贡金，默认按税收额度的 5% 在 Towny 每日税收周期结算一次。

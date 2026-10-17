@@ -2,6 +2,8 @@ package com.thatguycy.worlddynamicsengine.listener.towny;
 
 import com.palmergames.bukkit.towny.event.economy.TownyPreTransactionEvent;
 import com.palmergames.bukkit.towny.event.NewDayEvent;
+import com.palmergames.bukkit.towny.event.SpawnEvent;
+import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.event.time.dailytaxes.NewDayTaxAndUpkeepPreCollectionEvent;
 import com.palmergames.bukkit.towny.event.town.toggle.TownToggleNeutralEvent;
 import com.palmergames.bukkit.towny.object.economy.Account;
@@ -41,6 +43,16 @@ public class TownyEventListener implements Listener {
         this.plugin = plugin;
         this.orgManager = orgManager;
         this.economyBridge = economyBridge;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onTownySpawn(SpawnEvent event) {
+        Town town = TownyAPI.getInstance().getTown(event.getPlayer());
+        var nation = town == null ? null : town.getNationOrNull();
+        if (town == null || !(town.hasActiveWar() || orgManager.isTownInActiveWar(town.getName())
+                || nation != null && orgManager.isNationInActiveWar(nation.getName()))) return;
+        event.setCancelled(true);
+        event.setCancelMessage(plugin.getLocaleMessage("war_towny_spawn_blocked"));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -215,18 +227,7 @@ public class TownyEventListener implements Listener {
         if (killer == null || killer.equals(victim)) {
             return;
         }
-        orgManager.recordTownWarKill(killer, victim);
-
-        String killerNation = resolvePlayerNationName(killer);
-        String victimNation = resolvePlayerNationName(victim);
-        if (killerNation == null || victimNation == null) {
-            return;
-        }
-
-        if (!isPlayerTownNeutral(killer) && !isPlayerTownNeutral(victim)) {
-            orgManager.recordMilitaryWarKill(killerNation, victimNation);
-        }
-        orgManager.recordIndependenceWarKill(killerNation, victimNation);
+        orgManager.recordUnifiedWarKill(killer, victim);
     }
 
     @EventHandler

@@ -6,10 +6,12 @@ import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.TownyUniverse;
 import com.thatguycy.worlddynamicsengine.manager.organization.OrgManager;
+import com.thatguycy.worlddynamicsengine.manager.war.TownOwnershipHistory;
 import com.thatguycy.worlddynamicsengine.manager.storage.DataStorageManager;
 import com.thatguycy.worlddynamicsengine.model.WDEtown;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,7 +48,9 @@ public class TownManager {
         for (Town town : new ArrayList<>(TownyUniverse.getInstance().getTowns())) {
             registerTown(town);
             Nation nation = town.getNationOrNull();
-            towns.get(town.getName()).setNationName(nation == null ? "None" : nation.getName());
+            WDEtown record = towns.get(town.getName());
+            TownOwnershipHistory.change(plugin, record, nation == null ? "None" : nation.getName());
+            record.setNationName(nation == null ? "None" : nation.getName());
         }
         saveTowns();
     }
@@ -58,6 +62,7 @@ public class TownManager {
         Nation nation = townyTown.getNationOrNull();
         WDEtown town = new WDEtown(townyTown.getName(), nation == null ? "None" : nation.getName());
         towns.put(townyTown.getName(), town);
+        TownOwnershipHistory.change(plugin, town, town.getNationName());
         syncTownLeadership(townyTown);
         syncTownTaxPolicy(townyTown);
     }
@@ -79,6 +84,7 @@ public class TownManager {
     public void updateTownNation(String townName, String nationName) {
         WDEtown town = towns.get(townName);
         if (town != null) {
+            TownOwnershipHistory.change(plugin, town, nationName);
             town.setNationName(nationName == null ? "None" : nationName);
             saveTowns();
         }
@@ -116,25 +122,57 @@ public class TownManager {
         }
 
         try {
-            WDEtown town = towns.get(townName);
             Town townyTown = TownyUniverse.getInstance().getTown(townName);
             Nation destinationNation = TownyUniverse.getInstance().getNation(destinationNationName);
-            if (town == null || plugin.getNationManager().getNation(destinationNationName) == null
+            if (plugin.getNationManager().getNation(destinationNationName) == null
                     || townyTown == null || destinationNation == null) {
                 return false;
             }
+            registerTown(townyTown);
+            WDEtown town = towns.get(townName);
 
             if (townyTown.hasNation()) {
                 Nation currentNation = townyTown.getNationOrNull();
                 if (currentNation != null && currentNation.getName().equalsIgnoreCase(destinationNationName)) {
                     return false;
                 }
+                if (currentNation != null && townyTown.isCapital() && currentNation.getTowns().size() > 1) {
+                    Town successor = currentNation.getTowns().stream().filter(candidate -> candidate != townyTown)
+                            .sorted(Comparator.comparingInt(Town::getNumResidents).reversed()
+                                    .thenComparing(Town::getName, String.CASE_INSENSITIVE_ORDER))
+                            .findFirst().orElse(null);
+                    if (successor == null || successor.getMayor() == null) return false;
+                    Resident newKing = successor.getMayor();
+                    currentNation.setCapital(successor);
+                    try {
+                        currentNation.setKing(newKing);
+                        if (!newKing.equals(currentNation.getKing())) {
+                            currentNation.setCapital(townyTown);
+                            return false;
+                        }
+                    } catch (Exception e) {
+                        currentNation.setCapital(townyTown);
+                        throw e;
+                    }
+                    currentNation.save();
+                    var nationData = plugin.getNationManager().getNation(currentNation.getName());
+                    if (nationData != null) {
+                        nationData.setGovernmentLeader(newKing.getName());
+                        nationData.setPendingGovernmentLeader("None");
+                        nationData.setGovernmentLeaderVotes(new HashMap<>());
+                        nationData.setGovernmentLeaderCandidates(new ArrayList<>());
+                        nationData.setGovernmentLeaderBallots(new HashMap<>());
+                    }
+                }
                 townyTown.removeNation();
+                if (currentNation != null && townyTown.getNationOrNull() == currentNation) return false;
             }
 
             townyTown.setNation(destinationNation, true);
             townyTown.save();
+            destinationNation.save();
 
+            TownOwnershipHistory.change(plugin, town, destinationNationName);
             town.setNationName(destinationNationName);
             saveTowns();
             plugin.getNationManager().refreshTownHierarchy();

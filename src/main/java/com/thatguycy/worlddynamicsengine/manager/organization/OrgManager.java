@@ -78,6 +78,32 @@ public class OrgManager {
                 org.getSettings().remove(ACTIVE_MILITARY_WARS_SETTING);
                 changed = true;
             }
+            for (IndependenceWarState legacy : readIndependenceWars(org).values()) {
+                Set<String> defenders = new LinkedHashSet<>(org.getMemberNationNames());
+                defenders.remove(legacy.rebelNationName);
+                if (!defenders.isEmpty()) {
+                    MilitaryWarState war = new MilitaryWarState(legacy.rebelNationName, org.getChairmanNationName(),
+                            Set.of(legacy.rebelNationName), defenders, legacy.rebelScore, legacy.empireScore, legacy.startedAt);
+                    war.reason = WarReason.INDEPENDENCE;
+                    war.attackerOccupation.putAll(legacy.rebelOccupation);
+                    war.defenderOccupation.putAll(legacy.empireOccupation);
+                    war.attackerKills.putAll(legacy.rebelKills);
+                    war.defenderKills.putAll(legacy.empireKills);
+                    warLedger.wars.putIfAbsent(war.getWarKey(), war.toMap());
+                }
+                readPeaceTreatyProposals(org).entrySet().stream()
+                        .filter(entry -> entry.getKey().equals("independence:" + legacy.rebelNationName))
+                        .forEach(entry -> {
+                            var proposal = entry.getValue();
+                            warLedger.treaties.put(buildWarKey(legacy.rebelNationName, org.getChairmanNationName()), proposal.toMap());
+                        });
+            }
+            if (org.getSettings().remove("independenceWars") != null) changed = true;
+            var oldTreaties = readPeaceTreatyProposals(org);
+            if (oldTreaties.keySet().removeIf(key -> key.startsWith("independence:"))) {
+                writePeaceTreatyProposals(org, oldTreaties);
+                changed = true;
+            }
             changed |= synchronizeSovereignSubjectStates(org);
             changed |= synchronizeIdeologicalAllianceSettings(org);
         }
@@ -570,33 +596,14 @@ public class OrgManager {
     }
 
     public boolean adminResolveIndependence(WDEorg org, String nationName, IndependenceWarOutcome outcome) {
-        Map<String, IndependenceWarState> wars = readIndependenceWars(org);
-        String key = findIndependenceWarKey(wars, nationName);
-        if (key == null) return false;
-        IndependenceWarResolutionResult result = resolveIndependenceWar(org, wars, wars.get(key), outcome);
-        Map<String, PeaceTreatyProposalState> proposals = readPeaceTreatyProposals(org);
-        proposals.remove("independence:" + nationName);
-        writePeaceTreatyProposals(org, proposals);
-        saveOrganizations();
-        announceIndependenceWarResolution(org, result);
-        return true;
+        if (!hasActiveIndependenceWar(org, nationName)) return false;
+        if (outcome == IndependenceWarOutcome.SUCCESS) return surrenderIndependenceWar(org, nationName) != null;
+        return adminEndMilitaryWar(nationName, org.getChairmanNationName());
     }
 
     public boolean adminSetIndependenceScores(WDEorg org, String nationName, double rebel, double empire) {
-        if (!Double.isFinite(rebel) || !Double.isFinite(empire) || rebel < 0 || empire < 0) return false;
-        Map<String, IndependenceWarState> wars = readIndependenceWars(org);
-        String key = findIndependenceWarKey(wars, nationName);
-        if (key == null) return false;
-        Map<String, Object> serialized = wars.get(key).toMap();
-        serialized.put("rebelScore", rebel);
-        serialized.put("empireScore", empire);
-        wars.put(key, IndependenceWarState.fromMap(key, serialized));
-        writeIndependenceWars(org, wars);
-        Map<String, PeaceTreatyProposalState> proposals = readPeaceTreatyProposals(org);
-        proposals.remove("independence:" + key);
-        writePeaceTreatyProposals(org, proposals);
-        saveOrganizations();
-        return true;
+        return hasActiveIndependenceWar(org, nationName)
+                && adminSetMilitaryScores(nationName, org.getChairmanNationName(), rebel, empire);
     }
 
     public boolean canDemoteSubjectAutonomy(WDEorg org, String nationName) {
@@ -997,7 +1004,8 @@ public class OrgManager {
                 || !org.hasMemberNation(proposerNationName) || org.hasMemberNation(targetNationName)) {
             return MilitaryWarVoteResult.invalid();
         }
-        if (!validWarReason(reason, targetNationName)) return MilitaryWarVoteResult.invalid();
+        String reasonError = warReasonFailure(reason, proposerNationName, targetNationName);
+        if (reasonError != null) return MilitaryWarVoteResult.invalid(reasonError);
         if (isNationNeutral(proposerNationName) || isNationNeutral(targetNationName)) {
             return MilitaryWarVoteResult.peaceProtected();
         }
@@ -1122,7 +1130,7 @@ public class OrgManager {
             if (!war.getWarKey().equalsIgnoreCase(focusKey)) {
                 continue;
             }
-            String actor = war.isAttackerNation(nation) || war.isDefenderNation(nation) ? nation : townKey;
+            String actor = war.isAttackerNation(townKey) || war.isDefenderNation(townKey) ? townKey : nation;
             if (actor == null || actor.isBlank()) {
                 return null;
             }
@@ -1218,6 +1226,7 @@ public class OrgManager {
         if (actorNationName == null || targetNationName == null || proposalType == null || clauses == null || clauses.isEmpty() || nationManager == null) {
             return PeaceTreatyProposalResult.invalid("org_peace_treaty_invalid");
         }
+        clauses = normalizePeaceTreatyClauses(actorNationName, targetNationName, proposalType, clauses, nationManager);
 
         WarContext context = resolveWarContext(org, actorNationName, targetNationName);
         if (context == null) {
@@ -1251,11 +1260,6 @@ public class OrgManager {
                 totalPoints,
                 clauses,
                 System.currentTimeMillis());
-
-        if (shouldForceAcceptIndependenceTreaty(context, proposal, scoreDifference)) {
-            executePeaceTreaty(context, proposal, nationManager);
-            return PeaceTreatyProposalResult.forcedAccepted(proposal, scoreDifference);
-        }
 
         Map<String, PeaceTreatyProposalState> proposals = readPeaceTreatyProposals(org);
         proposals.put(context.getWarKey(), proposal);
@@ -1299,8 +1303,13 @@ public class OrgManager {
         List<PeaceTreatyMenuTarget> targets = new ArrayList<>();
         Set<String> seen = new LinkedHashSet<>();
         for (WDEorg org : warContexts()) {
-            for (WDEnation nation : nations.getAllNations()) {
-                String target = nation.getNationName();
+            List<String> candidates = nations.getAllNations().stream().map(WDEnation::getNationName)
+                    .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+            for (MilitaryWarState war : getActiveMilitaryWars(null)) {
+                for (String participant : war.getAttackerNationNames()) if (participant.startsWith("town:")) candidates.add(participant);
+                for (String participant : war.getDefenderNationNames()) if (participant.startsWith("town:")) candidates.add(participant);
+            }
+            for (String target : candidates) {
                 WarContext context = resolveWarContext(org, actorNation, target);
                 if (context == null || validatePeaceTreatyProposalAuthority(context, actorNation, target) != null
                         || !seen.add(context.getWarKey() + ":" + target)) continue;
@@ -1324,6 +1333,7 @@ public class OrgManager {
     public PeaceTreatyMenuPreview previewPeaceTreaty(WDEorg org, String actorNation, String targetNation,
                                                     PeaceTreatyProposalState.ProposalType type,
                                                     List<PeaceTreatyClauseState> clauses, NationManager nations) {
+        clauses = normalizePeaceTreatyClauses(actorNation, targetNation, type, clauses, nations);
         WarContext context = resolveWarContext(org, actorNation, targetNation);
         if (context == null) return new PeaceTreatyMenuPreview(0, 0, "org_peace_treaty_no_active_war");
         double difference = getTreatyScoreDifference(context, actorNation, targetNation, type);
@@ -1336,6 +1346,117 @@ public class OrgManager {
         }
         if (error == null) error = validatePeaceTreatyClauses(context, actorNation, targetNation, type, clauses, nations, false);
         return new PeaceTreatyMenuPreview(difference, points, error);
+    }
+
+    public boolean willPeaceTreatyDissolveNation(String actor, String target,
+                                                PeaceTreatyProposalState.ProposalType direction,
+                                                List<PeaceTreatyClauseState> clauses, NationManager nations) {
+        String conceding = direction == PeaceTreatyProposalState.ProposalType.DEMAND ? target : actor;
+        Nation nation = nations.getTownyNation(conceding);
+        if (nation == null || nation.getTowns().isEmpty()) return false;
+        Set<String> ceded = new LinkedHashSet<>();
+        for (var clause : clauses) {
+            if (clause.getType() != PeaceTreatyClauseState.ClauseType.TRANSFER_TOWN) continue;
+            Town town = TownyAPI.getInstance().getTown(clause.getString("town"));
+            Nation destination = nations.getTownyNation(clause.getString("destinationNation"));
+            if (town != null && town.getNationOrNull() == nation && destination != null && destination != nation) {
+                ceded.add(town.getName());
+            }
+        }
+        return nation.getTowns().stream().allMatch(town -> ceded.contains(town.getName()));
+    }
+
+    public List<PeaceTreatyClauseState> normalizePeaceTreatyClauses(String actor, String target,
+            PeaceTreatyProposalState.ProposalType direction, List<PeaceTreatyClauseState> clauses, NationManager nations) {
+        if (!willPeaceTreatyDissolveNation(actor, target, direction, clauses, nations)) return new ArrayList<>(clauses);
+        return clauses.stream().filter(clause -> clause.getType() != PeaceTreatyClauseState.ClauseType.TRIBUTE
+                && clause.getType() != PeaceTreatyClauseState.ClauseType.UNCONDITIONAL_PASSAGE).toList();
+    }
+
+    /**
+     * 菜单候选项复用提交校验，参数候选也必须能组成合法条款。
+     */
+    public record PeaceTreatyMenuClauseOption(PeaceTreatyClauseState.ClauseType type,
+                                              List<String> towns, List<String> destinations,
+                                              List<String> subjects, int maxPercent) {}
+
+    public boolean canIncludePeaceTreatyMenuClause(WDEorg org, String actor, String target,
+                                                   PeaceTreatyProposalState.ProposalType direction,
+                                                   List<PeaceTreatyClauseState> selected,
+                                                   PeaceTreatyClauseState candidate, NationManager nations) {
+        List<PeaceTreatyClauseState> prospective = new ArrayList<>(selected);
+        prospective.removeIf(clause -> clause.getType() == candidate.getType());
+        prospective.add(candidate);
+        return previewPeaceTreaty(org, actor, target, direction, prospective, nations).error() == null;
+    }
+
+    public List<PeaceTreatyMenuClauseOption> getPeaceTreatyMenuClauseOptions(
+            WDEorg org, String actor, String target, PeaceTreatyProposalState.ProposalType direction,
+            List<PeaceTreatyClauseState> selected, NationManager nations) {
+        WarContext context = resolveWarContext(org, actor, target);
+        if (context == null || validatePeaceTreatyProposalAuthority(context, actor, target) != null) return List.of();
+        String conceding = direction == PeaceTreatyProposalState.ProposalType.DEMAND ? target : actor;
+        Set<String> beneficiarySide = direction == PeaceTreatyProposalState.ProposalType.DEMAND
+                ? context.getActorSideNations() : context.getCounterpartySideNations();
+        List<PeaceTreatyMenuClauseOption> options = new ArrayList<>();
+        for (PeaceTreatyClauseState.ClauseType type : PeaceTreatyClauseState.ClauseType.values()) {
+            if ((type == PeaceTreatyClauseState.ClauseType.TRIBUTE
+                    || type == PeaceTreatyClauseState.ClauseType.UNCONDITIONAL_PASSAGE)
+                    && willPeaceTreatyDissolveNation(actor, target, direction, selected, nations)) continue;
+            List<String> towns = new ArrayList<>(), destinations = new ArrayList<>(), subjects = new ArrayList<>();
+            int maxPercent = 0;
+            boolean available = false;
+            switch (type) {
+                case REPARATIONS -> {
+                    int limit = Math.max(1, getWarConfiguration().getInt("peaceTreaty.clauses.reparations.maxPercent", 20));
+                    for (int percent = 1; percent <= limit; percent++) {
+                        var candidate = new PeaceTreatyClauseState(type, Map.of("percent", percent));
+                        if (!canIncludePeaceTreatyMenuClause(org, actor, target, direction, selected, candidate, nations)) break;
+                        maxPercent = percent;
+                    }
+                    available = maxPercent > 0;
+                }
+                case TRANSFER_TOWN -> {
+                    Nation source = nations.getTownyNation(conceding);
+                    for (Town town : source == null ? List.<Town>of() : source.getTowns()) {
+                        for (String destination : beneficiarySide) {
+                            if (nations.getNation(destination) == null || nations.getTownyNation(destination) == null) continue;
+                            var candidate = new PeaceTreatyClauseState(type,
+                                    Map.of("town", town.getName(), "destinationNation", destination));
+                            if (canIncludePeaceTreatyMenuClause(org, actor, target, direction, selected, candidate, nations)) {
+                                if (!towns.contains(town.getName())) towns.add(town.getName());
+                                if (!destinations.contains(destination)) destinations.add(destination);
+                            }
+                        }
+                    }
+                    available = !towns.isEmpty() && !destinations.isEmpty();
+                }
+                case LIBERATE_SUBJECT -> {
+                    WDEorg empire = getOrganizationByChairmanSovereignEmpire(conceding);
+                    if (empire != null) {
+                        for (String subject : empire.getMemberNationNames()) {
+                            if (!isSovereignSubjectNation(empire, subject) || nations.getNation(subject) == null
+                                    || nations.getTownyNation(subject) == null) continue;
+                            var candidate = new PeaceTreatyClauseState(type, Map.of("subjectNation", subject));
+                            if (canIncludePeaceTreatyMenuClause(org, actor, target, direction, selected, candidate, nations)) {
+                                subjects.add(subject);
+                            }
+                        }
+                    }
+                    available = !subjects.isEmpty();
+                }
+                default -> available = canIncludePeaceTreatyMenuClause(org, actor, target, direction, selected,
+                        new PeaceTreatyClauseState(type, Map.of()), nations);
+            }
+            if (available) {
+                towns.sort(String.CASE_INSENSITIVE_ORDER);
+                destinations.sort(String.CASE_INSENSITIVE_ORDER);
+                subjects.sort(String.CASE_INSENSITIVE_ORDER);
+                options.add(new PeaceTreatyMenuClauseOption(type, List.copyOf(towns), List.copyOf(destinations),
+                        List.copyOf(subjects), maxPercent));
+            }
+        }
+        return options;
     }
 
     public PeaceTreatyReviewResult reviewPeaceTreaty(WDEorg org,
@@ -1369,12 +1490,23 @@ public class OrgManager {
             return PeaceTreatyReviewResult.rejected(proposal);
         }
 
+        var effectiveClauses = normalizePeaceTreatyClauses(proposal.getProposerNationName(), proposal.getTargetNationName(),
+                proposal.getProposalType(), proposal.getClauses(), nationManager);
+        if (effectiveClauses.size() != proposal.getClauses().size()) {
+            proposal = new PeaceTreatyProposalState(proposal.getWarKey(), proposal.getProposalType(),
+                    proposal.getProposerNationName(), proposal.getTargetNationName(),
+                    calculatePeaceTreatyPoints(context, proposal.getProposerNationName(), effectiveClauses,
+                            isSeparatePeaceProposal(context, proposal.getProposerNationName(), proposal.getTargetNationName())),
+                    effectiveClauses, ((Number) proposal.toMap().get("createdAt")).longValue());
+        }
         String validationError = validatePeaceTreatyClauses(context, proposal.getProposerNationName(), proposal.getTargetNationName(), proposal.getProposalType(), proposal.getClauses(), nationManager, true);
         if (validationError != null) {
             return PeaceTreatyReviewResult.invalid(validationError);
         }
 
-        executePeaceTreaty(context, proposal, nationManager);
+        if (!executePeaceTreaty(context, proposal, nationManager)) {
+            return PeaceTreatyReviewResult.invalid("org_peace_treaty_transfer_town_invalid");
+        }
         proposals.remove(context.getWarKey());
         writePeaceTreatyProposals(org, proposals);
         saveOrganizations();
@@ -1399,7 +1531,9 @@ public class OrgManager {
     }
 
     public boolean hasActiveIndependenceWar(WDEorg org, String rebelNationName) {
-        return getActiveIndependenceWar(org, rebelNationName) != null;
+        return org != null && getActiveMilitaryWars(null).stream().anyMatch(war -> war.reason == WarReason.INDEPENDENCE
+                && war.getAttackerNationName().equalsIgnoreCase(rebelNationName)
+                && war.getDefenderNationName().equalsIgnoreCase(org.getChairmanNationName()));
     }
 
     public IndependenceWarState getActiveIndependenceWar(WDEorg org, String rebelNationName) {
@@ -1416,24 +1550,13 @@ public class OrgManager {
     }
 
     public List<IndependenceWarState> getActiveIndependenceWars(WDEorg org) {
-        return new ArrayList<>(readIndependenceWars(org).values());
+        return List.of();
     }
 
     public boolean startIndependenceWar(WDEorg org, String rebelNationName) {
-        if (org == null || rebelNationName == null || !org.isSovereignEmpire() || !org.hasMemberNation(rebelNationName)) {
-            return false;
-        }
-
-        Map<String, IndependenceWarState> wars = readIndependenceWars(org);
-        if (findIndependenceWarKey(wars, rebelNationName) != null) {
-            return false;
-        }
-
-        wars.put(rebelNationName, new IndependenceWarState(rebelNationName));
-        writeIndependenceWars(org, wars);
-        saveOrganizations();
-        broadcastServerMessage("war_broadcast_independence_started", rebelNationName, org.getOrganizationName());
-        return true;
+        return org != null && handleMilitaryAllianceWar(rebelNationName, org.getChairmanNationName(),
+                ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationManager(),
+                WarReason.INDEPENDENCE).isSuccess();
     }
 
     public void prepareIndependenceWarHostilities(WDEorg org, String rebelNationName, NationManager nationManager) {
@@ -1441,22 +1564,15 @@ public class OrgManager {
     }
 
     public IndependenceWarResolutionResult surrenderIndependenceWar(WDEorg org, String rebelNationName) {
-        if (org == null || rebelNationName == null) {
-            return null;
-        }
-
-        Map<String, IndependenceWarState> wars = readIndependenceWars(org);
-        String key = findIndependenceWarKey(wars, rebelNationName);
-        if (key == null) {
-            return null;
-        }
-
-        IndependenceWarState state = wars.get(key);
-        state.setChairmanSurrendered(true);
-        IndependenceWarResolutionResult result = resolveIndependenceWar(org, wars, state, IndependenceWarOutcome.SUCCESS);
+        if (!hasActiveIndependenceWar(org, rebelNationName)) return null;
+        MilitaryWarState war = getActiveMilitaryWars(null).stream().filter(w -> w.reason == WarReason.INDEPENDENCE
+                && w.getAttackerNationName().equalsIgnoreCase(rebelNationName)).findFirst().orElse(null);
+        var nations = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationManager();
+        removeMemberNationAndAdjust(org, rebelNationName);
+        createWarTrucesBetweenSides(war.getAttackerNationNames(), war.getDefenderNationNames(), 40, nations);
+        clearMilitaryWarAcrossOrganizations(war.getWarKey());
         saveOrganizations();
-        announceIndependenceWarResolution(org, result);
-        return result;
+        return new IndependenceWarResolutionResult(org, new IndependenceWarState(rebelNationName), IndependenceWarOutcome.SUCCESS);
     }
 
     public void recordIndependenceWarKill(String killerNationName, String victimNationName) {
@@ -1504,7 +1620,6 @@ public class OrgManager {
 
     public void recordWarKill(String killerNationName, String victimNationName) {
         recordMilitaryWarKill(killerNationName, victimNationName);
-        recordIndependenceWarKill(killerNationName, victimNationName);
     }
 
     public void recordMilitaryWarKill(String killerNationName, String victimNationName) {
@@ -1547,58 +1662,6 @@ public class OrgManager {
         saveOrganizations();
     }
 
-    public List<IndependenceWarResolutionResult> processIndependenceWarCycles() {
-        return processIndependenceWarCycles(buildOccupationCensus());
-    }
-
-    private List<IndependenceWarResolutionResult> processIndependenceWarCycles(Map<String, Map<String, int[]>> census) {
-        if (!isIndependenceWarEnabled()) {
-            return List.of();
-        }
-
-        List<IndependenceWarResolutionResult> results = new ArrayList<>();
-        boolean changed = false;
-        for (WDEorg org : getAllOrganizations()) {
-            if (!org.isSovereignEmpire()) {
-                continue;
-            }
-
-            Map<String, IndependenceWarState> wars = readIndependenceWars(org);
-            if (wars.isEmpty()) {
-                continue;
-            }
-
-            List<IndependenceWarState> states = new ArrayList<>(wars.values());
-            for (IndependenceWarState state : states) {
-                state.incrementElapsedCycles();
-                applyOccupationCyclePoints(org, state, census);
-                changed = true;
-
-                if (state.getElapsedCycles() >= getIndependenceWarMaxCycles()) {
-                    IndependenceWarOutcome outcome = determineTimedWarOutcome(state);
-                    IndependenceWarResolutionResult result = resolveIndependenceWar(org, wars, state, outcome);
-                    results.add(result);
-                }
-            }
-
-            if (!wars.isEmpty()) {
-                writeIndependenceWars(org, wars);
-            } else {
-                clearIndependenceWars(org);
-            }
-        }
-
-        if (changed || !results.isEmpty()) {
-            saveOrganizations();
-        }
-
-        for (IndependenceWarResolutionResult result : results) {
-            announceIndependenceWarResolution(result.getOrganization(), result);
-        }
-
-        return results;
-    }
-
     public String findMilitaryJoinConflict(WDEorg org, String nationName, NationManager nationManager) {
         if (org == null || nationName == null || !isMilitaryAlliance(org)) {
             return null;
@@ -1635,19 +1698,43 @@ public class OrgManager {
         MilitaryWarResult result = new MilitaryWarResult();
         if (attackerNationName == null || defenderNationName == null || nationManager == null
                 || attackerNationName.equalsIgnoreCase(defenderNationName)) {
+            result.fail("war_declaration_blocked");
             return result;
         }
-        if (isNationNeutral(attackerNationName) || isNationNeutral(defenderNationName)) return result;
+        if (isNationNeutral(attackerNationName)) {
+            result.fail("org_neutral_war_forbidden");
+            return result;
+        }
+        if (isNationNeutral(defenderNationName)) {
+            result.fail("diplomacy_target_nation_peace_protected", defenderNationName);
+            return result;
+        }
 
         List<WDEorg> attackerAlliances = getMilitaryAlliancesByNation(attackerNationName);
         List<WDEorg> defenderAlliances = getMilitaryAlliancesByNation(defenderNationName);
-        if (attackerAlliances.stream().anyMatch(a -> a.hasMemberNation(defenderNationName))) return result;
-        if (hasActiveWarBetween(attackerNationName, defenderNationName)) return result;
-        if (!validWarReason(reason, defenderNationName)) return result;
-        if (nationManager.hasActiveWarTruce(attackerNationName, defenderNationName)) return result;
-        for (String a : collectWarSide(attackerNationName, attackerAlliances)) {
-            for (String d : collectWarSide(defenderNationName, defenderAlliances)) {
-                if (!a.equalsIgnoreCase(d) && nationManager.hasActiveWarTruce(a, d)) return result;
+        if (attackerAlliances.stream().anyMatch(a -> a.hasMemberNation(defenderNationName))) {
+            result.fail("war_target_same_military_alliance", defenderNationName);
+            return result;
+        }
+        if (hasActiveWarBetween(attackerNationName, defenderNationName)) {
+            result.fail("org_war_vote_already_active", defenderNationName);
+            return result;
+        }
+        String reasonError = warReasonFailure(reason, attackerNationName, defenderNationName);
+        if (reasonError != null) {
+            result.fail(reasonError);
+            return result;
+        }
+        if (nationManager.hasActiveWarTruce(attackerNationName, defenderNationName)) {
+            result.fail("org_war_vote_target_truce", defenderNationName);
+            return result;
+        }
+        for (String a : declarationSide(attackerNationName, attackerAlliances, reason, true, attackerNationName)) {
+            for (String d : declarationSide(defenderNationName, defenderAlliances, reason, false, attackerNationName)) {
+                if (!a.equalsIgnoreCase(d) && nationManager.hasActiveWarTruce(a, d)) {
+                    result.fail("org_war_vote_target_truce", defenderNationName);
+                    return result;
+                }
             }
         }
 
@@ -1666,12 +1753,18 @@ public class OrgManager {
             attackerAlliances = getMilitaryAlliancesByNation(attackerNationName);
         }
 
-        Set<String> attackerSide = collectWarSide(attackerNationName, attackerAlliances);
-        Set<String> defenderSide = collectWarSide(defenderNationName, defenderAlliances);
+        Set<String> attackerSide = declarationSide(attackerNationName, attackerAlliances, reason, true, attackerNationName);
+        Set<String> defenderSide = declarationSide(defenderNationName, defenderAlliances, reason, false, attackerNationName);
         defenderSide.removeAll(attackerSide);
-        if (defenderSide.isEmpty() || !defenderSide.contains(defenderNationName)) return result;
+        if (defenderSide.isEmpty() || !defenderSide.contains(defenderNationName)) {
+            result.fail("war_target_same_military_alliance", defenderNationName);
+            return result;
+        }
         for (String attacker : attackerSide) for (String defender : defenderSide) {
-            if (nationManager.hasActiveWarTruce(attacker, defender)) return result;
+            if (nationManager.hasActiveWarTruce(attacker, defender)) {
+                result.fail("org_war_vote_target_truce", defenderNationName);
+                return result;
+            }
         }
 
         result.hostilePairsApplied = attackerSide.size() * defenderSide.size();
@@ -1686,6 +1779,47 @@ public class OrgManager {
         recordMilitaryWarState(attackerAlliances, warState);
         broadcastMilitaryWarStarted(warState);
 
+        return result;
+    }
+
+    private Set<String> declarationSide(String nation, List<WDEorg> alliances, WarReason reason,
+                                        boolean attacker, String rebel) {
+        if (reason != WarReason.INDEPENDENCE) return collectWarSide(nation, alliances);
+        if (attacker) return new LinkedHashSet<>(Set.of(rebel));
+        Set<String> side = collectWarSide(nation, alliances);
+        side.removeIf(member -> member.equalsIgnoreCase(rebel));
+        return side;
+    }
+
+    public MilitaryWarResult declareTownIndependence(Town town, String target, NationManager nations) {
+        MilitaryWarResult result = new MilitaryWarResult();
+        var engine = (com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin;
+        if (!engine.isRegularTownWarParticipationAllowed()) {
+            result.fail("war_town_regular_disabled"); return result;
+        }
+        String actor = town == null ? null : "town:" + town.getName();
+        String error = warReasonFailure(WarReason.INDEPENDENCE, actor, target);
+        if (error != null) { result.fail(error); return result; }
+        if (town.isNeutral() || isNationNeutral(target)) {
+            result.fail("org_neutral_war_forbidden"); return result;
+        }
+        if (hasActiveWarBetween(actor, target)) {
+            result.fail("org_war_vote_already_active", target); return result;
+        }
+        if (nations.hasActiveWarTruce(actor, target)) {
+            result.fail("org_war_vote_target_truce", target); return result;
+        }
+        Set<String> defenders = collectWarSide(target, getMilitaryAlliancesByNation(target));
+        for (String defender : defenders) {
+            if (nations.hasActiveWarTruce(actor, defender)) {
+                result.fail("org_war_vote_target_truce", defender); return result;
+            }
+        }
+        MilitaryWarState war = new MilitaryWarState(actor, target, Set.of(actor), defenders, System.currentTimeMillis());
+        war.reason = WarReason.INDEPENDENCE;
+        recordMilitaryWarState(List.of(), war);
+        broadcastMilitaryWarStarted(war);
+        result.hostilePairsApplied = defenders.size();
         return result;
     }
 
@@ -1742,7 +1876,6 @@ public class OrgManager {
             public void run() {
                 Map<String, Map<String, int[]>> census = buildOccupationCensus();
                 processRegularWarCycles(census);
-                processIndependenceWarCycles(census);
             }
         }.runTaskTimer(plugin, getIndependenceWarCycleTicks(), getIndependenceWarCycleTicks());
     }
@@ -2099,29 +2232,82 @@ public class OrgManager {
         manager.saveNations();
     }
 
-    public boolean startTownWar(Town attacker, Town defender, WarReason reason) {
+    public TownWarStartResult startTownWarDetailed(Town attacker, Town defender, WarReason reason) {
         var engine = (com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin;
         if (!engine.isRegularTownWarParticipationAllowed() || attacker == null || defender == null
-                || attacker == defender || attacker.isNeutral() || defender.isNeutral()
-                || reason == null || reason == WarReason.INDEPENDENCE || reason == WarReason.DESTROY_THREAT) return false;
+                || attacker == defender || reason == null || reason == WarReason.INDEPENDENCE
+                || reason == WarReason.DESTROY_THREAT) {
+            if (!engine.isRegularTownWarParticipationAllowed()) {
+                return TownWarStartResult.failed("war_town_regular_disabled");
+            }
+            if (attacker == null || defender == null) {
+                return TownWarStartResult.failed("town_not_found_generic");
+            }
+            return TownWarStartResult.failed("war_reason_invalid");
+        }
+        if (attacker.isNeutral() || defender.isNeutral()) {
+            return TownWarStartResult.failed("war_town_neutral_blocked");
+        }
+        var aNation = attacker.getNationOrNull();
+        var dNation = defender.getNationOrNull();
+        String reasonError = warReasonFailure(reason, aNation == null ? null : aNation.getName(),
+                dNation == null ? null : dNation.getName());
+        if (reasonError != null) return TownWarStartResult.failed(reasonError);
         String a = "town:" + attacker.getName(), d = "town:" + defender.getName();
         if (warLedger.townTruces.get(townTruceKey(a, d)) instanceof Map<?, ?> truce) {
             Map<String, Object> entry = new LinkedHashMap<>();
             truce.forEach((key, value) -> entry.put(String.valueOf(key), value));
-            if (engine.getWarTruceClock().isActive(entry)) return false;
+            if (engine.getWarTruceClock().isActive(entry)) {
+                return TownWarStartResult.failed("war_town_target_truce", defender.getName());
+            }
         }
-        if (attacker.getNationOrNull() != null && attacker.getNationOrNull() == defender.getNationOrNull()) return false;
-        if (getActiveMilitaryWars(null).stream().anyMatch(w -> w.containsOpposingNations(a, d))) return false;
+        if (attacker.getNationOrNull() != null && attacker.getNationOrNull() == defender.getNationOrNull()) {
+            return TownWarStartResult.failed("war_town_same_nation");
+        }
+        if (getActiveMilitaryWars(null).stream().anyMatch(w -> w.containsOpposingNations(a, d))) {
+            return TownWarStartResult.failed("war_town_already_active", defender.getName());
+        }
         MilitaryWarState war = new MilitaryWarState(a, d, Set.of(a), Set.of(d), System.currentTimeMillis());
         war.reason = reason;
         recordMilitaryWarState(List.of(), war);
         broadcastMilitaryWarStarted(war);
-        return true;
+        return TownWarStartResult.success();
+    }
+
+    public boolean startTownWar(Town attacker, Town defender, WarReason reason) {
+        return startTownWarDetailed(attacker, defender, reason).isStarted();
     }
 
     public void recordTownWarKill(Player killer, Player victim) {
         Town a = TownyAPI.getInstance().getTown(killer), d = TownyAPI.getInstance().getTown(victim);
         if (a != null && d != null) recordMilitaryWarKill("town:" + a.getName(), "town:" + d.getName());
+    }
+
+    public void recordUnifiedWarKill(Player killer, Player victim) {
+        Town a = TownyAPI.getInstance().getTown(killer), d = TownyAPI.getInstance().getTown(victim);
+        if (a == null || d == null || a.isNeutral() || d.isNeutral()) return;
+        double points = getMilitaryWarKillPoints();
+        for (MilitaryWarState war : getActiveMilitaryWars(null)) {
+            String killerId = participantIdentity(war, a);
+            String victimId = participantIdentity(war, d);
+            if (killerId == null || victimId == null || !war.containsOpposingNations(killerId, victimId)) continue;
+            if (war.isAttackerNation(killerId)) {
+                war.attackerScore += points;
+                war.attackerKills.merge(victimId, points, Double::sum);
+            } else {
+                war.defenderScore += points;
+                war.defenderKills.merge(victimId, points, Double::sum);
+            }
+            warLedger.wars.put(war.getWarKey(), war.toMap());
+        }
+        saveOrganizations();
+    }
+
+    private String participantIdentity(MilitaryWarState war, Town town) {
+        String identity = "town:" + town.getName();
+        if (war.isAttackerNation(identity) || war.isDefenderNation(identity)) return identity;
+        String nation = town.getNationOrNull() == null ? null : town.getNationOrNull().getName();
+        return war.isAttackerNation(nation) || war.isDefenderNation(nation) ? nation : null;
     }
 
     public boolean isTownInActiveWar(String name) {
@@ -2146,17 +2332,9 @@ public class OrgManager {
         return true;
     }
 
-    private boolean isIndependenceWarEnabled() {
-        return getOrganizationConfiguration().getBoolean("sovereignEmpire.independenceWar.enabled", true);
-    }
-
     private long getIndependenceWarCycleTicks() {
         long seconds = Math.max(1L, Math.min(86400L, getWarConfiguration().getLong("scoring.cycleSeconds", 300L)));
         return seconds * 20L;
-    }
-
-    private int getIndependenceWarMaxCycles() {
-        return Math.max(1, getOrganizationConfiguration().getInt("sovereignEmpire.independenceWar.maxCycles", 12));
     }
 
     private double getRebelKillPoints() {
@@ -2165,10 +2343,6 @@ public class OrgManager {
 
     private double getEmpireKillPoints() {
         return getMilitaryWarKillPoints();
-    }
-
-    private int getIndependenceWarSuccessLead() {
-        return Math.max(0, getOrganizationConfiguration().getInt("sovereignEmpire.independenceWar.successLead", 100));
     }
 
     private long getSovereignWarParticipationCheckTicks() {
@@ -2289,15 +2463,8 @@ public class OrgManager {
 
     public boolean hasActiveIndependenceWarBetween(String firstNation, String secondNation) {
         if (firstNation == null || secondNation == null || firstNation.equalsIgnoreCase(secondNation)) return false;
-        for (WDEorg org : getAllOrganizations()) {
-            for (IndependenceWarState war : getActiveIndependenceWars(org)) {
-                if (war.getRebelNationName().equalsIgnoreCase(firstNation) && org.hasMemberNation(secondNation)
-                        || war.getRebelNationName().equalsIgnoreCase(secondNation) && org.hasMemberNation(firstNation)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return getActiveMilitaryWars(null).stream().anyMatch(war -> war.reason == WarReason.INDEPENDENCE
+                && war.containsOpposingNations(firstNation, secondNation));
     }
 
     public List<String> enforceNeutralNation(String nationName) {
@@ -2595,20 +2762,6 @@ public class OrgManager {
             }
         }
 
-        for (IndependenceWarState warState : getActiveIndependenceWars(org)) {
-            String rebelNation = warState.getRebelNationName();
-            Set<String> rebelSide = new LinkedHashSet<>();
-            rebelSide.add(rebelNation);
-            Set<String> empireSide = new LinkedHashSet<>(org.getMemberNationNames());
-            empireSide.removeIf(existing -> existing != null && existing.equalsIgnoreCase(rebelNation));
-            if (rebelSide.contains(actorNationName) && empireSide.contains(targetNationName)) {
-                return WarContext.independence(org, warState, rebelSide, empireSide);
-            }
-            if (empireSide.contains(actorNationName) && rebelSide.contains(targetNationName)) {
-                return WarContext.independence(org, warState, empireSide, rebelSide);
-            }
-        }
-
         return null;
     }
 
@@ -2738,6 +2891,7 @@ public class OrgManager {
             case LOOT_CAPITAL -> Math.max(0, config.getInt("peaceTreaty.clauses.lootCapitalPoints", 20));
             case TRIBUTE -> Math.max(0, config.getInt("peaceTreaty.clauses.tributePoints", 25));
             case ALLOW_INDEPENDENCE -> Math.max(0, config.getInt("peaceTreaty.clauses.allowIndependencePoints", 40));
+            case FORCE_VASSALIZE -> Math.max(0, config.getInt("peaceTreaty.clauses.forceVassalizePoints", 60));
         };
     }
 
@@ -2816,23 +2970,6 @@ public class OrgManager {
         return 0D;
     }
 
-    private boolean shouldForceAcceptIndependenceTreaty(WarContext context,
-                                                        PeaceTreatyProposalState proposal,
-                                                        double scoreDifference) {
-        return context != null
-                && proposal != null
-                && context.getWarType() == WarContext.WarType.SOVEREIGN_INDEPENDENCE
-                && isAllowIndependenceOnlyTreaty(proposal.getClauses())
-                && isIndependenceBeneficiaryRebel(context, proposal)
-                && scoreDifference >= proposal.getTotalPoints();
-    }
-
-    private boolean isAllowIndependenceOnlyTreaty(List<PeaceTreatyClauseState> clauses) {
-        return clauses != null
-                && clauses.size() == 1
-                && clauses.getFirst().getType() == PeaceTreatyClauseState.ClauseType.ALLOW_INDEPENDENCE;
-    }
-
     private boolean hasAllowIndependenceClause(List<PeaceTreatyClauseState> clauses) {
         if (clauses == null) {
             return false;
@@ -2843,16 +2980,6 @@ public class OrgManager {
             }
         }
         return false;
-    }
-
-    private boolean isIndependenceBeneficiaryRebel(WarContext context, PeaceTreatyProposalState proposal) {
-        if (context == null || proposal == null || context.getIndependenceWarState() == null) {
-            return false;
-        }
-        String beneficiaryNationName = proposal.getProposalType() == PeaceTreatyProposalState.ProposalType.DEMAND
-                ? proposal.getProposerNationName()
-                : proposal.getTargetNationName();
-        return context.getIndependenceWarState().getRebelNationName().equalsIgnoreCase(beneficiaryNationName);
     }
 
     private String validatePeaceTreatyClauses(WarContext context,
@@ -2869,20 +2996,32 @@ public class OrgManager {
                 ? targetNationName
                 : proposerNationName;
 
+        if (proposerNationName.startsWith("town:") || targetNationName.startsWith("town:")) {
+            MilitaryWarState war = context.getMilitaryWarState();
+            for (PeaceTreatyClauseState clause : clauses) {
+                if (clause.getType() != PeaceTreatyClauseState.ClauseType.ALLOW_INDEPENDENCE) {
+                    return "org_peace_treaty_invalid_clause";
+                }
+                if (clause.getType() == PeaceTreatyClauseState.ClauseType.ALLOW_INDEPENDENCE
+                        && (war == null || war.reason != WarReason.INDEPENDENCE
+                        || !war.getAttackerNationName().equalsIgnoreCase(beneficiaryNationName)
+                        || warReasonFailure(WarReason.INDEPENDENCE, beneficiaryNationName, concedingNationName) != null)) {
+                    return "org_peace_treaty_allow_independence_invalid";
+                }
+            }
+            return null;
+        }
         WDEnation beneficiaryNation = nationManager.getNation(beneficiaryNationName);
         WDEnation concedingNation = nationManager.getNation(concedingNationName);
         if (beneficiaryNation == null || concedingNation == null) {
             return "nation_not_found";
         }
 
-        boolean independenceWar = context.getWarType() == WarContext.WarType.SOVEREIGN_INDEPENDENCE;
+        boolean independenceWar = context.getMilitaryWarState() != null
+                && context.getMilitaryWarState().reason == WarReason.INDEPENDENCE;
         boolean rebelBeneficiary = independenceWar
-                && context.getIndependenceWarState() != null
-                && context.getIndependenceWarState().getRebelNationName().equalsIgnoreCase(beneficiaryNationName);
+                && context.getMilitaryWarState().getAttackerNationName().equalsIgnoreCase(beneficiaryNationName);
         boolean hasAllowIndependence = hasAllowIndependenceClause(clauses);
-        if (independenceWar && rebelBeneficiary && clauses.stream().anyMatch(clause -> clause.getType() != PeaceTreatyClauseState.ClauseType.ALLOW_INDEPENDENCE) && !hasAllowIndependence) {
-            return "org_peace_treaty_independence_requires_allow";
-        }
 
         int maxReparationPercent = Math.max(1, getWarConfiguration().getInt("peaceTreaty.clauses.reparations.maxPercent", 20));
         for (PeaceTreatyClauseState clause : clauses) {
@@ -2902,9 +3041,13 @@ public class OrgManager {
                 case TRANSFER_TOWN -> {
                     String townName = clause.getString("town");
                     String destinationNationName = clause.getString("destinationNation");
-                    WDEtown town = townManager.getTown(townName);
-                    if (town == null || !town.getNationName().equalsIgnoreCase(concedingNationName)) {
+                    Town town = TownyAPI.getInstance().getTown(townName);
+                    if (town == null || town.getNationOrNull() == null
+                            || !town.getNationOrNull().getName().equalsIgnoreCase(concedingNationName)) {
                         return "org_peace_treaty_transfer_town_invalid";
+                    }
+                    if (nationManager.getTownyNation(destinationNationName) == null) {
+                        return "org_peace_treaty_transfer_destination_invalid";
                     }
                     if (!context.getActorSideNations().contains(destinationNationName) && !context.getCounterpartySideNations().contains(destinationNationName)) {
                         return "org_peace_treaty_transfer_destination_invalid";
@@ -2945,8 +3088,17 @@ public class OrgManager {
                     }
                 }
                 case ALLOW_INDEPENDENCE -> {
-                    if (!independenceWar || !rebelBeneficiary) {
+                    if (!independenceWar || !rebelBeneficiary
+                            || warReasonFailure(WarReason.INDEPENDENCE, beneficiaryNationName, concedingNationName) != null) {
                         return "org_peace_treaty_allow_independence_invalid";
+                    }
+                }
+                case FORCE_VASSALIZE -> {
+                    if (!canForceVassalize(beneficiaryNationName, concedingNationName, nationManager)
+                            || willPeaceTreatyDissolveNation(proposerNationName, targetNationName,
+                                    proposalType, clauses, nationManager)
+                            || hasAllowIndependence) {
+                        return "org_peace_treaty_force_vassalize_invalid";
                     }
                 }
                 case TRIBUTE, UNCONDITIONAL_PASSAGE, HUMILIATE -> {
@@ -2956,7 +3108,7 @@ public class OrgManager {
         return null;
     }
 
-    private void executePeaceTreaty(WarContext context, PeaceTreatyProposalState proposal, NationManager nationManager) {
+    private boolean executePeaceTreaty(WarContext context, PeaceTreatyProposalState proposal, NationManager nationManager) {
         String beneficiaryNationName = proposal.getProposalType() == PeaceTreatyProposalState.ProposalType.DEMAND
                 ? proposal.getProposerNationName()
                 : proposal.getTargetNationName();
@@ -2968,23 +3120,32 @@ public class OrgManager {
         Nation concedingNation = nationManager.getTownyNation(concedingNationName);
         WDEnation beneficiaryNationData = nationManager.getNation(beneficiaryNationName);
         WDEnation concedingNationData = nationManager.getNation(concedingNationName);
+        if (proposal.getProposerNationName().startsWith("town:") || proposal.getTargetNationName().startsWith("town:")) {
+            if (proposal.getClauses().stream().anyMatch(clause -> clause.getType() == PeaceTreatyClauseState.ClauseType.ALLOW_INDEPENDENCE)) {
+                Town town = TownyAPI.getInstance().getTown(beneficiaryNationName.substring(5));
+                if (town == null) return false;
+                town.removeNation();
+                if (town.getNationOrNull() != null) return false;
+                town.save();
+                townManager.updateTownNation(town.getName(), null);
+            }
+            endWarByTreaty(context, proposal, nationManager, false);
+            return true;
+        }
         if (beneficiaryNation == null || concedingNation == null || beneficiaryNationData == null || concedingNationData == null) {
-            return;
+            return false;
         }
 
         boolean grantsIndependence = false;
         for (PeaceTreatyClauseState clause : proposal.getClauses()) {
+            if (clause.getType() == PeaceTreatyClauseState.ClauseType.TRANSFER_TOWN) continue;
             switch (clause.getType()) {
                 case REPARATIONS -> applyReparationsClause(concedingNation, beneficiaryNation, clause.getInt("percent"));
                 case FORCE_CONVERSION -> {
                     concedingNationData.setReligionName(beneficiaryNationData.getReligionName());
                     concedingNationData.setReligionChosen(true);
                 }
-                case TRANSFER_TOWN -> {
-                    String townName = clause.getString("town");
-                    String destinationNationName = clause.getString("destinationNation");
-                    townManager.transferTownToNation(townName, destinationNationName);
-                }
+                case TRANSFER_TOWN -> { }
                 case DISSOLVE_ALLIANCE -> dissolveMilitaryAlliancesByChairman(concedingNationName);
                 case EXPEL_FROM_ALLIANCE -> expelNationFromAlliances(concedingNationName);
                 case LIBERATE_SUBJECT -> {
@@ -2999,11 +3160,39 @@ public class OrgManager {
                 case LOOT_CAPITAL -> applyLootCapitalClause(concedingNationName, beneficiaryNation, nationManager);
                 case TRIBUTE -> addPeaceTreatyTributeObligation(concedingNationData, beneficiaryNationName);
                 case ALLOW_INDEPENDENCE -> grantsIndependence = true;
+                case FORCE_VASSALIZE -> { }
             }
         }
 
         nationManager.saveNations();
+        // 先处理原首都条款，割让成功后再结束战争，不将失败割让报告为和约生效。
+        for (PeaceTreatyClauseState clause : proposal.getClauses()) {
+            if (clause.getType() != PeaceTreatyClauseState.ClauseType.TRANSFER_TOWN) continue;
+            String townName = clause.getString("town");
+            if (!townManager.transferTownToNation(townName, clause.getString("destinationNation"))) {
+                plugin.getLogger().severe("Peace treaty town transfer failed: " + townName);
+                return false;
+            }
+        }
         endWarByTreaty(context, proposal, nationManager, grantsIndependence);
+        if (grantsIndependence) {
+            WDEorg empire = getSovereignEmpireByNation(beneficiaryNationName);
+            if (isSovereignSubjectNation(empire, beneficiaryNationName)) removeMemberNationAndAdjust(empire, beneficiaryNationName);
+        }
+        if (proposal.getClauses().stream().anyMatch(clause ->
+                clause.getType() == PeaceTreatyClauseState.ClauseType.FORCE_VASSALIZE)
+                && !forceVassalize(beneficiaryNationName, concedingNationName, nationManager)) {
+            plugin.getLogger().severe("Peace treaty vassalization failed: " + concedingNationName);
+            return false;
+        }
+        if (nationManager.getTownyNation(concedingNationName) == null) {
+            for (WDEorg organization : getAllOrganizations()) {
+                if (organization.hasMemberNation(concedingNationName)) {
+                    removeMemberNationAndAdjust(organization, concedingNationName);
+                }
+            }
+        }
+        return true;
     }
 
     private void endWarByTreaty(WarContext context, PeaceTreatyProposalState proposal, NationManager nationManager, boolean grantsIndependence) {
@@ -3027,26 +3216,6 @@ public class OrgManager {
             return;
         }
 
-        if (context.getWarType() == WarContext.WarType.SOVEREIGN_INDEPENDENCE) {
-            IndependenceWarState state = context.getIndependenceWarState();
-            if (state == null) {
-                return;
-            }
-            Map<String, IndependenceWarState> wars = readIndependenceWars(context.getOrganization());
-            String key = state == null ? null : findIndependenceWarKey(wars, state.getRebelNationName());
-            if (grantsIndependence) {
-                resolveIndependenceWar(context.getOrganization(), wars, state, IndependenceWarOutcome.SUCCESS);
-            } else if (key != null) {
-                wars.remove(key);
-                if (wars.isEmpty()) {
-                    clearIndependenceWars(context.getOrganization());
-                } else {
-                    writeIndependenceWars(context.getOrganization(), wars);
-                }
-            }
-            createWarTrucesBetweenSides(context.getActorSideNations(), context.getCounterpartySideNations(), proposal.getTotalPoints(), nationManager);
-            saveOrganizations();
-        }
     }
 
     private void clearMilitaryWarAcrossOrganizations(String warKey) {
@@ -3188,6 +3357,31 @@ public class OrgManager {
             }
         }
         return null;
+    }
+
+    private boolean canForceVassalize(String beneficiary, String conceding, NationManager nations) {
+        WDEorg empire = getOrganizationByChairmanSovereignEmpire(beneficiary);
+        if (empire == null || beneficiary.equalsIgnoreCase(conceding) || empire.hasMemberNation(conceding)
+                || nations.getTownyNation(conceding) == null
+                || getOrganizationByChairmanSovereignEmpire(conceding) != null) return false;
+        return true;
+    }
+
+    private boolean forceVassalize(String beneficiary, String conceding, NationManager nations) {
+        if (!canForceVassalize(beneficiary, conceding, nations)) return false;
+        WDEorg empire = getOrganizationByChairmanSovereignEmpire(beneficiary);
+        for (WDEorg previous : getAllOrganizations()) {
+            if (previous.isSovereignEmpire() && previous.hasMemberNation(conceding)) {
+                removeMemberNationAndAdjust(previous, conceding);
+            }
+        }
+        if (!addMemberNation(empire, conceding)) return false;
+        Map<String, SovereignSubjectState> states = readSovereignSubjectStates(empire);
+        states.put(conceding, new SovereignSubjectState(SovereignSubjectState.AutonomyTier.PUPPET,
+                getDefaultSubjectSuppression(), false, false));
+        writeSovereignSubjectStates(empire, states);
+        saveOrganizations();
+        return true;
     }
 
     private void addPeaceTreatyTributeObligation(WDEnation concedingNation, String beneficiaryNationName) {
@@ -3378,6 +3572,14 @@ public class OrgManager {
     }
 
     private MilitaryWarVoteResult resolveMilitaryWarVote(WDEorg org, MilitaryWarProposalState proposal, Map<String, MilitaryWarProposalState> proposals, NationManager nationManager) {
+        String reasonError = warReasonFailure(proposal.reason, proposal.getProposerNationName(), proposal.getTargetNationName());
+        if (reasonError != null) {
+            String key = findMilitaryWarProposalKey(proposals, proposal.getTargetNationName());
+            if (key != null) proposals.remove(key);
+            writeMilitaryWarProposals(org, proposals);
+            saveOrganizations();
+            return MilitaryWarVoteResult.invalid(reasonError);
+        }
         if (isNationNeutral(proposal.getProposerNationName()) || isNationNeutral(proposal.getTargetNationName())) {
             String key = findMilitaryWarProposalKey(proposals, proposal.getTargetNationName());
             if (key != null) proposals.remove(key);
@@ -3432,7 +3634,7 @@ public class OrgManager {
             }
             MilitaryWarResult warResult = handleMilitaryAllianceWar(proposal.getProposerNationName(), proposal.getTargetNationName(),
                     nationManager, proposal.reason);
-            if (warResult.getHostilePairsApplied() == 0) return MilitaryWarVoteResult.invalid();
+            if (warResult.getHostilePairsApplied() == 0) return MilitaryWarVoteResult.invalid(warResult.getFailureMessageKey());
             nationManager.saveNations();
             saveOrganizations();
             return MilitaryWarVoteResult.approved(warResult, proposal);
@@ -3504,16 +3706,6 @@ public class OrgManager {
             }
         }
         return null;
-    }
-
-    private IndependenceWarOutcome determineTimedWarOutcome(IndependenceWarState state) {
-        if (state.isChairmanSurrendered() || state.getRebelScore() - state.getEmpireScore() >= getIndependenceWarSuccessLead()) {
-            return IndependenceWarOutcome.SUCCESS;
-        }
-        if (state.getRebelScore() < state.getEmpireScore()) {
-            return IndependenceWarOutcome.FAILURE;
-        }
-        return IndependenceWarOutcome.STALEMATE;
     }
 
     private IndependenceWarResolutionResult resolveIndependenceWar(WDEorg org, Map<String, IndependenceWarState> wars, IndependenceWarState state, IndependenceWarOutcome outcome) {
@@ -3590,7 +3782,7 @@ public class OrgManager {
         int defenderNations = Math.max(1, war.defenderNationNames.size());
         int attackerNations = Math.max(1, war.attackerNationNames.size());
         for (String owner : war.defenderNationNames) {
-            for (var town : getNationOccupationWeights(owner).entrySet()) {
+            for (var town : occupationWeightsForSide(owner, war.attackerNationNames).entrySet()) {
                 double share = occupancyShare(town.getKey(), war, census);
                 double attackPoints = town.getValue() * share;
                 double defendPoints = town.getValue() * (1D - share);
@@ -3601,9 +3793,9 @@ public class OrgManager {
             }
         }
         for (String owner : war.attackerNationNames) {
-            for (var town : getNationOccupationWeights(owner).entrySet()) {
+            for (var town : occupationWeightsForSide(owner, war.defenderNationNames).entrySet()) {
                 // On attacker territory, an empty town earns neither side points.
-                if (countOccupiers(town.getKey(), war.defenderNationNames, census, true) == 0) continue;
+                if (countOccupiers(town.getKey(), war.defenderNationNames, war.attackerNationNames, census, true) == 0) continue;
                 double defendPoints = town.getValue() * (1D - occupancyShare(town.getKey(), war, census));
                 war.defenderOccupation.merge(owner, defendPoints, Double::sum);
                 war.defenderScore += defendPoints / attackerNations;
@@ -3611,9 +3803,23 @@ public class OrgManager {
         }
     }
 
+    private Map<String, Double> occupationWeightsForSide(String owner, Set<String> opposing) {
+        if (owner.startsWith("town:") || opposing.stream().noneMatch(id -> id.startsWith("town:"))) {
+            return getNationOccupationWeights(owner);
+        }
+        Nation nation = resolveTownyNation(owner);
+        if (nation == null) return Map.of();
+        Map<String, Integer> population = new LinkedHashMap<>();
+        for (Town town : nation.getTowns()) {
+            if (!opposing.contains("town:" + town.getName())) population.put(town.getName(), town.getNumResidents());
+        }
+        return com.thatguycy.worlddynamicsengine.manager.war.WarOccupation.weights(population,
+                nation.getCapital() == null ? null : nation.getCapital().getName());
+    }
+
     private double occupancyShare(String town, MilitaryWarState war, Map<String, Map<String, int[]>> census) {
-        return WarOccupation.attackerShare(countOccupiers(town, war.attackerNationNames, census, false),
-                countOccupiers(town, war.defenderNationNames, census, true));
+        return WarOccupation.attackerShare(countOccupiers(town, war.attackerNationNames, war.defenderNationNames, census, false),
+                countOccupiers(town, war.defenderNationNames, war.attackerNationNames, census, true));
     }
 
     private int countOccupiers(String town, Set<String> side, Map<String, Map<String, int[]>> census, boolean defenders) {
@@ -3624,11 +3830,27 @@ public class OrgManager {
         return total;
     }
 
+    private int countOccupiers(String town, Set<String> side, Set<String> opposing,
+                               Map<String, Map<String, int[]>> census, boolean defenders) {
+        int total = countOccupiers(town, side, census, defenders);
+        for (String identity : opposing) {
+            if (!identity.startsWith("town:")) continue;
+            Town rebelTown = TownyAPI.getInstance().getTown(identity.substring(5));
+            if (rebelTown != null && rebelTown.getNationOrNull() != null
+                    && side.contains(rebelTown.getNationOrNull().getName())) {
+                int[] count = census.getOrDefault(town, Map.of()).get(identity);
+                if (count != null) total -= count[defenders ? 1 : 0];
+            }
+        }
+        return Math.max(0, total);
+    }
+
     public boolean isWarDefender(Player player) {
         Town home = TownyAPI.getInstance().getTown(player);
         if (home == null) return false;
         String nation = home.getNationOrNull() == null ? null : home.getNationOrNull().getName();
         for (MilitaryWarState war : readActiveMilitaryWars(null).values()) {
+            if (war.isAttackerNation("town:" + home.getName())) continue;
             if (war.isDefenderNation(nation) || war.isDefenderNation("town:" + home.getName())) return true;
         }
         for (WDEorg org : getAllOrganizations()) for (IndependenceWarState war : getActiveIndependenceWars(org)) {
@@ -3638,10 +3860,61 @@ public class OrgManager {
     }
 
     public boolean validWarReason(WarReason reason, String target) {
-        if (reason == null || reason == WarReason.INDEPENDENCE) return false;
+        if (reason == null) return false;
         return reason != WarReason.DESTROY_THREAT || getAllOrganizations().stream()
                 .anyMatch(org -> (isMilitaryAlliance(org) || org.isSovereignEmpire())
-                        && (org.hasMemberNation(target) || org.getOrganizationName().equals(target)));
+                        && org.getChairmanNationName() != null && org.getChairmanNationName().equalsIgnoreCase(target));
+    }
+
+    public String warReasonFailure(WarReason reason, String actor, String target) {
+        if (reason == WarReason.DESTROY_THREAT && !validWarReason(reason, target)) {
+            return "war_reason_requires_threat_chairman";
+        }
+        if (!validWarReason(reason, target)) return "war_reason_invalid";
+        var engine = (com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin;
+        NationManager nations = engine.getNationManager();
+        WDEnation attacker = nations.getNation(actor), defender = nations.getNation(target);
+        return switch (reason) {
+            case INDEPENDENCE -> {
+                if (actor != null && actor.startsWith("town:")) {
+                    Town town = TownyAPI.getInstance().getTown(actor.substring(5));
+                    yield town != null && town.getNationOrNull() != null
+                            && town.getNationOrNull().getName().equalsIgnoreCase(target)
+                            ? null : "war_reason_independence_invalid";
+                }
+                WDEorg empire = getSovereignEmpireByNation(actor);
+                yield isSovereignSubjectNation(empire, actor) && empire.getChairmanNationName().equalsIgnoreCase(target)
+                        ? null : "war_reason_independence_invalid";
+            }
+            case HOLY_WAR -> {
+                String ownIdeology = attacker == null ? null : attacker.getReligionName();
+                String enemyIdeology = defender == null ? null : defender.getReligionName();
+                boolean eligible = ownIdeology != null && !ownIdeology.isBlank() && !"None".equalsIgnoreCase(ownIdeology)
+                        && enemyIdeology != null && !enemyIdeology.isBlank() && !"None".equalsIgnoreCase(enemyIdeology)
+                        && !ownIdeology.equalsIgnoreCase(enemyIdeology);
+                yield eligible ? null : "war_reason_requires_different_ideologies";
+            }
+            case EXPORT_REVOLUTION -> attacker != null && "DEMOCRACY".equalsIgnoreCase(attacker.getGovernmentType())
+                    ? null : "war_reason_requires_democracy";
+            case RECONQUEST -> {
+                Nation enemy = nations.getTownyNation(target);
+                boolean eligible = actor != null && enemy != null && enemy.getTowns().stream()
+                        .map(town -> townManager.getTown(town.getName())).filter(java.util.Objects::nonNull)
+                        .anyMatch(town -> com.thatguycy.worlddynamicsengine.manager.war.TownOwnershipHistory.qualifies(engine, town, actor));
+                yield eligible ? null : "war_reason_requires_lost_town";
+            }
+            case TRADE_CONFLICT -> isNationTradeSanctionedBy(actor, target) ? null : "war_reason_requires_trade_blockade";
+            case HUMILIATE_RIVAL -> hostileToward(attacker, defender, nations) && hostileToward(defender, attacker, nations)
+                    ? null : "war_reason_requires_mutual_hostility";
+            default -> null;
+        };
+    }
+
+    private boolean hostileToward(WDEnation actor, WDEnation target, NationManager nations) {
+        if (actor == null || target == null) return false;
+        Nation a = nations.getTownyNation(actor.getNationName()), d = nations.getTownyNation(target.getNationName());
+        return a != null && d != null && a.hasEnemy(d) || actor.getDiplomaticRelations().entrySet().stream()
+                .anyMatch(entry -> entry.getKey().equalsIgnoreCase(target.getNationName()) && "unfriendly".equalsIgnoreCase(entry.getValue()));
     }
 
     private void announceIndependenceWarResolution(WDEorg org, IndependenceWarResolutionResult result) {
@@ -3716,6 +3989,8 @@ public class OrgManager {
     }
 
     public boolean isNationInActiveIndependenceWar(String nationName) {
+        if (getActiveMilitaryWars(null).stream().anyMatch(war -> war.reason == WarReason.INDEPENDENCE
+                && (war.isAttackerNation(nationName) || war.isDefenderNation(nationName)))) return true;
         if (nationName == null) {
             return false;
         }
@@ -4170,6 +4445,7 @@ public class OrgManager {
         private final Status status;
         private final MilitaryWarProposalState proposal;
         private final MilitaryWarResult warResult;
+        private String failureMessageKey;
 
         private MilitaryWarVoteResult(Status status, MilitaryWarProposalState proposal, MilitaryWarResult warResult) {
             this.status = status;
@@ -4180,6 +4456,14 @@ public class OrgManager {
         public static MilitaryWarVoteResult invalid() {
             return new MilitaryWarVoteResult(Status.INVALID, null, null);
         }
+
+        public static MilitaryWarVoteResult invalid(String key) {
+            var result = invalid();
+            result.failureMessageKey = key;
+            return result;
+        }
+
+        public String getFailureMessageKey() { return failureMessageKey; }
 
         public static MilitaryWarVoteResult alreadyPending() {
             return new MilitaryWarVoteResult(Status.ALREADY_PENDING, null, null);
@@ -4238,6 +4522,8 @@ public class OrgManager {
         private boolean defenderAllianceInvolved;
         private int hostilePairsApplied;
         private final List<String> removedFromAttackerAlliances = new ArrayList<>();
+        private String failureMessageKey = "war_declaration_blocked";
+        private Object[] failureMessageArgs = new Object[0];
 
         public boolean isAttackerAllianceInvolved() {
             return attackerAllianceInvolved;
@@ -4255,8 +4541,57 @@ public class OrgManager {
             return removedFromAttackerAlliances;
         }
 
+        public String getFailureMessageKey() {
+            return failureMessageKey;
+        }
+
+        public Object[] getFailureMessageArgs() {
+            return failureMessageArgs;
+        }
+
+        public boolean isSuccess() {
+            return hostilePairsApplied > 0;
+        }
+
         public boolean hasAllianceEffect() {
             return attackerAllianceInvolved || defenderAllianceInvolved;
+        }
+
+        private void fail(String messageKey, Object... args) {
+            this.failureMessageKey = messageKey == null || messageKey.isBlank() ? "war_declaration_blocked" : messageKey;
+            this.failureMessageArgs = args == null ? new Object[0] : args;
+        }
+    }
+
+    public static class TownWarStartResult {
+        private final boolean started;
+        private final String failureMessageKey;
+        private final Object[] failureMessageArgs;
+
+        private TownWarStartResult(boolean started, String failureMessageKey, Object[] failureMessageArgs) {
+            this.started = started;
+            this.failureMessageKey = failureMessageKey;
+            this.failureMessageArgs = failureMessageArgs == null ? new Object[0] : failureMessageArgs;
+        }
+
+        public static TownWarStartResult success() {
+            return new TownWarStartResult(true, null, new Object[0]);
+        }
+
+        public static TownWarStartResult failed(String messageKey, Object... args) {
+            return new TownWarStartResult(false, messageKey, args);
+        }
+
+        public boolean isStarted() {
+            return started;
+        }
+
+        public String getFailureMessageKey() {
+            return failureMessageKey;
+        }
+
+        public Object[] getFailureMessageArgs() {
+            return failureMessageArgs;
         }
     }
 
@@ -4551,6 +4886,7 @@ public class OrgManager {
             HUMILIATE,
             LOOT_CAPITAL,
             TRIBUTE,
+            FORCE_VASSALIZE,
             ALLOW_INDEPENDENCE;
 
             public static ClauseType fromString(String rawValue) {
@@ -4568,6 +4904,7 @@ public class OrgManager {
                     case "humiliate", "羞辱" -> HUMILIATE;
                     case "lootcapital", "loot_capital", "劫掠首都" -> LOOT_CAPITAL;
                     case "tribute", "贡金" -> TRIBUTE;
+                    case "forcevassalize", "force_vassalize", "强制附庸" -> FORCE_VASSALIZE;
                     case "allowindependence", "allow_independence", "grantindependence", "允许独立" -> ALLOW_INDEPENDENCE;
                     default -> null;
                 };

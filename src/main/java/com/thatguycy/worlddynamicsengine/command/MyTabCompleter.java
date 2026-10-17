@@ -32,6 +32,8 @@ public class MyTabCompleter implements TabCompleter {
     }
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
+        var home = sender instanceof Player player ? com.palmergames.bukkit.towny.TownyAPI.getInstance().getTown(player) : null;
+        String actorNation = home == null || home.getNationOrNull() == null ? null : home.getNationOrNull().getName();
         List<String> onlinePlayerNames = Bukkit.getOnlinePlayers().stream()
                 .map(Player::getName)
                 .collect(Collectors.toList());
@@ -62,13 +64,26 @@ public class MyTabCompleter implements TabCompleter {
                 else if (args.length == 3) completions.addAll(Arrays.asList("nation", "town"));
                 else if (args.length == 4) {
                     if ("town".equalsIgnoreCase(args[2])) {
+                        if (actorNation != null) completions.add(actorNation);
                         completions.addAll(WorldDynamicsEngine.getInstance().getTownManager().getAllTowns().stream()
                                 .map(com.thatguycy.worlddynamicsengine.model.WDEtown::getTownName).toList());
                     } else completions.addAll(WorldDynamicsEngine.getInstance().getNationManager().getAllNations().stream()
                             .map(com.thatguycy.worlddynamicsengine.model.WDEnation::getNationName).toList());
                 } else if (args.length == 5) {
+                    var targetTown = "town".equalsIgnoreCase(args[2])
+                            ? com.palmergames.bukkit.towny.TownyAPI.getInstance().getTown(args[3]) : null;
+                    String targetNation = "town".equalsIgnoreCase(args[2])
+                            ? (targetTown == null || targetTown.getNationOrNull() == null ? null : targetTown.getNationOrNull().getName())
+                            : args[3];
                     Arrays.stream(com.thatguycy.worlddynamicsengine.model.war.WarReason.values())
-                            .filter(r -> r != com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE)
+                            .filter(r -> !("town".equalsIgnoreCase(args[2]) && targetTown == null)
+                                    || r == com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE)
+                            .filter(r -> !("town".equalsIgnoreCase(args[2]) && r == com.thatguycy.worlddynamicsengine.model.war.WarReason.DESTROY_THREAT))
+                            .filter(r -> orgManager.warReasonFailure(r,
+                                    r == com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE
+                                            && "town".equalsIgnoreCase(args[2]) && home != null ? "town:" + home.getName() : actorNation,
+                                    r == com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE
+                                            && "town".equalsIgnoreCase(args[2]) ? args[3] : targetNation) == null)
                             .map(r -> r.name().toLowerCase(java.util.Locale.ROOT)).forEach(completions::add);
                 }
             } else if (rootArg.equals("help") && args.length == 2) {
@@ -324,7 +339,7 @@ public class MyTabCompleter implements TabCompleter {
             } else if (args.length == 5 && args[0].equalsIgnoreCase("org")) {
                 if (args[1].equalsIgnoreCase("declarewar")) {
                     Arrays.stream(com.thatguycy.worlddynamicsengine.model.war.WarReason.values())
-                            .filter(r -> orgManager.validWarReason(r, args[3]))
+                            .filter(r -> orgManager.warReasonFailure(r, actorNation, args[3]) == null)
                             .map(r -> r.name().toLowerCase(java.util.Locale.ROOT)).forEach(completions::add);
                 } else if (args[1].equalsIgnoreCase("votejoin")) {
                     completions.addAll(Arrays.asList("yes", "no"));
@@ -357,6 +372,9 @@ public class MyTabCompleter implements TabCompleter {
             }
         }
 
+        if (args.length == 6 && args[0].equalsIgnoreCase("org") && args[1].equalsIgnoreCase("peacetreaty")) {
+            completions.add("forceVassalize");
+        }
         if (args.length == 1) completions.removeIf(value -> !CommandPermissions.root(sender, value));
         String partial = args.length == 0 ? "" : args[args.length - 1].toLowerCase(java.util.Locale.ROOT);
         return completions.stream().filter(value -> value.toLowerCase(java.util.Locale.ROOT).startsWith(partial)).distinct().toList();

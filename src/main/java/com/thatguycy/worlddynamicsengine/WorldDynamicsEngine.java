@@ -666,6 +666,19 @@ public class WorldDynamicsEngine extends JavaPlugin {
                 warConfig.set("peaceTreaty.clauses.allowIndependencePoints", 40);
                 warConfigChanged = true;
             }
+            if (!warConfig.contains("peaceTreaty.clauses.forceVassalizePoints")) {
+                warConfig.set("peaceTreaty.clauses.forceVassalizePoints", 60);
+                warConfigChanged = true;
+            }
+            for (var entry : java.util.Map.<String, Object>of(
+                    "reasons.reconquest.minimumDays", 7,
+                    "reasons.reconquest.clock", "REAL_TIME",
+                    "reasons.reconquest.world", "world").entrySet()) {
+                if (!warConfig.contains(entry.getKey())) {
+                    warConfig.set(entry.getKey(), entry.getValue());
+                    warConfigChanged = true;
+                }
+            }
             if (!warConfig.contains("peaceTreaty.tribute.taxRatePercent")) {
                 warConfig.set("peaceTreaty.tribute.taxRatePercent", 5.0D);
                 warConfigChanged = true;
@@ -694,6 +707,10 @@ public class WorldDynamicsEngine extends JavaPlugin {
                     organizationConfig.set(path, null);
                     saveYamlConfiguration(organizationConfig, organizationConfigFile);
                 }
+            }
+            if (organizationConfig.contains("sovereignEmpire.independenceWar")) {
+                organizationConfig.set("sovereignEmpire.independenceWar", null);
+                saveYamlConfiguration(organizationConfig, organizationConfigFile);
             }
             if (!warConfig.contains("truce.baseHours")) {
                 warConfig.set("truce.baseHours", 24L);

@@ -241,6 +241,7 @@ public class OrgCommand implements CommandExecutor {
 
         List<String> memberNationLines = new ArrayList<>();
         for (String memberNation : org.getMemberNationNames()) {
+            if (org.isSovereignEmpire() && !orgManager.isSovereignSubjectNation(org, memberNation)) continue;
             memberNationLines.add(formatMemberNationInfo(org, memberNation));
         }
         String memberLabelKey = "SOVEREIGN_EMPIRE".equalsIgnoreCase(org.getOrganizationType())
@@ -280,15 +281,13 @@ public class OrgCommand implements CommandExecutor {
             }
         }
 
-        List<OrgManager.IndependenceWarState> activeWars = orgManager.getActiveIndependenceWars(org);
+        List<OrgManager.MilitaryWarState> activeWars = orgManager.getActiveMilitaryWars(org);
         if (!activeWars.isEmpty()) {
             List<String> warLines = new ArrayList<>();
-            for (OrgManager.IndependenceWarState state : activeWars) {
-                warLines.add(msg("org_independence_war_info_entry",
-                        state.getRebelNationName(),
-                        formatWarScore(state.getRebelScore()),
-                        formatWarScore(state.getEmpireScore()),
-                        state.getElapsedCycles()));
+            for (OrgManager.MilitaryWarState state : activeWars) {
+                warLines.add(state.getAttackerNationName() + " / " + state.getDefenderNationName()
+                        + " [" + msg(state.getReason().messageKey()) + "] "
+                        + formatWarScore(state.getAttackerScore()) + " / " + formatWarScore(state.getDefenderScore()));
             }
             sender.sendMessage(ChatColor.YELLOW + msg("org_info_independence_wars") + ChatColor.WHITE + String.join(" | ", warLines));
         }
@@ -607,15 +606,7 @@ public class OrgCommand implements CommandExecutor {
                 return true;
             }
 
-            orgManager.prepareIndependenceWarHostilities(org, actorNation, nationManager);
-
-            if (!orgManager.startIndependenceWar(org, actorNation)) {
-                sender.sendMessage(ChatColor.RED + msg("org_independence_war_start_failed"));
-                return true;
-            }
-
-            sender.sendMessage(ChatColor.GREEN + msg("org_independence_war_started", actorNation, org.getOrganizationName()));
-            sender.sendMessage(ChatColor.YELLOW + msg("org_independence_war_auto_hostility_set"));
+            WorldDynamicsEngine.getInstance().getPlayerMenuManager().openWarMenu((Player) sender);
             return true;
         }
 
@@ -969,8 +960,9 @@ public class OrgCommand implements CommandExecutor {
 
         String targetNation = args[3];
         var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
-        if (!orgManager.validWarReason(reason, targetNation)) {
-            sender.sendMessage(ChatColor.RED + msg("war_reason_invalid"));
+        String reasonError = orgManager.warReasonFailure(reason, actorNation, targetNation);
+        if (reasonError != null) {
+            sender.sendMessage(ChatColor.RED + msg(reasonError));
             return true;
         }
         if (org.hasMemberNation(targetNation)) {
@@ -1030,10 +1022,15 @@ public class OrgCommand implements CommandExecutor {
         }
 
         switch (result.getStatus()) {
-            case INVALID -> sender.sendMessage(ChatColor.RED + msg("org_war_vote_invalid"));
+            case INVALID -> sender.sendMessage(ChatColor.RED + (result.getFailureMessageKey() != null
+                    ? msg(result.getFailureMessageKey()) : org.hasMemberNation(targetNation)
+                    ? msg("war_target_same_military_alliance", targetNation)
+                    : msg("org_war_vote_invalid")));
             case ALREADY_PENDING -> sender.sendMessage(ChatColor.RED + msg("org_war_vote_already_pending", targetNation));
             case NOT_FOUND -> sender.sendMessage(ChatColor.RED + msg("org_war_vote_not_found", targetNation));
-            case PEACE_PROTECTED -> sender.sendMessage(ChatColor.RED + msg("org_neutral_war_forbidden"));
+            case PEACE_PROTECTED -> sender.sendMessage(ChatColor.RED + (nationManager.isNationPeaceProtected(targetNation)
+                    ? msg("diplomacy_target_nation_peace_protected", targetNation)
+                    : msg("org_neutral_war_forbidden")));
             case ACTIVE_WAR -> sender.sendMessage(ChatColor.RED + msg("org_war_vote_already_active", targetNation));
             case TRUCE -> sender.sendMessage(ChatColor.RED + msg("org_war_vote_target_truce", targetNation));
             case PENDING -> sender.sendMessage(ChatColor.GREEN + (startedByProposal

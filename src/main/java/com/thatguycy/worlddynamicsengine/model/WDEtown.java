@@ -33,6 +33,7 @@ public class WDEtown implements ConfigurationSerializable {
     private String residentTaxType;
     private double residentTaxAmount;
     private Map<String, Boolean> conscripts;
+    private final Map<String, Object> ownershipHistory = new LinkedHashMap<>();
 
     public WDEtown(String townName, String nationName) {
         this.townName = townName;
@@ -56,6 +57,9 @@ public class WDEtown implements ConfigurationSerializable {
     }
 
     public WDEtown(Map<String, Object> map) {
+        if (map.get("ownershipHistory") instanceof Map<?, ?> history) {
+            history.forEach((key, value) -> ownershipHistory.put(String.valueOf(key), value));
+        }
         this.townName = String.valueOf(map.getOrDefault("townName", "Unknown"));
         this.nationName = String.valueOf(map.getOrDefault("nationName", "None"));
         this.religionName = String.valueOf(map.getOrDefault("religionName", "None"));
@@ -105,7 +109,12 @@ public class WDEtown implements ConfigurationSerializable {
         map.put("residentTaxType", residentTaxType);
         map.put("residentTaxAmount", residentTaxAmount);
         map.put("conscripts", conscripts);
+        map.put("ownershipHistory", new LinkedHashMap<>(ownershipHistory));
         return map;
+    }
+
+    public Map<String, Object> getOwnershipHistory() {
+        return ownershipHistory;
     }
 
     public static WDEtown deserialize(Map<String, Object> map) {

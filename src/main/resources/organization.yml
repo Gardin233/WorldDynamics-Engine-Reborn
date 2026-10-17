@@ -108,12 +108,3 @@ sovereignEmpire:
       puppet:
         amount: "12000.00"
         currency: default
-  independenceWar:
-    # 是否启用从仆国独立战争机制。
-    enabled: true
-    # 最多结算多少个周期后判定本次独立战争结果。
-    maxCycles: 12
-    # 周期、击杀分和防守方复活冻结统一使用 war.yml -> scoring。
-    # 独立国为防守方，宗主阵营为进攻方。
-    # 达到最大周期后，从仆国至少领先多少分时视为独立成功。
-    successLead: 100
