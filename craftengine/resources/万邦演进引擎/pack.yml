@@ -1,0 +1,5 @@
+author: Gardin233
+version: 1.0.0
+description: "WDER的一些默认资源" 
+namespace: world_dynamics_engine
+enable: true

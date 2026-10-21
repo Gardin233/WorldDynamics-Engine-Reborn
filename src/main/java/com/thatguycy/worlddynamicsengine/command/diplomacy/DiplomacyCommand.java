@@ -79,6 +79,10 @@ public class DiplomacyCommand implements CommandExecutor {
                 return handleSetTrading(sender, nationName, args, WorldDynamicsEngine.getInstance());
             case "visit":
                 return handleVisit(sender, nationName, nationManager, residentManager, economyBridge);
+            case "letter":
+            case "letters":
+            case "readletter":
+                return handleLetters(sender, args);
             default:
                 sender.sendMessage(ChatColor.RED + msg("unknownsub"));
                 return true;
@@ -146,6 +150,137 @@ public class DiplomacyCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.RED + msg("diplomacy_own_nation_data_missing"));
         }
 
+        return true;
+    }
+
+    private boolean handleLetters(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(msg("common_only_players"));
+            return true;
+        }
+        WorldDynamicsEngine plugin = WorldDynamicsEngine.getInstance();
+        Nation own = getNationByResident(player.getName());
+        if (own == null || !hasDiplomaticAuthority(sender)) {
+            sender.sendMessage(msg("diplomacy_no_authority_relation"));
+            return true;
+        }
+        var storage = plugin.getDataStorageManager();
+        String category = "diplomatic_letters";
+        if (!args[1].equalsIgnoreCase("letter")) {
+            var letters = storage.loadStringKeyed(category, com.thatguycy.worlddynamicsengine.model.DiplomaticLetter.class);
+            if (args[1].equalsIgnoreCase("readletter")) {
+                var letter = letters.get(args[2]);
+                if (letter == null || !java.util.List.of(letter.value("senderNationUuid"), letter.value("targetNationUuid"))
+                        .contains(own.getUUID().toString())) {
+                    sender.sendMessage(msg("diplomacy_letter_not_found"));
+                    return true;
+                }
+                int page;
+                try { page = args.length > 3 ? Integer.parseInt(args[3]) : 1; }
+                catch (NumberFormatException ex) { sender.sendMessage(msg("diplomacy_letter_usage")); return true; }
+                String body = letter.value("body");
+                int pages = Math.max(1, (body.length() + 399) / 400);
+                if (page < 1 || page > pages) { sender.sendMessage(msg("diplomacy_letter_usage")); return true; }
+                sender.sendMessage(msg("diplomacy_letter_header", letter.value("sender"), letter.value("target"),
+                        msg("diplomacy_letter_type_" + letter.value("type").toLowerCase(java.util.Locale.ROOT)), page, pages));
+                sender.sendMessage(body.substring((page - 1) * 400, Math.min(page * 400, body.length())));
+            } else {
+                int page;
+                try { page = Integer.parseInt(args[2]); }
+                catch (NumberFormatException ex) { sender.sendMessage(msg("diplomacy_letter_usage")); return true; }
+                var visible = letters.values().stream().filter(letter ->
+                        own.getUUID().toString().equals(letter.value("senderNationUuid"))
+                                || own.getUUID().toString().equals(letter.value("targetNationUuid")))
+                        .sorted(java.util.Comparator.comparingLong((com.thatguycy.worlddynamicsengine.model.DiplomaticLetter letter) ->
+                                ((Number) letter.data.get("sentAt")).longValue()).reversed()).toList();
+                int pages = Math.max(1, (visible.size() + 7) / 8);
+                if (page < 1 || page > pages) { sender.sendMessage(msg("diplomacy_letter_usage")); return true; }
+                sender.sendMessage(msg("diplomacy_letter_list", page, pages));
+                visible.subList((page - 1) * 8, Math.min(page * 8, visible.size())).forEach(letter ->
+                        sender.sendMessage(msg("diplomacy_letter_entry", letter.value("id"), letter.value("sender"),
+                                letter.value("target"), msg("diplomacy_letter_type_" + letter.value("type").toLowerCase(java.util.Locale.ROOT)))));
+            }
+            return true;
+        }
+        if (args.length < 5) { sender.sendMessage(msg("diplomacy_letter_usage")); return true; }
+        Nation target = nationManager.getTownyNation(args[2]);
+        if (target == null || target.getUUID().equals(own.getUUID())) {
+            sender.sendMessage(msg("diplomacy_letter_target_invalid"));
+            return true;
+        }
+        String type = switch (args[3].toLowerCase(java.util.Locale.ROOT)) {
+            case "insult", "侮辱" -> "INSULT";
+            case "notice", "通知" -> "NOTICE";
+            case "request", "请求" -> "REQUEST";
+            default -> "";
+        };
+        String body = String.join(" ", Arrays.copyOfRange(args, 4, args.length)).trim();
+        if (type.isEmpty() || body.isEmpty() || body.length() > 4000 || body.chars().anyMatch(Character::isISOControl)) {
+            sender.sendMessage(msg("diplomacy_letter_usage"));
+            return true;
+        }
+        java.math.BigDecimal amount;
+        String currency = plugin.getConfig().getString("diplomacy.letters.cost.currency", "default");
+        try {
+            amount = new java.math.BigDecimal(plugin.getConfig().getString("diplomacy.letters.cost.amount", "100.00"));
+            if (amount.signum() < 0 || amount.scale() > 8
+                    || amount.compareTo(new java.math.BigDecimal("1000000000000")) > 0) throw new NumberFormatException();
+        } catch (NumberFormatException ex) {
+            sender.sendMessage(msg("diplomacy_letter_config_invalid"));
+            return true;
+        }
+        if (economyBridge == null || !economyBridge.hasProvider()) {
+            sender.sendMessage(msg("diplomacy_economy_provider_missing"));
+            return true;
+        }
+        if (!economyBridge.supportsExactCurrency(currency)) {
+            sender.sendMessage(msg("diplomacy_letter_config_invalid"));
+            return true;
+        }
+        var cost = new EconomyBridge.Charge(amount, currency);
+        if (!economyBridge.has(player, cost) || !economyBridge.withdraw(player, cost).success()) {
+            sender.sendMessage(msg("diplomacy_letter_insufficient", economyBridge.format(cost)));
+            return true;
+        }
+        Map<String, Object> values = new java.util.LinkedHashMap<>();
+        values.put("id", java.util.UUID.randomUUID().toString());
+        values.put("senderNationUuid", own.getUUID().toString());
+        values.put("targetNationUuid", target.getUUID().toString());
+        values.put("sender", own.getName());
+        values.put("target", target.getName());
+        values.put("author", player.getName());
+        values.put("authorUuid", player.getUniqueId().toString());
+        values.put("type", type);
+        values.put("body", body);
+        values.put("sentAt", System.currentTimeMillis());
+        try {
+            storage.saveEntity(category, String.valueOf(values.get("id")),
+                    new com.thatguycy.worlddynamicsengine.model.DiplomaticLetter(values));
+        } catch (RuntimeException ex) {
+            if (!economyBridge.deposit(player, amount, currency).success()) {
+                plugin.getLogger().severe("Diplomatic letter refund failed for " + player.getUniqueId());
+            }
+            plugin.getLogger().severe("Diplomatic letter storage failed: " + ex.getMessage());
+            sender.sendMessage(msg("diplomacy_letter_storage_failed"));
+            return true;
+        }
+        if (plugin.getNationHistoryManager() != null) {
+            try {
+                plugin.getNationHistoryManager().record(own.getName(), "DIPLOMATIC_LETTER_" + type, values);
+                plugin.getNationHistoryManager().record(target.getName(), "DIPLOMATIC_LETTER_" + type, values);
+            } catch (RuntimeException ex) {
+                plugin.getLogger().severe("Diplomatic letter history failed, letter=" + values.get("id") + ": " + ex.getMessage());
+                sender.sendMessage(msg("diplomacy_letter_history_failed"));
+            }
+        }
+        sender.sendMessage(msg("diplomacy_letter_sent", target.getName(), economyBridge.format(cost), values.get("id")));
+        for (Player receiver : org.bukkit.Bukkit.getOnlinePlayers()) {
+            Nation receiverNation = getNationByResident(receiver.getName());
+            if (receiverNation != null && receiverNation.getUUID().equals(target.getUUID())) {
+                receiver.sendMessage(msg("diplomacy_letter_received", own.getName(),
+                        msg("diplomacy_letter_type_" + type.toLowerCase(java.util.Locale.ROOT)), values.get("id")));
+            }
+        }
         return true;
     }
 

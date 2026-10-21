@@ -463,6 +463,7 @@ public final class AdminCommand implements CommandExecutor {
                 require(!manager.religionExists(a[3]), "admin_operation_blocked");
                 require(!manager.isReligionLeader(founder.getUUID()), "religion_leader_cannot_create");
                 manager.addReligion(new WDEreligion(a[3], founder.getUUID(), founder.getName(), System.currentTimeMillis()));
+                broadcast("religion_broadcast_created", a[3], founder.getName());
             }
             case "delete" -> {
                 size(a, 5); confirm(a[4]); WDEreligion r = religion(a[3]);
@@ -520,6 +521,9 @@ public final class AdminCommand implements CommandExecutor {
                     selected.add(meme);
                 }
                 r.setMemes(selected); manager.markMemeModified(r); manager.saveReligion(r);
+                broadcast("religion_broadcast_memes_updated", r.getReligionName(), String.join("、", selected.stream()
+                        .map(manager::getMemeDisplayName)
+                        .toList()));
             }
             case "doctrine" -> {
                 size(a, 6); WDEreligion r = religion(a[3]);
@@ -642,6 +646,9 @@ public final class AdminCommand implements CommandExecutor {
     private void require(boolean condition, String key) { if (!condition) throw new AdminFailure(key); }
     private void send(CommandSender sender, String key, Object... values) {
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.formatLocaleMessage(key, values)));
+    }
+    private void broadcast(String key, Object... values) {
+        org.bukkit.Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', plugin.formatLocaleMessage(key, values)));
     }
     /**
      * 在管理员命令内部携带可展示的校验失败原因，不把业务拒绝视为服务端故障。

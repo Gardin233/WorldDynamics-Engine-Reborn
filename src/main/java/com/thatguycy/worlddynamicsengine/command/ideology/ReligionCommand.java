@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -219,6 +220,7 @@ public class ReligionCommand implements CommandExecutor {
         creator.setReligionChosen(true);
         residentManager.saveResidents();
         sender.sendMessage(ChatColor.GREEN + msg("religion_created", religionName));
+        broadcast("religion_broadcast_created", religion.getReligionName(), player.getName());
         return true;
     }
 
@@ -753,6 +755,7 @@ public class ReligionCommand implements CommandExecutor {
         religionManager.markMemeModified(religion);
         religionManager.saveReligion(religion);
         sender.sendMessage(ChatColor.GREEN + msg("religion_memes_set", religion.getReligionName(), formatMemeList(religion.getMemes())));
+        broadcast("religion_broadcast_memes_updated", religion.getReligionName(), formatMemeList(religion.getMemes()));
         return true;
     }
 
@@ -1097,6 +1100,10 @@ public class ReligionCommand implements CommandExecutor {
 
     private String formatTime(long timestamp) {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(timestamp));
+    }
+
+    private void broadcast(String key, Object... args) {
+        Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', msg(key, args)));
     }
 
     private String msg(String key, Object... args) {

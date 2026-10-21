@@ -1504,7 +1504,19 @@ public class OrgManager {
             return PeaceTreatyReviewResult.invalid(validationError);
         }
 
-        if (!executePeaceTreaty(context, proposal, nationManager)) {
+        var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
+        boolean executed;
+        if (history != null) history.beginSettlement();
+        try {
+            executed = executePeaceTreaty(context, proposal, nationManager);
+            if (history != null) history.treaty(proposal, executed);
+        } catch (RuntimeException ex) {
+            if (history != null) history.treaty(proposal, false);
+            throw ex;
+        } finally {
+            if (history != null) history.endSettlement();
+        }
+        if (!executed) {
             return PeaceTreatyReviewResult.invalid("org_peace_treaty_transfer_town_invalid");
         }
         proposals.remove(context.getWarKey());
@@ -1568,6 +1580,13 @@ public class OrgManager {
         MilitaryWarState war = getActiveMilitaryWars(null).stream().filter(w -> w.reason == WarReason.INDEPENDENCE
                 && w.getAttackerNationName().equalsIgnoreCase(rebelNationName)).findFirst().orElse(null);
         var nations = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationManager();
+        var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
+        if (history != null) {
+            history.record(rebelNationName, "SUBJECT_LIBERATED", Map.of("beneficiary", rebelNationName,
+                    "conceding", org.getChairmanNationName(), "war", war.getWarKey()));
+            history.record(org.getChairmanNationName(), "WAR_DEFEAT",
+                    Map.of("opponent", rebelNationName, "war", war.getWarKey()));
+        }
         removeMemberNationAndAdjust(org, rebelNationName);
         createWarTrucesBetweenSides(war.getAttackerNationNames(), war.getDefenderNationNames(), 40, nations);
         clearMilitaryWarAcrossOrganizations(war.getWarKey());
@@ -2679,6 +2698,8 @@ public class OrgManager {
         if (warState == null) return;
         warLedger.wars.put(warState.getWarKey(), warState.toMap());
         saveOrganizations();
+        var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
+        if (history != null) history.warStarted(warState);
     }
 
     private Map<String, MilitaryWarState> readActiveMilitaryWars(WDEorg org) {
@@ -3234,6 +3255,8 @@ public class OrgManager {
             }
         }
         if (endedWar != null) {
+            var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
+            if (history != null) history.warEnded(endedWar);
             broadcastMilitaryWarEnded(endedWar);
         }
     }

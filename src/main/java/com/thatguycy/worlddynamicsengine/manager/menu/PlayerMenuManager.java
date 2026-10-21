@@ -127,7 +127,7 @@ public class PlayerMenuManager implements Listener {
                 .replace("%doctrine_name%", religions.getDoctrineDisplayName(doctrineId))));
     }
 
-    private Material ideologyIcon(String category, String id, Material fallback) {
+    private ItemStack ideologyIcon(Player player, String category, String id, Material fallback) {
         String value = switch (category) {
             case "doctrines" -> {
                 var doctrine = religions.getDoctrine(id);
@@ -139,11 +139,23 @@ public class PlayerMenuManager implements Listener {
             }
             default -> "";
         };
-        if (value == null || value.isBlank()) {
-            value = fallback.name();
+        if (value != null) {
+            value = value.trim();
         }
-        Material material = Material.matchMaterial(value);
-        return material == null || !material.isItem() || material.isAir() ? fallback : material;
+        if (value != null && !value.isBlank()) {
+            Material material = Material.matchMaterial(value);
+            if (material != null && material.isItem() && !material.isAir()) {
+                return new ItemStack(material);
+            }
+            var integration = plugin.getCraftEngineIntegration();
+            if (integration != null) {
+                ItemStack item = integration.createItemStack(value, player);
+                if (item != null && item.getType().isItem() && !item.getType().isAir()) {
+                    return item;
+                }
+            }
+        }
+        return new ItemStack(fallback);
     }
 
     private WDEresident resident(Player player) {
@@ -1739,7 +1751,7 @@ public class PlayerMenuManager implements Listener {
                     religions.getDoctrineAttitudeDisplayName(definition.getId(), attitude)), text("preview")));
             String doctrineCooldown = religions.describeDoctrineModificationCooldown(plugin.userLang, religion, definition.getId());
             if (!doctrineCooldown.isBlank()) lore.add(text("modification_cooldown", doctrineCooldown));
-            button(menu, i - start, ideologyIcon("doctrines", definition.getId(), Material.PAPER), religions.getDoctrineDisplayName(definition.getId()),
+            button(menu, i - start, ideologyIcon(player, "doctrines", definition.getId(), Material.PAPER), religions.getDoctrineDisplayName(definition.getId()),
                     lore,
                     () -> openAttitudes(player, name, definition.getId(), 0, page));
         }
@@ -1762,7 +1774,7 @@ public class PlayerMenuManager implements Listener {
             if (attitude.getId().equals(religion.getDoctrineAttitude(doctrineId))) lore.add(text("selected"));
             String doctrineCooldown = religions.describeDoctrineModificationCooldown(plugin.userLang, religion, doctrineId);
             if (!doctrineCooldown.isBlank()) lore.add(text("modification_cooldown", doctrineCooldown));
-            button(menu, i - start, allowed ? ideologyIcon("doctrines", doctrineId, Material.PAPER) : Material.BARRIER,
+            button(menu, i - start, allowed ? ideologyIcon(player, "doctrines", doctrineId, Material.PAPER) : new ItemStack(Material.BARRIER),
                     religions.getDoctrineAttitudeDisplayName(doctrineId, attitude.getId()), lore, () -> {
                 if (!canEdit(player, religions.getReligion(name))) return;
                 if (!allowed) {
@@ -1812,7 +1824,7 @@ public class PlayerMenuManager implements Listener {
         for (int i = start; i < Math.min(start + 45, entries.size()); i++) {
             IdeologyMemeDefinition meme = entries.get(i);
             boolean checked = selected.contains(meme.getId());
-            button(menu, i - start, ideologyIcon("memes", meme.getId(), Material.AMETHYST_SHARD),
+            button(menu, i - start, ideologyIcon(player, "memes", meme.getId(), Material.AMETHYST_SHARD),
                     religions.getMemeDisplayName(meme.getId()),
                     List.of(meme.getDescription(), editable ? text(checked ? "meme_selected" : "meme_unselected") : text("readonly")),
                     () -> {
@@ -1968,8 +1980,22 @@ public class PlayerMenuManager implements Listener {
     }
 
     private void button(Menu menu, int slot, Material material, String title, List<String> lore, Runnable action) {
-        ItemStack item = new ItemStack(material);
+        button(menu, slot, new ItemStack(material), title, lore, action);
+    }
+
+    private void button(Menu menu, int slot, ItemStack baseItem, String title, List<String> lore, Runnable action) {
+        ItemStack item = baseItem == null ? new ItemStack(Material.BARRIER) : baseItem.clone();
+        if (item.getType().isAir()) {
+            item = new ItemStack(Material.BARRIER);
+        }
         ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            meta = Bukkit.getItemFactory().getItemMeta(item.getType());
+            if (meta == null) {
+                item = new ItemStack(Material.BARRIER);
+                meta = item.getItemMeta();
+            }
+        }
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', title));
         List<String> lines = new ArrayList<>();
         for (String line : lore) {

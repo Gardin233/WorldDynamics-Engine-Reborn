@@ -53,12 +53,22 @@ public class MyTabCompleter implements TabCompleter {
                 completions.add("inn");
                 completions.add("rally");
                 completions.add("war");
+                completions.add("history");
                 completions.add("town");
                 completions.add("nation");
                 completions.add("diplomacy");
                 completions.add("org"); // Added 'org'
                 completions.add("ideology");
                 // Add more first-level options as needed
+            } else if (rootArg.equals("history")) {
+                var history = WorldDynamicsEngine.getInstance().getNationHistoryManager();
+                if (args.length == 2) completions.addAll(Arrays.asList("list", "read", "txt", "book"));
+                else if (args.length == 3 && !args[1].equalsIgnoreCase("list")) {
+                    history.list().forEach(book -> {
+                        completions.add(book.id);
+                        completions.add(history.displayName(book));
+                    });
+                }
             } else if (rootArg.equals("war")) {
                 if (args.length == 2) completions.addAll(Arrays.asList("menu", "declare", "surrender"));
                 else if (args.length == 3) completions.addAll(Arrays.asList("nation", "town"));
@@ -262,18 +272,26 @@ public class MyTabCompleter implements TabCompleter {
             } else if (args[0].equalsIgnoreCase("nation") && args.length == 5 && args[2].equalsIgnoreCase("settowntax")) {
                 completions.addAll(Arrays.asList("fixed", "wealth_percentage", "定额", "总财产比例"));
             } else if (args[0].equalsIgnoreCase("diplomacy") && args.length == 2) {
-                completions.addAll(Arrays.asList("setrelation", "trading", "viewtrading", "relations", "visit"));
+                completions.addAll(Arrays.asList("setrelation", "trading", "viewtrading", "relations", "visit", "letter", "letters", "readletter"));
             } else if (args[0].equalsIgnoreCase("diplomacy") && args.length == 3) {
                 if (args[1].equalsIgnoreCase("setrelation") || args[1].equalsIgnoreCase("trading")) {
                     TownyUniverse.getInstance().getNations().forEach(nation -> completions.add(nation.getName()));
                 } else if (args[1].equalsIgnoreCase("visit")) {
                     TownyUniverse.getInstance().getNations().forEach(nation -> completions.add(nation.getName()));
+                } else if (args[1].equalsIgnoreCase("letter")) {
+                    TownyUniverse.getInstance().getNations().stream()
+                            .filter(nation -> !nation.getName().equalsIgnoreCase(actorNation))
+                            .forEach(nation -> completions.add(nation.getName()));
+                } else if (args[1].equalsIgnoreCase("letters")) {
+                    completions.add("1");
                 }
             } else if (args[0].equalsIgnoreCase("diplomacy") && args.length == 4) {
                 if (args[1].equalsIgnoreCase("setrelation")) {
                     completions.addAll(Arrays.asList("friendly", "neutral", "unfriendly"));
                 } else if (args[1].equalsIgnoreCase("trading")) {
                     completions.addAll(Arrays.asList("enabled", "disabled"));
+                } else if (args[1].equalsIgnoreCase("letter")) {
+                    completions.addAll(Arrays.asList("insult", "notice", "request"));
                 }
             } else if (args.length == 2 && args[0].equalsIgnoreCase("org")) {
                 completions.addAll(Arrays.asList("menu", "create", "dissolve", "applynation", "votejoin", "reviewjoin", "declarewar", "votewar", "sanction", "deposit", "withdraw", "leave", "grantindependence", "peacetreaty", "reviewtreaty", "promoteautonomy", "demoteautonomy", "setgarrison", "mobilizewar", "replaceleader", "demandtribute", "info"));

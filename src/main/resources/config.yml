@@ -83,3 +83,11 @@ economy:
 
 # 语言代码。当前支持：en、es、zh_cn
 locale: zh_cn
+
+# 外交致函费用：由发信人的个人钱包支付，0 表示免费。
+# 单封正文最多4000字符；侮辱信不会自动改变外交关系或宣战。
+diplomacy:
+  letters:
+    cost:
+      amount: "100.00"
+      currency: default

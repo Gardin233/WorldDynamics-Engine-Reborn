@@ -1,0 +1,31 @@
+items:
+  world_dynamics_engine:crazy_for_blood:
+    material: minecraft:paper
+    data:
+      item_name: "汲血狂热"
+    model:
+      path: world_dynamics_engine:item/blood_mark
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/blood_mark
+  world_dynamics_engine:crazy_human_flesh:
+    material: minecraft:paper
+    data:
+      item_name: "食人狂热"
+    model:
+      path: world_dynamics_engine:item/bone_knife
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/bone_knife
+  world_dynamics_engine:unhuman:
+    material: minecraft:paper
+    data:
+      item_name: "非人异化"
+    model:
+      path: world_dynamics_engine:item/fresh_bottle
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/fresh_bottle

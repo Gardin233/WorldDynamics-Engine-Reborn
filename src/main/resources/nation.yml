@@ -1,5 +1,12 @@
 # 国家模块配置。
 
+# 国家史书开关；关闭时停止事件采集，但保留已有索引、归档和导出能力。
+history:
+  enabled: true
+  # REAL_TIME 为现实天；REALISTIC_SEASONS 为季节日历天，不可用时回退现实天。
+  clock: REAL_TIME
+  world: world
+
 # 插件内允许设置的国家政体列表。
 validGovernmentTypes:
   - DICTATORSHIP

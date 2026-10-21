@@ -106,6 +106,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
     private ArmorDoctrineListener armorDoctrineListener;
     private WarScoreboardManager warScoreboardManager;
     private InnManager innManager;
+    private com.thatguycy.worlddynamicsengine.manager.history.NationHistoryManager nationHistoryManager;
 
     public String framework;
     public boolean govEnabled;
@@ -190,6 +191,8 @@ public class WorldDynamicsEngine extends JavaPlugin {
         playerMenuManager = new PlayerMenuManager(this);
 
         loadTownyDataOnStartup();
+        nationHistoryManager = new com.thatguycy.worlddynamicsengine.manager.history.NationHistoryManager(this);
+        nationHistoryManager.initialize();
         registerCommands();
         registerListeners();
         startBackgroundTasks();
@@ -244,6 +247,10 @@ public class WorldDynamicsEngine extends JavaPlugin {
 
     public NationManager getNationManager() {
         return nationManager;
+    }
+
+    public com.thatguycy.worlddynamicsengine.manager.history.NationHistoryManager getNationHistoryManager() {
+        return nationHistoryManager;
     }
 
     public ResidentManager getResidentManager() {
@@ -415,6 +422,8 @@ public class WorldDynamicsEngine extends JavaPlugin {
         ConfigurationSerialization.registerClass(InnBed.class, "InnBed");
         ConfigurationSerialization.registerClass(WDEtown.class, "WDEtown");
         ConfigurationSerialization.registerClass(WDEnation.class);
+        ConfigurationSerialization.registerClass(com.thatguycy.worlddynamicsengine.model.DiplomaticLetter.class);
+        ConfigurationSerialization.registerClass(com.thatguycy.worlddynamicsengine.model.NationChronicle.class);
         ConfigurationSerialization.registerClass(WDEresident.class, "WDEresident");
         ConfigurationSerialization.registerClass(WDEorg.class, "WDEorg");
         ConfigurationSerialization.registerClass(WDEreligion.class, "WDEreligion");
@@ -737,6 +746,24 @@ public class WorldDynamicsEngine extends JavaPlugin {
             townConfig.set("allowRegularWarParticipation", false);
             saveYamlConfiguration(townConfig, townConfigFile);
         }
+        boolean historyChanged = false;
+        for (var entry : Map.<String, Object>of("history.enabled", false, "history.clock", "REAL_TIME",
+                "history.world", "world").entrySet()) {
+            if (!nationConfig.contains(entry.getKey())) {
+                nationConfig.set(entry.getKey(), entry.getValue());
+                historyChanged = true;
+            }
+        }
+        if (historyChanged) saveYamlConfiguration(nationConfig, nationConfigFile);
+        boolean lettersChanged = false;
+        for (var entry : Map.<String, Object>of("diplomacy.letters.cost.amount", "100.00",
+                "diplomacy.letters.cost.currency", "default").entrySet()) {
+            if (!getConfig().contains(entry.getKey())) {
+                getConfig().set(entry.getKey(), entry.getValue());
+                lettersChanged = true;
+            }
+        }
+        if (lettersChanged) saveConfig();
         userLang = getConfig().getString("locale", "zh_cn");
     }
 
@@ -783,6 +810,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         commandHandler.registerSubCommand("inn", new InnCommand(this, innManager));
         commandHandler.registerSubCommand("rally", new com.thatguycy.worlddynamicsengine.command.war.RallyCommand(this));
         commandHandler.registerSubCommand("war", new com.thatguycy.worlddynamicsengine.command.war.WarCommand(this));
+        commandHandler.registerSubCommand("history", new com.thatguycy.worlddynamicsengine.command.history.HistoryCommand(this));
         commandHandler.registerSubCommand("background", new BackgroundCommand(this, backgroundManager, residentManager));
         commandHandler.registerSubCommand("menu", (sender, command, label, args) -> {
             if (sender instanceof org.bukkit.entity.Player player) {
@@ -908,6 +936,10 @@ public class WorldDynamicsEngine extends JavaPlugin {
         loadLocales();
         readConfigSettings();
         if (warTruceClock != null) warTruceClock.reload();
+        if (nationHistoryManager != null) {
+            nationHistoryManager.reload();
+            nationHistoryManager.initialize();
+        }
         if (playerDropManager != null) {
             playerDropManager.reloadDefinitions();
         }

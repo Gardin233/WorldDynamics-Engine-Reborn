@@ -1,0 +1,40 @@
+items:
+  world_dynamics_engine:blood_meat:
+    material: BEEF
+    data:
+      item_name: "可怖培根"
+      lore:
+        - "&#ff0000这&#fd0505块&#fa0a0a肉&#f80e0e刺&#f51313激&#f31818着&#f01d1d你&#ee2222全&#ec2727身&#e92b2b上&#e73030下&#e43535的&#e23a3a孔&#df3f3f洞"
+        - "&#dd4343但&#da4848对&#d84d4d心&#d24848理&#cc4343变&#c63f3f态&#c03a3a来&#ba3535说&#b43030，"
+        - "&#ae2b2b这&#a92727绝&#a32222对&#9d1d1d是&#971818一&#911313份&#8b0e0e美&#850a0a味&#7f0505佳&#790000肴"
+    model:
+      path: world_dynamics_engine:item/bloodmeat
+
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/bloodmeat
+    settings:
+      food:
+        nutrition: 6  # 0~20, 整数
+        saturation: 4  # 0~10, 单精度浮点数
+  world_dynamics_engine:blood:
+    material: BEEF
+    data:
+      item_name: "可怖之血"
+      lore:
+        - "&#ff0000你&#fd0303的&#fc0707大&#fa0a0a脑&#f80d0d在&#f71010尖&#f51414叫&#f31717，&#f21a1a它&#f01d1d的&#ee2121气&#ed2424味&#eb2727引"
+        - "&#e92b2b发&#e82e2e了&#e63131一&#e43434种&#e33838原&#e13b3b始&#df3e3e的&#de4242恐&#dc4545惧&#da4848。"
+        - "&#d94b4b究&#d64b4b竟&#d24848是&#ce4545什&#ca4242么&#c63e3e情&#c23b3b况&#be3838下&#ba3434我&#b63131们&#b22e2e才&#ae2b2b需&#aa2727要"
+        - "&#a52424饮&#a12121用&#9d1d1d它&#991a1a？&#951717我&#911414们&#8d1010永&#890d0d远&#850a0a不&#810707会&#7d0303知&#790000道"
+    model:
+      path: world_dynamics_engine:item/blood
+
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/blood
+    settings:
+      food:
+        nutrition: 2  # 0~20, 整数
+        saturation: 2  # 0~10, 单精度浮点数

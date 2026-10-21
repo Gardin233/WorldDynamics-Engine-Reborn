@@ -36,6 +36,7 @@ public final class TownyLifecycleListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onNewNation(NewNationEvent event) {
         nations.registerNation(event.getNation());
+        if (plugin.getNationHistoryManager() != null) plugin.getNationHistoryManager().created(event.getNation());
         for (Town town : event.getNation().getTowns()) {
             towns.updateTownNation(town.getName(), event.getNation().getName());
         }
@@ -55,6 +56,10 @@ public final class TownyLifecycleListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRenameTown(RenameTownEvent event) {
+        if (plugin.getNationHistoryManager() != null && event.getTown().getNationOrNull() != null) {
+            plugin.getNationHistoryManager().renameTown(event.getTown().getNationOrNull().getName(),
+                    event.getOldName(), event.getTown().getName());
+        }
         towns.renameTown(event.getOldName(), event.getTown().getName());
         nations.refreshTownHierarchy();
     }

@@ -48,6 +48,8 @@ public class NationManager {
 
     public void saveNations() {
         dataStorageManager.saveStringKeyed(STORAGE_CATEGORY, nations);
+        var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
+        if (history != null) nations.values().forEach(history::observe);
     }
 
     public void updateNation(WDEnation nation) {
@@ -77,6 +79,8 @@ public class NationManager {
     }
 
     public void removeNation(String name) {
+        var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
+        if (history != null) history.archive(name);
         nations.remove(name);
         for (WDEnation remaining : nations.values()) {
             Set<String> passage = readNationStringSet(remaining, "unconditionalPassageTargets");
@@ -96,6 +100,8 @@ public class NationManager {
     }
 
     public void renameNation(String oldName, String newName) {
+        var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
+        if (history != null) history.rename(oldName, newName);
         WDEnation nation = nations.remove(oldName);
         if (nation != null) {
             nation.setNationName(newName);

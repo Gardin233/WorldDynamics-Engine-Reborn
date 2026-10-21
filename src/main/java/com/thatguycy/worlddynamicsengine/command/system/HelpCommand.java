@@ -90,6 +90,10 @@ public class HelpCommand implements CommandExecutor {
         lines.add(ChatColor.AQUA + plugin.formatLocaleMessage("help_section_header", plugin.getLocaleMessage("help_general")));
         lines.add(ChatColor.YELLOW + "/wde help [page]" + ChatColor.WHITE + " - " + plugin.getLocaleMessage("help_cmd_help"));
         lines.add(ChatColor.YELLOW + "/wde docs" + ChatColor.WHITE + " - " + plugin.getLocaleMessage("help_cmd_docs"));
+        if (plugin.getNationHistoryManager() != null) {
+            lines.add(ChatColor.YELLOW + "/wde history <list|read|txt|book>" + ChatColor.WHITE + " - "
+                    + plugin.getNationHistoryManager().message("help", java.util.Map.of()));
+        }
         if (sender == null || CommandPermissions.root(sender, "debug")) {
             lines.add(ChatColor.YELLOW + "/wde debug balance <player> [currency]" + ChatColor.WHITE + " - " + plugin.getLocaleMessage("help_cmd_debug_balance"));
         }
