@@ -1,7 +1,7 @@
 # WorldDynamicsEngine:Reborn
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![GitHub stars](https://img.shields.io/github/stars/stoleyourharvs/WorldDynamics-Engine)
+![GitHub stars](https://img.shields.io/github/stars/Gardin233/WorldDynamics-Engine-Reborn)
 
 **万邦演变引擎：重生（WDER）** 基于 [WorldDynamics-Engine v0.2.1 发布源码](https://github.com/stoleyourharvs/WorldDynamics-Engine/releases/tag/v0.2.1) 演进，主要面向 Paper 与 Towny 服务器。
 
