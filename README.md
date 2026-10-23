@@ -10,6 +10,8 @@ WDER 为 Towny 城镇和国家增加治理、国家集团、主权帝国、外�
 ## 项目链接
 
 - [上游 v0.2.1 源码](https://github.com/stoleyourharvs/WorldDynamics-Engine/releases/tag/v0.2.1)
+- [本项目源码](https://github.com/stoleyourharvs/WorldDynamics-Engine)
+- [插件发布](https://github.com/stoleyourharvs/WorldDynamics-Engine/releases)
 - [问题反馈](https://github.com/stoleyourharvs/WorldDynamics-Engine/issues)
 
 ## 主要玩法

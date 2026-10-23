@@ -14,7 +14,7 @@ import com.thatguycy.worlddynamicsengine.model.WDEorg;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.math.BigDecimal;
 import java.util.Locale;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -55,7 +55,7 @@ public class SovereignSubjectCommand {
 
         String actorNation = getAuthorizedNationName(player);
         if (actorNation == null || !orgManager.isSovereignSubjectNation(org, actorNation)) {
-            sender.sendMessage(ChatColor.RED + msg("org_only_subject_can_promote_autonomy"));
+            sender.sendMessage(TextColors.RED + msg("org_only_subject_can_promote_autonomy"));
             return true;
         }
         if (isIndependenceWarActive(sender, org, actorNation)) {
@@ -65,44 +65,44 @@ public class SovereignSubjectCommand {
         SovereignSubjectState.AutonomyTier currentTier = orgManager.getSubjectAutonomyTier(org, actorNation);
         boolean peacefulIndependence = currentTier == SovereignSubjectState.AutonomyTier.DOMINION;
         if (peacefulIndependence && orgManager.isNationInActiveWar(actorNation)) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_peaceful_independence_blocked_by_war"));
+            sender.sendMessage(TextColors.RED + msg("org_subject_peaceful_independence_blocked_by_war"));
             return true;
         }
 
         int suppression = orgManager.getSubjectSuppression(org, actorNation);
         if (suppression > 0) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_autonomy_requires_zero_suppression", suppression));
+            sender.sendMessage(TextColors.RED + msg("org_subject_autonomy_requires_zero_suppression", suppression));
             return true;
         }
 
         EconomyBridge.Charge charge = orgManager.getSovereignAutonomyUpgradeCharge();
         Nation townyNation = resolveNation(actorNation);
         if (townyNation == null) {
-            sender.sendMessage(ChatColor.RED + msg("org_nation_treasury_unavailable"));
+            sender.sendMessage(TextColors.RED + msg("org_nation_treasury_unavailable"));
             return true;
         }
         if (!withdrawGovernmentCharge(townyNation, charge, "WorldDynamicsEngine sovereign subject autonomy upgrade")) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_autonomy_upgrade_cost_insufficient", formatGovernmentCharge(charge)));
+            sender.sendMessage(TextColors.RED + msg("org_subject_autonomy_upgrade_cost_insufficient", formatGovernmentCharge(charge)));
             return true;
         }
 
         if (peacefulIndependence) {
             if (!orgManager.peacefullyReleaseDominion(org, actorNation)) {
-                sender.sendMessage(ChatColor.RED + msg("org_subject_autonomy_upgrade_failed"));
+                sender.sendMessage(TextColors.RED + msg("org_subject_autonomy_upgrade_failed"));
                 return true;
             }
-            sender.sendMessage(ChatColor.GREEN + msg("org_subject_peaceful_independence",
+            sender.sendMessage(TextColors.GREEN + msg("org_subject_peaceful_independence",
                     actorNation, org.getOrganizationName(), formatGovernmentCharge(charge)));
             return true;
         }
 
         SovereignSubjectState.AutonomyTier upgradedTier = orgManager.promoteSubjectAutonomy(org, actorNation);
         if (upgradedTier == null) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_autonomy_upgrade_failed"));
+            sender.sendMessage(TextColors.RED + msg("org_subject_autonomy_upgrade_failed"));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GREEN + msg("org_subject_autonomy_upgraded",
+        sender.sendMessage(TextColors.GREEN + msg("org_subject_autonomy_upgraded",
                 actorNation,
                 tierName(upgradedTier),
                 formatGovernmentCharge(charge)));
@@ -118,12 +118,12 @@ public class SovereignSubjectCommand {
             return true;
         }
         if (args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_demoteautonomy"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_demoteautonomy"));
             return true;
         }
 
         if (!isChairman(player, org)) {
-            sender.sendMessage(ChatColor.RED + msg("org_only_chairman_demote_autonomy"));
+            sender.sendMessage(TextColors.RED + msg("org_only_chairman_demote_autonomy"));
             return true;
         }
 
@@ -134,22 +134,22 @@ public class SovereignSubjectCommand {
 
         SovereignSubjectState.AutonomyTier currentTier = orgManager.getSubjectAutonomyTier(org, targetNation);
         if (!currentTier.canDemote()) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_autonomy_already_lowest", targetNation));
+            sender.sendMessage(TextColors.RED + msg("org_subject_autonomy_already_lowest", targetNation));
             return true;
         }
 
         int suppression = orgManager.getSubjectSuppression(org, targetNation);
         if (suppression < 100) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_autonomy_requires_full_suppression", targetNation, suppression));
+            sender.sendMessage(TextColors.RED + msg("org_subject_autonomy_requires_full_suppression", targetNation, suppression));
             return true;
         }
 
         SovereignSubjectState.AutonomyTier demotedTier = orgManager.demoteSubjectAutonomy(org, targetNation);
         if (demotedTier == null) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_autonomy_demote_failed", targetNation));
+            sender.sendMessage(TextColors.RED + msg("org_subject_autonomy_demote_failed", targetNation));
             return true;
         }
-        sender.sendMessage(ChatColor.GREEN + msg("org_subject_autonomy_demoted", targetNation, tierName(demotedTier)));
+        sender.sendMessage(TextColors.GREEN + msg("org_subject_autonomy_demoted", targetNation, tierName(demotedTier)));
         return true;
     }
 
@@ -162,11 +162,11 @@ public class SovereignSubjectCommand {
             return true;
         }
         if (args.length < 5) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_setgarrison"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_setgarrison"));
             return true;
         }
         if (!isChairman(player, org)) {
-            sender.sendMessage(ChatColor.RED + msg("org_only_chairman_set_garrison"));
+            sender.sendMessage(TextColors.RED + msg("org_only_chairman_set_garrison"));
             return true;
         }
 
@@ -177,17 +177,17 @@ public class SovereignSubjectCommand {
 
         Boolean enabled = parseEnabledState(args[4]);
         if (enabled == null) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_setgarrison"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_setgarrison"));
             return true;
         }
 
         if (!orgManager.setSubjectGarrisonState(org, targetNation, enabled)) {
-            sender.sendMessage(ChatColor.YELLOW + msg("org_subject_garrison_unchanged",
+            sender.sendMessage(TextColors.YELLOW + msg("org_subject_garrison_unchanged",
                     targetNation,
                     enabled ? msg("common_enabled") : msg("common_disabled")));
             return true;
         }
-        sender.sendMessage(ChatColor.GREEN + msg("org_subject_garrison_updated",
+        sender.sendMessage(TextColors.GREEN + msg("org_subject_garrison_updated",
                 targetNation,
                 enabled ? msg("common_enabled") : msg("common_disabled")));
         return true;
@@ -202,11 +202,11 @@ public class SovereignSubjectCommand {
             return true;
         }
         if (args.length < 5) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_mobilizewar"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_mobilizewar"));
             return true;
         }
         if (!isChairman(player, org)) {
-            sender.sendMessage(ChatColor.RED + msg("org_only_chairman_mobilize_subject_war"));
+            sender.sendMessage(TextColors.RED + msg("org_only_chairman_mobilize_subject_war"));
             return true;
         }
 
@@ -217,27 +217,27 @@ public class SovereignSubjectCommand {
 
         Boolean enabled = parseEnabledState(args[4]);
         if (enabled == null) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_mobilizewar"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_mobilizewar"));
             return true;
         }
         if (enabled && orgManager.isNationNeutral(targetNation)) {
-            sender.sendMessage(ChatColor.RED + msg("org_neutral_war_forbidden"));
+            sender.sendMessage(TextColors.RED + msg("org_neutral_war_forbidden"));
             return true;
         }
 
         if (orgManager.isGarrisonSubject(org, targetNation) && !enabled) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_war_duty_garrison_forced", targetNation));
+            sender.sendMessage(TextColors.RED + msg("org_subject_war_duty_garrison_forced", targetNation));
             return true;
         }
 
         if (!orgManager.setSubjectWarParticipationRequired(org, targetNation, enabled)) {
-            sender.sendMessage(ChatColor.YELLOW + msg("org_subject_war_duty_unchanged",
+            sender.sendMessage(TextColors.YELLOW + msg("org_subject_war_duty_unchanged",
                     targetNation,
                     enabled ? msg("common_enabled") : msg("common_disabled")));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GREEN + msg("org_subject_war_duty_updated",
+        sender.sendMessage(TextColors.GREEN + msg("org_subject_war_duty_updated",
                 targetNation,
                 enabled ? msg("common_enabled") : msg("common_disabled")));
         return true;
@@ -252,11 +252,11 @@ public class SovereignSubjectCommand {
             return true;
         }
         if (args.length < 5) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_replaceleader"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_replaceleader"));
             return true;
         }
         if (!isChairman(player, org)) {
-            sender.sendMessage(ChatColor.RED + msg("org_only_chairman_replace_subject_leader"));
+            sender.sendMessage(TextColors.RED + msg("org_only_chairman_replace_subject_leader"));
             return true;
         }
 
@@ -268,21 +268,21 @@ public class SovereignSubjectCommand {
 
         WDEnation subjectNation = nationManager.getNation(targetNation);
         if (subjectNation == null) {
-            sender.sendMessage(ChatColor.RED + msg("nation_not_found_with_name", targetNation));
+            sender.sendMessage(TextColors.RED + msg("nation_not_found_with_name", targetNation));
             return true;
         }
         if (!nationManager.isNationResidentCandidate(subjectNation, newLeaderName)) {
-            sender.sendMessage(ChatColor.RED + msg("nation_candidate_must_be_nation_resident"));
+            sender.sendMessage(TextColors.RED + msg("nation_candidate_must_be_nation_resident"));
             return true;
         }
         if (!nationManager.forceNationLeader(subjectNation, newLeaderName)) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_replace_leader_failed", targetNation, newLeaderName));
+            sender.sendMessage(TextColors.RED + msg("org_subject_replace_leader_failed", targetNation, newLeaderName));
             return true;
         }
 
         int suppression = orgManager.reduceSubjectSuppression(
                 org, targetNation, orgManager.getForcedLeaderChangeSuppressionReduction());
-        sender.sendMessage(ChatColor.GREEN + msg("org_subject_replace_leader_success",
+        sender.sendMessage(TextColors.GREEN + msg("org_subject_replace_leader_success",
                 targetNation, newLeaderName, Math.max(0, suppression)));
         return true;
     }
@@ -296,11 +296,11 @@ public class SovereignSubjectCommand {
             return true;
         }
         if (args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_demandtribute"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_demandtribute"));
             return true;
         }
         if (!isChairman(player, org)) {
-            sender.sendMessage(ChatColor.RED + msg("org_only_chairman_demand_tribute"));
+            sender.sendMessage(TextColors.RED + msg("org_only_chairman_demand_tribute"));
             return true;
         }
 
@@ -311,17 +311,17 @@ public class SovereignSubjectCommand {
 
         EconomyBridge.Charge charge = orgManager.getForcedTributeCharge(org, targetNation);
         if (charge.amount().compareTo(BigDecimal.ZERO) <= 0) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_forced_tribute_unconfigured", targetNation));
+            sender.sendMessage(TextColors.RED + msg("org_subject_forced_tribute_unconfigured", targetNation));
             return true;
         }
 
         Nation townyNation = resolveNation(targetNation);
         if (townyNation == null) {
-            sender.sendMessage(ChatColor.RED + msg("org_nation_treasury_unavailable"));
+            sender.sendMessage(TextColors.RED + msg("org_nation_treasury_unavailable"));
             return true;
         }
         if (!withdrawGovernmentCharge(townyNation, charge, "WorldDynamicsEngine sovereign forced tribute")) {
-            sender.sendMessage(ChatColor.RED + msg("org_subject_forced_tribute_insufficient",
+            sender.sendMessage(TextColors.RED + msg("org_subject_forced_tribute_insufficient",
                     targetNation, formatGovernmentCharge(charge)));
             return true;
         }
@@ -331,7 +331,7 @@ public class SovereignSubjectCommand {
         orgManager.saveOrganizations();
         int suppression = orgManager.reduceSubjectSuppression(
                 org, targetNation, orgManager.getForcedTributeSuppressionReduction());
-        sender.sendMessage(ChatColor.GREEN + msg("org_subject_forced_tribute_success",
+        sender.sendMessage(TextColors.GREEN + msg("org_subject_forced_tribute_success",
                 targetNation, formatGovernmentCharge(charge), Math.max(0, suppression)));
         return true;
     }
@@ -340,7 +340,7 @@ public class SovereignSubjectCommand {
         if (org.isSovereignEmpire()) {
             return true;
         }
-        sender.sendMessage(ChatColor.RED + msg("org_only_sovereign_subject_control"));
+        sender.sendMessage(TextColors.RED + msg("org_only_sovereign_subject_control"));
         return false;
     }
 
@@ -348,7 +348,7 @@ public class SovereignSubjectCommand {
         if (orgManager.isSovereignSubjectNation(org, nationName)) {
             return true;
         }
-        sender.sendMessage(ChatColor.RED + msg("org_subject_not_found", nationName));
+        sender.sendMessage(TextColors.RED + msg("org_subject_not_found", nationName));
         return false;
     }
 
@@ -356,7 +356,7 @@ public class SovereignSubjectCommand {
         if (!orgManager.hasActiveIndependenceWar(org, nationName)) {
             return false;
         }
-        sender.sendMessage(ChatColor.RED + msg("org_subject_control_blocked_by_war", nationName));
+        sender.sendMessage(TextColors.RED + msg("org_subject_control_blocked_by_war", nationName));
         return true;
     }
 
@@ -373,7 +373,7 @@ public class SovereignSubjectCommand {
         if (sender instanceof Player player) {
             return player;
         }
-        sender.sendMessage(ChatColor.RED + msg(messageKey));
+        sender.sendMessage(TextColors.RED + msg(messageKey));
         return null;
     }
 
@@ -381,7 +381,7 @@ public class SovereignSubjectCommand {
         if (org != null) {
             return true;
         }
-        sender.sendMessage(ChatColor.RED + WorldDynamicsEngine.getInstance()
+        sender.sendMessage(TextColors.RED + WorldDynamicsEngine.getInstance()
                 .getLocaleMessage(WorldDynamicsEngine.getInstance().userLang, "orgnotfound"));
         return false;
     }

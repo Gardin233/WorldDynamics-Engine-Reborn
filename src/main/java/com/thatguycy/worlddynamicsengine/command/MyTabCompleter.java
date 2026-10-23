@@ -42,7 +42,11 @@ public class MyTabCompleter implements TabCompleter {
             String rootArg = args.length > 0 ? args[0].toLowerCase() : "";
             if (args.length > 1 && !CommandPermissions.root(sender, rootArg)) return List.of();
             if (rootArg.equals("admin") && args.length > 1) return AdminTabCompleter.complete(sender, args);
-            if (args.length == 1) {
+            if (args.length == 3 && HelpCommand.supportsModule(rootArg)
+                    && args[1].equalsIgnoreCase("help")) {
+                int pages = HelpCommand.getModulePageCount(WorldDynamicsEngine.getInstance(), rootArg);
+                for (int page = 1; page <= pages; page++) completions.add(String.valueOf(page));
+            } else if (args.length == 1) {
                 completions.add("help");
                 completions.add("docs");
                 if (CommandPermissions.root(sender, "debug")) completions.add("debug");
@@ -62,7 +66,7 @@ public class MyTabCompleter implements TabCompleter {
                 // Add more first-level options as needed
             } else if (rootArg.equals("history")) {
                 var history = WorldDynamicsEngine.getInstance().getNationHistoryManager();
-                if (args.length == 2) completions.addAll(Arrays.asList("list", "read", "txt", "book"));
+                if (args.length == 2) completions.addAll(Arrays.asList("help", "list", "read", "txt", "book"));
                 else if (args.length == 3 && !args[1].equalsIgnoreCase("list")) {
                     history.list().forEach(book -> {
                         completions.add(book.id);
@@ -70,16 +74,32 @@ public class MyTabCompleter implements TabCompleter {
                     });
                 }
             } else if (rootArg.equals("war")) {
-                if (args.length == 2) completions.addAll(Arrays.asList("menu", "declare", "surrender"));
-                else if (args.length == 3) completions.addAll(Arrays.asList("nation", "town"));
-                else if (args.length == 4) {
+                if (args.length == 2) completions.addAll(Arrays.asList("help", "menu", "focus", "declare", "surrender"));
+                else if (args.length == 3) {
+                    if ("focus".equalsIgnoreCase(args[1])) {
+                        completions.add("clear");
+                        if (sender instanceof Player player) {
+                            int count = WorldDynamicsEngine.getInstance().getWarScoreboardManager()
+                                    .getAvailableWars(player).size();
+                            for (int i = 1; i <= count; i++) completions.add(String.valueOf(i));
+                        }
+                    } else if ("surrender".equalsIgnoreCase(args[1])) {
+                        completions.add("town");
+                    } else if ("declare".equalsIgnoreCase(args[1])) {
+                        completions.addAll(Arrays.asList("nation", "town"));
+                    }
+                } else if (args.length == 4 && "declare".equalsIgnoreCase(args[1])) {
                     if ("town".equalsIgnoreCase(args[2])) {
                         if (actorNation != null) completions.add(actorNation);
                         completions.addAll(WorldDynamicsEngine.getInstance().getTownManager().getAllTowns().stream()
                                 .map(com.thatguycy.worlddynamicsengine.model.WDEtown::getTownName).toList());
                     } else completions.addAll(WorldDynamicsEngine.getInstance().getNationManager().getAllNations().stream()
                             .map(com.thatguycy.worlddynamicsengine.model.WDEnation::getNationName).toList());
-                } else if (args.length == 5) {
+                } else if (args.length == 4 && "surrender".equalsIgnoreCase(args[1])
+                        && "town".equalsIgnoreCase(args[2])) {
+                    completions.addAll(WorldDynamicsEngine.getInstance().getTownManager().getAllTowns().stream()
+                            .map(com.thatguycy.worlddynamicsengine.model.WDEtown::getTownName).toList());
+                } else if (args.length == 5 && "declare".equalsIgnoreCase(args[1])) {
                     var targetTown = "town".equalsIgnoreCase(args[2])
                             ? com.palmergames.bukkit.towny.TownyAPI.getInstance().getTown(args[3]) : null;
                     String targetNation = "town".equalsIgnoreCase(args[2])
@@ -101,9 +121,9 @@ public class MyTabCompleter implements TabCompleter {
                     completions.add(String.valueOf(page));
                 }
             } else if (rootArg.equals("inn") && args.length == 2) {
-                completions.add("set");
+                completions.addAll(Arrays.asList("help", "set"));
             } else if (rootArg.equals("rally") && args.length == 2) {
-                completions.addAll(Arrays.asList("nation", "town"));
+                completions.addAll(Arrays.asList("help", "nation", "town"));
             } else if (rootArg.equals("inn") && args.length == 3) {
                 completions.addAll(Arrays.asList("10", "25", "50"));
             } else if (rootArg.equals("inn") && args.length == 4) {
@@ -112,7 +132,7 @@ public class MyTabCompleter implements TabCompleter {
             } else if (rootArg.equals("debug") && args.length == 2) {
                 completions.addAll(Arrays.asList("balance", "craftengine", "realisticseasons"));
             } else if (rootArg.equals("background") && args.length == 2) {
-                completions.addAll(Arrays.asList("menu", "list", "info", "choose", "status"));
+                completions.addAll(Arrays.asList("help", "menu", "list", "info", "choose", "status"));
             } else if (rootArg.equals("background") && args.length == 3
                     && (args[1].equalsIgnoreCase("list") || args[1].equalsIgnoreCase("info") || args[1].equalsIgnoreCase("choose"))) {
                 completions.addAll(Arrays.asList("childhood", "adulthood", "儿童时期", "成年时期"));
@@ -132,7 +152,7 @@ public class MyTabCompleter implements TabCompleter {
                     completions.addAll(WorldDynamicsEngine.getInstance().getEconomyBridge().currencies());
                 }
             } else if (rootArg.equals("ideology") && args.length == 2) {
-                completions.addAll(Arrays.asList("menu", "create", "info", "list", "setplayer", "setnation", "settown", "setmemes", "abdicate", "excommunicate", "treasury", "donate", "settithe"));
+                completions.addAll(Arrays.asList("help", "menu", "create", "info", "list", "setplayer", "setnation", "settown", "setmemes", "abdicate", "excommunicate", "treasury", "donate", "settithe", "governance", "cardinal", "vote", "church", "council", "split"));
             } else if (rootArg.equals("ideology") && args.length == 3) {
                 switch (args[1].toLowerCase()) {
                     case "info":
@@ -142,6 +162,18 @@ public class MyTabCompleter implements TabCompleter {
                     case "treasury":
                     case "donate":
                     case "settithe":
+                    case "governance":
+                    case "cardinal":
+                    case "vote":
+                        completions.addAll(religionManager.getAllReligionNames());
+                        break;
+                    case "church":
+                        completions.addAll(Arrays.asList("create", "list", "join", "leave", "abdicate", "disband", "treasury"));
+                        break;
+                    case "council":
+                        completions.addAll(Arrays.asList("propose", "vote", "list"));
+                        break;
+                    case "split":
                         completions.addAll(religionManager.getAllReligionNames());
                         break;
                     case "setplayer":
@@ -168,9 +200,62 @@ public class MyTabCompleter implements TabCompleter {
                     completions.addAll(Arrays.asList("player", "town", "nation"));
                 } else if (args[1].equalsIgnoreCase("settithe")) {
                     completions.addAll(Arrays.asList("fixed", "wealth_percentage"));
+                } else if (args[1].equalsIgnoreCase("governance")) {
+                    completions.addAll(Arrays.asList("lifetime", "cardinal", "synodal"));
+                } else if (args[1].equalsIgnoreCase("cardinal")) {
+                    completions.addAll(Arrays.asList("appoint", "revoke"));
+                } else if (args[1].equalsIgnoreCase("vote")) {
+                    completions.add("abstain");
+                    TownyUniverse.getInstance().getResidents().forEach(resident -> completions.add(resident.getName()));
                 } else if (args[1].equalsIgnoreCase("donate")) {
                     completions.addAll(Arrays.asList("100", "1000"));
+                } else if (args[1].equalsIgnoreCase("church")
+                        && Arrays.asList("create", "list", "join", "leave", "abdicate", "disband", "treasury")
+                                .contains(args[2].toLowerCase())
+                        || args[1].equalsIgnoreCase("council")
+                                && Arrays.asList("propose", "list").contains(args[2].toLowerCase())
+                        || args[1].equalsIgnoreCase("split")) {
+                    completions.addAll(religionManager.getAllReligionNames());
+                } else if (args[1].equalsIgnoreCase("council") && args[2].equalsIgnoreCase("vote")) {
+                    religionManager.getAllReligionNames().forEach(name ->
+                            WorldDynamicsEngine.getInstance().getIdeologyChurchManager()
+                                    .getProposals(name, true)
+                                    .stream()
+                                    .filter(proposal -> proposal.isPending())
+                                    .forEach(proposal -> completions.add(proposal.getProposalUuid().toString())));
                 }
+            } else if (rootArg.equals("ideology") && args.length == 5
+                    && ((args[1].equalsIgnoreCase("council") && args[2].equalsIgnoreCase("propose"))
+                            || (args[1].equalsIgnoreCase("council") && args[2].equalsIgnoreCase("vote"))
+                            || (args[1].equalsIgnoreCase("church")
+                                    && Arrays.asList("join", "treasury", "disband", "abdicate")
+                                            .contains(args[2].toLowerCase()))
+                            || args[1].equalsIgnoreCase("split"))) {
+                if (args[1].equalsIgnoreCase("council") && args[2].equalsIgnoreCase("propose")) {
+                    completions.addAll(Arrays.asList("memes", "doctrine", "tithe", "sanction", "lift", "appeal", "reform"));
+                } else if (args[1].equalsIgnoreCase("council") && args[2].equalsIgnoreCase("vote")) {
+                    completions.addAll(Arrays.asList("yes", "no"));
+                } else if (args[1].equalsIgnoreCase("church")) {
+                    String action = args[2].toLowerCase();
+                    if (action.equals("join") || action.equals("treasury") || action.equals("disband")
+                            || action.equals("abdicate")) {
+                        WorldDynamicsEngine.getInstance().getIdeologyChurchManager()
+                                .getChurches(args[3]).stream().filter(church -> church.isActive())
+                                .forEach(church -> completions.add(church.getChurchName()));
+                    }
+                } else if (args[1].equalsIgnoreCase("split")) {
+                    WorldDynamicsEngine.getInstance().getIdeologyChurchManager()
+                            .getChurches(args[3]).stream().filter(church -> church.isActive())
+                            .forEach(church -> completions.add(church.getChurchName()));
+                }
+            } else if (rootArg.equals("ideology") && args.length == 6
+                    && args[1].equalsIgnoreCase("church") && args[2].equalsIgnoreCase("abdicate")) {
+                TownyUniverse.getInstance().getResidents().forEach(resident -> completions.add(resident.getName()));
+            } else if (rootArg.equals("ideology") && args.length == 6
+                    && args[1].equalsIgnoreCase("church") && args[2].equalsIgnoreCase("treasury")) {
+                completions.addAll(Arrays.asList("deposit", "withdraw"));
+            } else if (rootArg.equals("ideology") && args.length == 5 && args[1].equalsIgnoreCase("cardinal")) {
+                TownyUniverse.getInstance().getResidents().forEach(resident -> completions.add(resident.getName()));
             } else if (rootArg.equals("ideology") && args.length == 5 && args[1].equalsIgnoreCase("settithe")) {
                 completions.addAll("wealth_percentage".equalsIgnoreCase(args[3])
                         ? Arrays.asList("0", "5", "10", "100") : Arrays.asList("0", "100", "1000"));
@@ -189,7 +274,7 @@ public class MyTabCompleter implements TabCompleter {
                         break;
                 }
             } else if (args.length == 2 && args[0].equalsIgnoreCase("town")) {
-                completions.add("menu");
+                completions.addAll(Arrays.asList("help", "menu"));
                 TownyUniverse.getInstance().getTowns().forEach(town -> completions.add(town.getName()));
             } else if (args[0].equalsIgnoreCase("town") && args.length == 3) {
                 completions.addAll(Arrays.asList("menu", "setgovtype", "setleader", "nominateleader", "voteleader", "setelectiondays", "setconscript", "setconscriptprivilege"));
@@ -226,7 +311,7 @@ public class MyTabCompleter implements TabCompleter {
             } else if (args[0].equalsIgnoreCase("town") && args.length == 6 && args[2].equalsIgnoreCase("setconscriptprivilege")) {
                 completions.addAll(Arrays.asList("enabled", "disabled", "启用", "禁用"));
             } else if (args.length == 2 && args[0].equalsIgnoreCase("nation")) {
-                completions.add("menu");
+                completions.addAll(Arrays.asList("help", "menu"));
                 TownyUniverse.getInstance().getNations().forEach(nation -> completions.add(nation.getName()));
             } else if (args[0].equalsIgnoreCase("nation") && args.length == 3) {
                 completions.addAll(Arrays.asList("menu", "setgovtype", "setgovleader", "startelection", "addgovmember", "kickgovmember",
@@ -272,7 +357,7 @@ public class MyTabCompleter implements TabCompleter {
             } else if (args[0].equalsIgnoreCase("nation") && args.length == 5 && args[2].equalsIgnoreCase("settowntax")) {
                 completions.addAll(Arrays.asList("fixed", "wealth_percentage", "定额", "总财产比例"));
             } else if (args[0].equalsIgnoreCase("diplomacy") && args.length == 2) {
-                completions.addAll(Arrays.asList("setrelation", "trading", "viewtrading", "relations", "visit", "letter", "letters", "readletter"));
+                completions.addAll(Arrays.asList("help", "setrelation", "trading", "viewtrading", "relations", "visit", "letter", "letters", "readletter"));
             } else if (args[0].equalsIgnoreCase("diplomacy") && args.length == 3) {
                 if (args[1].equalsIgnoreCase("setrelation") || args[1].equalsIgnoreCase("trading")) {
                     TownyUniverse.getInstance().getNations().forEach(nation -> completions.add(nation.getName()));
@@ -294,7 +379,7 @@ public class MyTabCompleter implements TabCompleter {
                     completions.addAll(Arrays.asList("insult", "notice", "request"));
                 }
             } else if (args.length == 2 && args[0].equalsIgnoreCase("org")) {
-                completions.addAll(Arrays.asList("menu", "create", "dissolve", "applynation", "votejoin", "reviewjoin", "declarewar", "votewar", "sanction", "deposit", "withdraw", "leave", "grantindependence", "peacetreaty", "reviewtreaty", "promoteautonomy", "demoteautonomy", "setgarrison", "mobilizewar", "replaceleader", "demandtribute", "info"));
+                completions.addAll(Arrays.asList("help", "menu", "create", "dissolve", "applynation", "votejoin", "reviewjoin", "declarewar", "votewar", "sanction", "deposit", "withdraw", "leave", "grantindependence", "peacetreaty", "reviewtreaty", "promoteautonomy", "demoteautonomy", "setgarrison", "mobilizewar", "replaceleader", "demandtribute", "info"));
             } else if (args.length == 3 && args[0].equalsIgnoreCase("org")) {
                 if (args[1].equalsIgnoreCase("peacetreaty") || args[1].equalsIgnoreCase("reviewtreaty")) completions.add("war");
                 if (!args[1].equalsIgnoreCase("create")) {

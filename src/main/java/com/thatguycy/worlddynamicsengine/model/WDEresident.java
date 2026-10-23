@@ -17,6 +17,8 @@ public class WDEresident implements ConfigurationSerializable {
     private UUID userUUID;
     private String username;
     private String religionName;
+    private UUID churchUuid;
+    private long churchChangedAt;
     private boolean religionChosen;
     private String childhoodBackgroundId;
     private String adulthoodBackgroundId;
@@ -28,6 +30,8 @@ public class WDEresident implements ConfigurationSerializable {
         this.userUUID = userUUID;
         this.username = username;
         this.religionName = "None";
+        this.churchUuid = null;
+        this.churchChangedAt = 0L;
         this.religionChosen = false;
         this.childhoodBackgroundId = "";
         this.adulthoodBackgroundId = "";
@@ -41,6 +45,10 @@ public class WDEresident implements ConfigurationSerializable {
         this.userUUID = UUID.fromString(String.valueOf(map.get("userUUID")));
         this.username = String.valueOf(map.getOrDefault("username", "Unknown"));
         this.religionName = String.valueOf(map.getOrDefault("religionName", "None"));
+        String churchUuidValue = normalizeStringValue(map.get("churchUuid"));
+        this.churchUuid = churchUuidValue.isBlank() ? null : UUID.fromString(churchUuidValue);
+        Object rawChurchChangedAt = map.get("churchChangedAt");
+        this.churchChangedAt = rawChurchChangedAt instanceof Number number ? number.longValue() : 0L;
         Object rawReligionChosen = map.get("religionChosen");
         this.religionChosen = rawReligionChosen instanceof Boolean
                 ? (Boolean) rawReligionChosen
@@ -59,6 +67,8 @@ public class WDEresident implements ConfigurationSerializable {
         map.put("userUUID", userUUID.toString());
         map.put("username", username);
         map.put("religionName", religionName);
+        map.put("churchUuid", churchUuid == null ? "" : churchUuid.toString());
+        map.put("churchChangedAt", churchChangedAt);
         map.put("religionChosen", religionChosen);
         map.put("childhoodBackgroundId", childhoodBackgroundId);
         map.put("adulthoodBackgroundId", adulthoodBackgroundId);
@@ -99,7 +109,24 @@ public class WDEresident implements ConfigurationSerializable {
     }
 
     public void setReligionName(String religionName) {
+        if (this.religionName == null || religionName == null
+                || !this.religionName.equalsIgnoreCase(religionName)) {
+            churchUuid = null;
+        }
         this.religionName = religionName;
+    }
+
+    public UUID getChurchUuid() {
+        return churchUuid;
+    }
+
+    public void setChurchUuid(UUID churchUuid, long changedAt) {
+        this.churchUuid = churchUuid;
+        this.churchChangedAt = changedAt;
+    }
+
+    public long getChurchChangedAt() {
+        return churchChangedAt;
     }
 
     public boolean isReligionChosen() {

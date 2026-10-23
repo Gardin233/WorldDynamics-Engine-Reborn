@@ -11,8 +11,11 @@ import com.thatguycy.worlddynamicsengine.manager.governance.NationManager;
 import com.thatguycy.worlddynamicsengine.manager.governance.ResidentManager;
 import com.thatguycy.worlddynamicsengine.manager.governance.TownManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyTreasuryManager;
+import com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyChurchManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.ReligionManager;
+import com.thatguycy.worlddynamicsengine.model.IdeologyCouncilProposal;
 import com.thatguycy.worlddynamicsengine.model.WDEnation;
+import com.thatguycy.worlddynamicsengine.model.WDEChurch;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEtown;
@@ -28,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -43,20 +46,23 @@ public class ReligionCommand implements CommandExecutor {
     private final ResidentManager residentManager;
     private final ReligionManager religionManager;
     private final EconomyBridge economyBridge;
+    private final IdeologyChurchManager churchManager;
 
-    public ReligionCommand(NationManager nationManager, TownManager townManager, ResidentManager residentManager, ReligionManager religionManager, EconomyBridge economyBridge) {
+    public ReligionCommand(NationManager nationManager, TownManager townManager, ResidentManager residentManager,
+            ReligionManager religionManager, EconomyBridge economyBridge, IdeologyChurchManager churchManager) {
         this.nationManager = nationManager;
         this.townManager = townManager;
         this.residentManager = residentManager;
         this.religionManager = religionManager;
         this.economyBridge = economyBridge;
+        this.churchManager = churchManager;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         WorldDynamicsEngine plugin = WorldDynamicsEngine.getInstance();
         if (!plugin.religionEnabled) {
-            sender.sendMessage(ChatColor.RED + msg("religion_disabled"));
+            sender.sendMessage(TextColors.RED + msg("religion_disabled"));
             return true;
         }
 
@@ -65,7 +71,7 @@ public class ReligionCommand implements CommandExecutor {
             return true;
         }
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_root"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_root"));
             return true;
         }
 
@@ -82,24 +88,35 @@ public class ReligionCommand implements CommandExecutor {
             case "setmemes" -> handleSetMemes(sender, args);
             case "donate" -> handleDonate(sender, args, plugin);
             case "settithe" -> handleSetTithe(sender, args, plugin);
+            case "governance" -> handleGovernance(sender, args);
+            case "cardinal" -> handleCardinal(sender, args);
+            case "vote" -> handleElectionVote(sender, args);
+            case "church" -> handleChurch(sender, args);
+            case "council" -> handleCouncil(sender, args);
+            case "split" -> handleSplit(sender, args);
             case "treasury" -> {
                 if (args.length != 3) {
-                    sender.sendMessage(ChatColor.RED + msg("religion_usage_treasury"));
+                    sender.sendMessage(TextColors.RED + msg("religion_usage_treasury"));
                 } else if (religionManager.getReligion(args[2]) == null) {
-                    sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+                    sender.sendMessage(TextColors.RED + msg("religion_not_found"));
                 } else if (sender instanceof Player player) {
-                    plugin.getPlayerMenuManager().openIdeologyTreasury(player, args[2]);
+                    WDEreligion ideology = religionManager.getReligion(args[2]);
+                    if (ideology.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+                        sender.sendMessage(TextColors.YELLOW + msg("religion_treasury_synodal_use_church"));
+                    } else {
+                        plugin.getPlayerMenuManager().openIdeologyTreasury(player, args[2]);
+                    }
                 } else {
                     handleInfo(sender, args);
                 }
                 yield true;
             }
             case "withdraw" -> {
-                sender.sendMessage(ChatColor.RED + msg("religion_treasury_withdraw_forbidden"));
+                sender.sendMessage(TextColors.RED + msg("religion_treasury_withdraw_forbidden"));
                 yield true;
             }
             default -> {
-                sender.sendMessage(ChatColor.RED + msg("religion_usage_root"));
+                sender.sendMessage(TextColors.RED + msg("religion_usage_root"));
                 yield true;
             }
         };
@@ -109,19 +126,24 @@ public class ReligionCommand implements CommandExecutor {
         Player player = requirePlayer(sender);
         if (player == null) return true;
         if (args.length != 4) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_donate"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_donate"));
+            return true;
+        }
+        WDEreligion targetIdeology = religionManager.getReligion(args[2]);
+        if (targetIdeology != null && targetIdeology.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_synodal_use_church"));
             return true;
         }
         BigDecimal amount;
         try {
             amount = new BigDecimal(args[3]);
         } catch (NumberFormatException ex) {
-            sender.sendMessage(ChatColor.RED + msg("religion_treasury_invalid_amount"));
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_invalid_amount"));
             return true;
         }
         IdeologyTreasuryManager.DonationResult result = plugin.getIdeologyTreasuryManager().donate(player, args[2], amount);
         if (result.status() == IdeologyTreasuryManager.DonationStatus.SUCCESS) {
-            sender.sendMessage(ChatColor.GREEN + msg("religion_donation_success", args[2], economyBridge.format(amount)));
+            sender.sendMessage(TextColors.GREEN + msg("religion_donation_success", args[2], economyBridge.format(amount)));
             player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.3f);
         } else {
             String key = switch (result.status()) {
@@ -131,7 +153,7 @@ public class ReligionCommand implements CommandExecutor {
                 case INSUFFICIENT_FUNDS -> "religion_donation_insufficient";
                 default -> "religion_treasury_storage_error";
             };
-            sender.sendMessage(ChatColor.RED + msg(key));
+            sender.sendMessage(TextColors.RED + msg(key));
         }
         return true;
     }
@@ -140,76 +162,417 @@ public class ReligionCommand implements CommandExecutor {
         Player player = requirePlayer(sender);
         if (player == null) return true;
         if (args.length != 5) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_settithe"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_settithe"));
             return true;
         }
         WDEreligion religion = religionManager.getReligion(args[2]);
         if (religion == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            sender.sendMessage(TextColors.RED + msg("religion_not_found"));
+            return true;
+        }
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            sender.sendMessage(TextColors.RED + msg("religion_synodal_use_council"));
             return true;
         }
         if (!isPontiff(player, religion)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_only_pontiff"));
+            sender.sendMessage(TextColors.RED + msg("religion_only_pontiff"));
             return true;
         }
         try {
             WDEreligion.TitheType type = WDEreligion.TitheType.valueOf(args[3].toUpperCase(Locale.ROOT));
             BigDecimal amount = new BigDecimal(args[4]);
             if (!religionManager.configureTithe(religion.getReligionName(), player.getUniqueId(), type, amount)) {
-                sender.sendMessage(ChatColor.RED + msg("religion_only_pontiff"));
+                sender.sendMessage(TextColors.RED + msg("religion_only_pontiff"));
                 return true;
             }
-            sender.sendMessage(ChatColor.GREEN + msg("religion_tithe_updated", religion.getReligionName(),
+            sender.sendMessage(TextColors.GREEN + msg("religion_tithe_updated", religion.getReligionName(),
                     msg("religion_tithe_type_" + type.name().toLowerCase(Locale.ROOT)),
                     type == WDEreligion.TitheType.WEALTH_PERCENTAGE ? amount.toPlainString() + "%" : economyBridge.format(amount)));
         } catch (IllegalArgumentException ex) {
-            sender.sendMessage(ChatColor.RED + msg("religion_tithe_invalid"));
+            sender.sendMessage(TextColors.RED + msg("religion_tithe_invalid"));
         } catch (IllegalStateException ex) {
-            sender.sendMessage(ChatColor.RED + msg("religion_treasury_storage_error"));
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
             plugin.getLogger().severe("Failed to save ideology tithe: " + ex.getMessage());
+        }
+        return true;
+    }
+
+    private boolean handleGovernance(CommandSender sender, String[] args) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+        if (args.length != 4) {
+            sender.sendMessage(TextColors.RED + msg("religion_usage_governance"));
+            return true;
+        }
+        WDEreligion.GovernanceMode mode;
+        try {
+            mode = WDEreligion.GovernanceMode.valueOf(args[3].toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_governance_invalid"));
+            return true;
+        }
+        try {
+            if (mode == WDEreligion.GovernanceMode.SYNODAL) {
+                churchManager.enterSynodal(args[2], player.getUniqueId(), player.getName());
+            } else {
+                religionManager.changeGovernanceMode(args[2], player.getUniqueId(), mode);
+            }
+            sender.sendMessage(TextColors.GREEN + msg("religion_governance_changed", args[2],
+                    msg("religion_governance_" + mode.name().toLowerCase(Locale.ROOT))));
+        } catch (UnsupportedOperationException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_governance_synodal_unavailable"));
+        } catch (IllegalArgumentException ex) {
+            String key = ex.getMessage() != null && ex.getMessage().contains("leader")
+                    ? "religion_only_pontiff" : "religion_governance_rejected";
+            sender.sendMessage(TextColors.RED + msg(key));
+        } catch (RuntimeException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
+            WorldDynamicsEngine.getInstance().getLogger().severe("Failed to change ideology governance: " + ex.getMessage());
+        }
+        return true;
+    }
+
+    private boolean handleCardinal(CommandSender sender, String[] args) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+        if (args.length != 5) {
+            sender.sendMessage(TextColors.RED + msg("religion_usage_cardinal"));
+            return true;
+        }
+        boolean appoint;
+        if ("appoint".equalsIgnoreCase(args[3]) || "任命".equals(args[3])) appoint = true;
+        else if ("revoke".equalsIgnoreCase(args[3]) || "撤销".equals(args[3])) appoint = false;
+        else {
+            sender.sendMessage(TextColors.RED + msg("religion_usage_cardinal"));
+            return true;
+        }
+        Resident target = resolveResident(args[4]);
+        if (target == null) {
+            sender.sendMessage(TextColors.RED + msg("player_not_found"));
+            return true;
+        }
+        try {
+            religionManager.changeCardinal(args[2], player.getUniqueId(), target.getUUID(), target.getName(), appoint);
+            sender.sendMessage(TextColors.GREEN + msg(appoint ? "religion_cardinal_appointed" : "religion_cardinal_revoked",
+                    target.getName(), args[2]));
+        } catch (IllegalArgumentException ex) {
+            String detail = ex.getMessage() == null ? "" : ex.getMessage();
+            String key = detail.contains("treasury") ? "religion_cardinal_insufficient_treasury"
+                    : detail.contains("leader") ? "religion_only_pontiff"
+                    : detail.contains("mode") ? "religion_cardinal_requires_mode"
+                    : detail.contains("seat") ? "religion_cardinal_seats_full"
+                    : detail.contains("eligible") ? "religion_cardinal_ineligible"
+                    : detail.contains("already a cardinal") ? "religion_cardinal_already"
+                    : detail.contains("not a cardinal") ? "religion_cardinal_missing"
+                    : "religion_cardinal_rejected";
+            sender.sendMessage(TextColors.RED + msg(key));
+        } catch (RuntimeException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
+            WorldDynamicsEngine.getInstance().getLogger().severe("Failed to update ideology cardinal: " + ex.getMessage());
+        }
+        return true;
+    }
+
+    private boolean handleElectionVote(CommandSender sender, String[] args) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+        if (args.length != 4) {
+            sender.sendMessage(TextColors.RED + msg("religion_usage_vote"));
+            return true;
+        }
+        String candidate = args[3];
+        if (!"abstain".equalsIgnoreCase(candidate) && !"弃权".equals(candidate)) {
+            Resident resident = resolveResident(candidate);
+            if (resident == null) {
+                sender.sendMessage(TextColors.RED + msg("player_not_found"));
+                return true;
+            }
+            candidate = resident.getUUID().toString();
+        } else {
+            candidate = "ABSTAIN";
+        }
+        try {
+            religionManager.castElectionVote(args[2], player.getUniqueId(), candidate);
+            sender.sendMessage(TextColors.GREEN + msg("religion_vote_recorded"));
+        } catch (IllegalArgumentException ex) {
+            String detail = ex.getMessage() == null ? "" : ex.getMessage();
+            String key = detail.contains("one sealed") ? "religion_vote_already_cast"
+                    : detail.contains("cardinals") ? "religion_vote_cardinal_only"
+                    : detail.contains("candidate") ? "religion_vote_candidate_invalid"
+                    : "religion_vote_unavailable";
+            sender.sendMessage(TextColors.RED + msg(key));
+        } catch (RuntimeException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
+            WorldDynamicsEngine.getInstance().getLogger().severe("Failed to save ideology election vote: " + ex.getMessage());
+        }
+        return true;
+    }
+
+    private boolean handleChurch(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(TextColors.RED + msg("religion_usage_church"));
+            return true;
+        }
+        String action = args[2].toLowerCase(Locale.ROOT);
+        if ("list".equals(action)) {
+            if (args.length != 4) {
+                sender.sendMessage(TextColors.RED + msg("religion_usage_church"));
+                return true;
+            }
+            WDEreligion ideology = religionManager.getReligion(args[3]);
+            if (ideology == null) {
+                sender.sendMessage(TextColors.RED + msg("religion_not_found"));
+                return true;
+            }
+            List<WDEChurch> churches = churchManager.getChurches(ideology.getReligionName()).stream()
+                    .filter(WDEChurch::isActive).toList();
+            sender.sendMessage(TextColors.GOLD + msg("church_list_header", ideology.getReligionName(), churches.size()));
+            for (WDEChurch church : churches) {
+                sender.sendMessage(TextColors.YELLOW + church.getChurchName() + TextColors.GRAY
+                        + " [" + church.getChurchUuid() + "] " + msg("church_list_head", church.getHeadName())
+                        + " " + msg("church_list_members", church.getMembers().size())
+                        + (church.isSanctioned(System.currentTimeMillis()) ? " " + msg("church_sanctioned") : ""));
+            }
+            return true;
+        }
+
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+        try {
+            switch (action) {
+                case "create" -> {
+                    if (args.length != 5) throw new IllegalArgumentException("usage");
+                    churchManager.createChurch(player, args[3], args[4]);
+                    sender.sendMessage(TextColors.GREEN + msg("church_created", args[4]));
+                }
+                case "join" -> {
+                    if (args.length != 5) throw new IllegalArgumentException("usage");
+                    churchManager.joinChurch(player, args[3], args[4]);
+                    sender.sendMessage(TextColors.GREEN + msg("church_joined", args[4]));
+                }
+                case "leave" -> {
+                    if (args.length != 4) throw new IllegalArgumentException("usage");
+                    churchManager.leaveChurch(player, args[3]);
+                    sender.sendMessage(TextColors.GREEN + msg("church_left"));
+                }
+                case "abdicate" -> {
+                    if (args.length != 6) throw new IllegalArgumentException("usage");
+                    Resident successor = resolveResident(args[5]);
+                    if (successor == null) {
+                        sender.sendMessage(TextColors.RED + msg("player_not_found"));
+                        return true;
+                    }
+                    churchManager.abdicateChurch(player, args[3], args[4], successor.getUUID().toString());
+                    sender.sendMessage(TextColors.GREEN + msg("church_abdicated", successor.getName()));
+                }
+                case "disband" -> {
+                    if (args.length != 5) throw new IllegalArgumentException("usage");
+                    churchManager.disbandChurch(player, args[3], args[4]);
+                    sender.sendMessage(TextColors.GREEN + msg("church_disbanded", args[4]));
+                }
+                case "treasury" -> {
+                    if (args.length != 7) throw new IllegalArgumentException("usage");
+                    BigDecimal amount = new BigDecimal(args[6]);
+                    BigDecimal balance = "deposit".equalsIgnoreCase(args[5])
+                            ? churchManager.deposit(player, args[3], args[4], amount)
+                            : "withdraw".equalsIgnoreCase(args[5])
+                                    ? churchManager.withdraw(player, args[3], args[4], amount)
+                                    : null;
+                    if (balance == null) throw new IllegalArgumentException("treasury_action");
+                    sender.sendMessage(TextColors.GREEN + msg("church_treasury_updated",
+                            economyBridge.format(amount), economyBridge.format(balance)));
+                }
+                default -> sender.sendMessage(TextColors.RED + msg("religion_usage_church"));
+            }
+        } catch (NumberFormatException ex) {
+            sender.sendMessage(TextColors.RED + msg("church_treasury_invalid"));
+        } catch (IllegalArgumentException ex) {
+            String detail = ex.getMessage() == null ? "" : ex.getMessage();
+            String key = "usage".equals(detail) ? "religion_usage_church"
+                    : detail.contains("funds") ? "church_insufficient_funds"
+                    : detail.contains("treasury") || detail.contains("amount") ? "church_treasury_invalid"
+                    : detail.contains("cooldown") ? "church_cooldown"
+                    : detail.contains("head") ? "church_head_required"
+                    : detail.contains("sanction") ? "church_sanction_restricted"
+                    : detail.contains("member") || detail.contains("follower") ? "church_membership_required"
+                    : "church_action_rejected";
+            sender.sendMessage(TextColors.RED + msg(key));
+        } catch (RuntimeException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
+            WorldDynamicsEngine.getInstance().getLogger().severe("Failed church operation: " + ex.getMessage());
+        }
+        return true;
+    }
+
+    private boolean handleCouncil(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(TextColors.RED + msg("religion_usage_council"));
+            return true;
+        }
+        String action = args[2].toLowerCase(Locale.ROOT);
+        if ("list".equals(action)) {
+            if (args.length != 4) {
+                sender.sendMessage(TextColors.RED + msg("religion_usage_council"));
+                return true;
+            }
+            List<IdeologyCouncilProposal> entries = churchManager.getProposals(args[3], true);
+            sender.sendMessage(TextColors.GOLD + msg("council_list_header", args[3], entries.size()));
+            for (IdeologyCouncilProposal proposal : entries) {
+                sender.sendMessage(TextColors.YELLOW + proposal.getProposalUuid().toString() + TextColors.GRAY
+                        + " " + msg("council_type_" + proposal.getType().name().toLowerCase(Locale.ROOT))
+                        + " " + msg("council_state_" + proposal.getState().name().toLowerCase(Locale.ROOT))
+                        + " " + proposal.getYesWeight() + "/" + proposal.getTotalWeight());
+            }
+            return true;
+        }
+
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+        try {
+            if ("vote".equals(action)) {
+                if (args.length != 5 || !List.of("yes", "no").contains(args[4].toLowerCase(Locale.ROOT))) {
+                    throw new IllegalArgumentException("usage");
+                }
+                churchManager.vote(player, UUID.fromString(args[3]), args[4]);
+                sender.sendMessage(TextColors.GREEN + msg("council_vote_recorded"));
+                return true;
+            }
+            if (!"propose".equals(action) || args.length < 7) {
+                throw new IllegalArgumentException("usage");
+            }
+            int reasonMarker = -1;
+            for (int i = 5; i < args.length; i++) {
+                if ("--".equals(args[i])) {
+                    reasonMarker = i;
+                    break;
+                }
+            }
+            if (reasonMarker < 5 || reasonMarker >= args.length - 1) {
+                throw new IllegalArgumentException("usage");
+            }
+            String ideology = args[3];
+            String proposalType = args[4].toLowerCase(Locale.ROOT);
+            String target = null;
+            Map<String, Object> payload = new java.util.LinkedHashMap<>();
+            IdeologyCouncilProposal.Type type = switch (proposalType) {
+                case "memes" -> {
+                    payload.put("memes", java.util.Arrays.asList(args).subList(5, reasonMarker));
+                    yield IdeologyCouncilProposal.Type.SET_MEMES;
+                }
+                case "doctrine" -> {
+                    if (reasonMarker != 7) throw new IllegalArgumentException("usage");
+                    payload.put("doctrineId", args[5]);
+                    payload.put("attitudeId", args[6]);
+                    yield IdeologyCouncilProposal.Type.SET_DOCTRINE;
+                }
+                case "tithe" -> {
+                    if (reasonMarker != 7) throw new IllegalArgumentException("usage");
+                    payload.put("titheType", args[5].toUpperCase(Locale.ROOT));
+                    payload.put("titheAmount", args[6]);
+                    yield IdeologyCouncilProposal.Type.SET_TITHE;
+                }
+                case "sanction" -> {
+                    if (reasonMarker != 7) throw new IllegalArgumentException("usage");
+                    target = args[5];
+                    payload.put("durationDays", args[6]);
+                    yield IdeologyCouncilProposal.Type.SANCTION_CHURCH;
+                }
+                case "lift" -> {
+                    if (reasonMarker != 6) throw new IllegalArgumentException("usage");
+                    target = args[5];
+                    yield IdeologyCouncilProposal.Type.LIFT_SANCTION;
+                }
+                case "appeal" -> {
+                    if (reasonMarker != 5) throw new IllegalArgumentException("usage");
+                    yield IdeologyCouncilProposal.Type.APPEAL_SANCTION;
+                }
+                case "reform" -> {
+                    if (reasonMarker != 6) throw new IllegalArgumentException("usage");
+                    payload.put("governanceMode", args[5].toUpperCase(Locale.ROOT));
+                    yield IdeologyCouncilProposal.Type.REFORM_UNION;
+                }
+                default -> throw new IllegalArgumentException("usage");
+            };
+            String reason = String.join(" ", java.util.Arrays.copyOfRange(args, reasonMarker + 1, args.length));
+            UUID proposal = churchManager.submitProposal(player, ideology, type, target, payload, reason);
+            sender.sendMessage(TextColors.GREEN + msg("council_proposal_created", proposal.toString()));
+        } catch (NumberFormatException ex) {
+            sender.sendMessage(TextColors.RED + msg("council_proposal_invalid"));
+        } catch (IllegalArgumentException ex) {
+            String detail = ex.getMessage() == null ? "" : ex.getMessage();
+            String key = "usage".equals(detail) ? "religion_usage_council"
+                    : detail.contains("unsanctioned") ? "council_vote_restricted"
+                    : detail.contains("already voted") ? "council_vote_once"
+                    : detail.contains("sanction") ? "council_sanction_restricted"
+                    : detail.contains("cooldown") ? "church_cooldown"
+                    : detail.contains("head") ? "church_head_required"
+                    : "council_proposal_rejected";
+            sender.sendMessage(TextColors.RED + msg(key));
+        } catch (RuntimeException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
+            WorldDynamicsEngine.getInstance().getLogger().severe("Failed council proposal operation: " + ex.getMessage());
+        }
+        return true;
+    }
+
+    private boolean handleSplit(CommandSender sender, String[] args) {
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+        if (args.length != 5) {
+            sender.sendMessage(TextColors.RED + msg("religion_usage_split"));
+            return true;
+        }
+        try {
+            churchManager.splitChurch(player, args[2], args[3], args[4]);
+            sender.sendMessage(TextColors.GREEN + msg("church_split_created", args[4]));
+        } catch (IllegalArgumentException ex) {
+            sender.sendMessage(TextColors.RED + msg("church_split_rejected"));
+        } catch (RuntimeException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
+            WorldDynamicsEngine.getInstance().getLogger().severe("Failed church schism: " + ex.getMessage());
         }
         return true;
     }
 
     private boolean handleCreate(CommandSender sender, String[] args, WorldDynamicsEngine plugin) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_only_players_create"));
+            sender.sendMessage(TextColors.RED + msg("religion_only_players_create"));
             return true;
         }
 
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_create"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_create"));
             return true;
         }
 
         if (religionManager.isReligionLeader(player.getUniqueId())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_leader_cannot_create"));
+            sender.sendMessage(TextColors.RED + msg("religion_leader_cannot_create"));
             return true;
         }
 
         String religionName = args[2].trim();
         if (!isValidReligionName(religionName)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_invalid_name"));
+            sender.sendMessage(TextColors.RED + msg("religion_invalid_name"));
             return true;
         }
 
         if (religionManager.religionExists(religionName)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_already_exists"));
+            sender.sendMessage(TextColors.RED + msg("religion_already_exists"));
             return true;
         }
 
         EconomyBridge.Charge cost = plugin.getReligionCreationCostCharge();
         if (economyBridge == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_economy_provider_missing"));
+            sender.sendMessage(TextColors.RED + msg("religion_economy_provider_missing"));
             return true;
         }
         if (economyBridge != null && !economyBridge.has(player, cost)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_enough_money", economyBridge.format(cost)));
+            sender.sendMessage(TextColors.RED + msg("religion_not_enough_money", economyBridge.format(cost)));
             return true;
         }
 
         if (economyBridge != null && !economyBridge.withdraw(player, cost).success()) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_enough_money", economyBridge.format(cost)));
+            sender.sendMessage(TextColors.RED + msg("religion_not_enough_money", economyBridge.format(cost)));
             return true;
         }
 
@@ -219,48 +582,69 @@ public class ReligionCommand implements CommandExecutor {
         creator.setReligionName(religion.getReligionName());
         creator.setReligionChosen(true);
         residentManager.saveResidents();
-        sender.sendMessage(ChatColor.GREEN + msg("religion_created", religionName));
+        religionManager.onResidentIdeologyChanged(player.getUniqueId());
+        churchManager.onResidentIdeologyChanged(player.getUniqueId());
+        sender.sendMessage(TextColors.GREEN + msg("religion_created", religionName));
         broadcast("religion_broadcast_created", religion.getReligionName(), player.getName());
         return true;
     }
 
     private boolean handleInfo(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_info"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_info"));
             return true;
         }
 
         WDEreligion religion = religionManager.getReligion(args[2]);
         if (religion == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            sender.sendMessage(TextColors.RED + msg("religion_not_found"));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GOLD + msg("religion_info_header", religion.getReligionName()));
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_founder") + ChatColor.WHITE + religion.getFounderName());
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_pontiff") + ChatColor.WHITE + religion.getPontiffName());
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_treasury") + ChatColor.WHITE
-                + economyBridge.format(religion.getTreasuryBalance()));
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_tithe") + ChatColor.WHITE
+        sender.sendMessage(TextColors.GOLD + msg("religion_info_header", religion.getReligionName()));
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_founder") + TextColors.WHITE + religion.getFounderName());
+        boolean synodal = religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL;
+        sender.sendMessage(TextColors.YELLOW + msg(synodal ? "religion_info_former_pontiff" : "religion_info_pontiff")
+                + TextColors.WHITE + religion.getPontiffName());
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_governance") + TextColors.WHITE
+                + msg("religion_governance_" + religion.getGovernanceMode().name().toLowerCase(Locale.ROOT)));
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.CARDINAL) {
+            sender.sendMessage(TextColors.YELLOW + msg("religion_info_cardinals") + TextColors.WHITE
+                    + religion.getCardinals().size() + "/" + religionManager.getCardinalSeatLimit(religion)
+                    + " " + String.join(", ", religion.getCardinals().values()));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_info_election") + TextColors.WHITE
+                    + msg(religion.isElectionOpen() ? "religion_election_open" : "religion_election_waiting"));
+        }
+        if (synodal) {
+            List<WDEChurch> activeChurches = churchManager.getChurches(religion.getReligionName()).stream()
+                    .filter(WDEChurch::isActive).toList();
+            sender.sendMessage(TextColors.YELLOW + msg("religion_info_church_count") + TextColors.WHITE
+                    + activeChurches.size());
+            sender.sendMessage(TextColors.GRAY + msg("religion_treasury_synodal_use_church"));
+        } else {
+            sender.sendMessage(TextColors.YELLOW + msg("religion_info_treasury") + TextColors.WHITE
+                    + economyBridge.format(religion.getTreasuryBalance()));
+            sender.sendMessage(TextColors.GRAY + msg("religion_treasury_withdraw_forbidden"));
+        }
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_tithe") + TextColors.WHITE
                 + msg("religion_tithe_type_" + religion.getTitheType().name().toLowerCase(Locale.ROOT)) + " "
                 + (religion.getTitheType() == WDEreligion.TitheType.WEALTH_PERCENTAGE
                         ? religion.getTitheAmount().toPlainString() + "%" : economyBridge.format(religion.getTitheAmount())));
-        sender.sendMessage(ChatColor.GRAY + msg("religion_treasury_withdraw_forbidden"));
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_created_at") + ChatColor.WHITE + formatTime(religion.getCreatedAt()));
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_created_at") + TextColors.WHITE + formatTime(religion.getCreatedAt()));
         List<String> configuredMemes = religionManager.getConfiguredMemes(religion.getMemes());
         Map<String, String> configuredDoctrineAttitudes = religionManager.getConfiguredDoctrineAttitudes(religion);
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_memes") + ChatColor.WHITE + formatMemeList(configuredMemes));
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_doctrines") + ChatColor.WHITE + formatDoctrineList(religion));
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_memes") + TextColors.WHITE + formatMemeList(configuredMemes));
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_doctrines") + TextColors.WHITE + formatDoctrineList(religion));
         if (!configuredMemes.isEmpty()) {
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_info_meme_descriptions"));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_info_meme_descriptions"));
             for (String meme : configuredMemes) {
-                sender.sendMessage(ChatColor.GRAY + msg("religion_info_meme_entry", religionManager.getMemeDisplayName(meme), religionManager.getMemeDescription(meme)));
+                sender.sendMessage(TextColors.GRAY + msg("religion_info_meme_entry", religionManager.getMemeDisplayName(meme), religionManager.getMemeDescription(meme)));
             }
         }
         if (!configuredDoctrineAttitudes.isEmpty()) {
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_info_doctrine_descriptions"));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_info_doctrine_descriptions"));
             for (Map.Entry<String, String> entry : configuredDoctrineAttitudes.entrySet()) {
-                sender.sendMessage(ChatColor.GRAY + msg(
+                sender.sendMessage(TextColors.GRAY + msg(
                         "religion_info_doctrine_entry",
                         religionManager.getDoctrineDisplayName(entry.getKey()),
                         religionManager.getDoctrineAttitudeDisplayName(entry.getKey(), entry.getValue()),
@@ -268,15 +652,15 @@ public class ReligionCommand implements CommandExecutor {
                 ));
             }
         }
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_excommunicated_players") + ChatColor.WHITE + formatExcommunicatedPlayers(religion.getExcommunicatedPlayers()));
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_excommunicated_towns") + ChatColor.WHITE + formatNameList(religion.getExcommunicatedTowns()));
-        sender.sendMessage(ChatColor.YELLOW + msg("religion_info_excommunicated_nations") + ChatColor.WHITE + formatNameList(religion.getExcommunicatedNations()));
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_excommunicated_players") + TextColors.WHITE + formatExcommunicatedPlayers(religion.getExcommunicatedPlayers()));
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_excommunicated_towns") + TextColors.WHITE + formatNameList(religion.getExcommunicatedTowns()));
+        sender.sendMessage(TextColors.YELLOW + msg("religion_info_excommunicated_nations") + TextColors.WHITE + formatNameList(religion.getExcommunicatedNations()));
         return true;
     }
 
     private boolean handleList(CommandSender sender) {
         List<String> names = religionManager.getAllReligionNames();
-        sender.sendMessage(ChatColor.GOLD + msg("religion_list_header", names.size()) + ChatColor.WHITE + (names.isEmpty() ? msg("common_none") : String.join(", ", names)));
+        sender.sendMessage(TextColors.GOLD + msg("religion_list_header", names.size()) + TextColors.WHITE + (names.isEmpty() ? msg("common_none") : String.join(", ", names)));
         return true;
     }
 
@@ -287,7 +671,7 @@ public class ReligionCommand implements CommandExecutor {
         }
 
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_setplayer"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_setplayer"));
             return true;
         }
 
@@ -299,19 +683,33 @@ public class ReligionCommand implements CommandExecutor {
         String requestedReligion = args[2];
         String currentReligion = normalizeReligionName(resident.getReligionName());
 
+        WDEreligion currentLeaderIdeology = religionManager.getLedIdeology(player.getUniqueId());
+        if (currentLeaderIdeology != null
+                && !matchesReligion(requestedReligion, currentLeaderIdeology.getReligionName())) {
+            sender.sendMessage(TextColors.RED + msg("religion_leader_must_abdicate"));
+            return true;
+        }
+        WDEreligion currentChurchIdeology = religionManager.getReligion(currentReligion);
+        WDEChurch currentChurch = churchManager.getActiveChurchForResident(resident, currentChurchIdeology);
+        if (currentChurch != null && currentChurch.getHeadUuid().equals(player.getUniqueId())
+                && !matchesReligion(requestedReligion, currentChurchIdeology.getReligionName())) {
+            sender.sendMessage(TextColors.RED + msg("church_head_must_abdicate"));
+            return true;
+        }
+
         if ("none".equalsIgnoreCase(requestedReligion)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_player_clear_disabled"));
+            sender.sendMessage(TextColors.RED + msg("religion_player_clear_disabled"));
             return true;
         }
 
         WDEreligion religion = religionManager.getReligion(requestedReligion);
         if (religion == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            sender.sendMessage(TextColors.RED + msg("religion_not_found"));
             return true;
         }
 
         if (matchesReligion(currentReligion, religion.getReligionName())) {
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_player_already_set", religion.getReligionName()));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_player_already_set", religion.getReligionName()));
             return true;
         }
 
@@ -319,46 +717,48 @@ public class ReligionCommand implements CommandExecutor {
         if (requiresPaidConversion(resident.isReligionChosen(), currentReligion, religion.getReligionName())) {
             EconomyBridge.Charge cost = applyIdeologicalAllianceDiscount(resolveResidentNationName(player), plugin.getReligionPlayerConversionCostCharge());
             if (economyBridge == null) {
-                sender.sendMessage(ChatColor.RED + msg("religion_economy_provider_missing"));
+                sender.sendMessage(TextColors.RED + msg("religion_economy_provider_missing"));
                 return true;
             }
             if (!economyBridge.has(player, cost) || !economyBridge.withdraw(player, cost).success()) {
-                sender.sendMessage(ChatColor.RED + msg("religion_player_not_enough_money", economyBridge.format(cost)));
+                sender.sendMessage(TextColors.RED + msg("religion_player_not_enough_money", economyBridge.format(cost)));
                 return true;
             }
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_player_conversion_paid", economyBridge.format(cost)));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_player_conversion_paid", economyBridge.format(cost)));
         } else if (firstFree) {
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_first_selection_free"));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_first_selection_free"));
         }
 
         resident.setReligionName(religion.getReligionName());
         resident.setReligionChosen(true);
         residentManager.saveResidents();
-        sender.sendMessage(ChatColor.GREEN + msg("religion_player_set", religion.getReligionName()));
+        religionManager.onResidentIdeologyChanged(player.getUniqueId());
+        churchManager.onResidentIdeologyChanged(player.getUniqueId());
+        sender.sendMessage(TextColors.GREEN + msg("religion_player_set", religion.getReligionName()));
         return true;
     }
 
     private boolean handleForceSetPlayerReligion(Player actor, String[] args, WorldDynamicsEngine plugin) {
         if (args.length < 4) {
-            actor.sendMessage(ChatColor.RED + msg("religion_usage_setplayer_force"));
+            actor.sendMessage(TextColors.RED + msg("religion_usage_setplayer_force"));
             return true;
         }
 
         Resident targetResident = resolveResident(args[2]);
         if (targetResident == null) {
-            actor.sendMessage(ChatColor.RED + msg("player_not_found"));
+            actor.sendMessage(TextColors.RED + msg("player_not_found"));
             return true;
         }
 
         Town targetTown = resolveResidentTown(targetResident);
         if (targetTown == null) {
-            actor.sendMessage(ChatColor.RED + msg("religion_player_must_have_town"));
+            actor.sendMessage(TextColors.RED + msg("religion_player_must_have_town"));
             return true;
         }
 
         WDEtown targetTownData = townManager.getTown(targetTown.getName());
         if (targetTownData == null || !hasDirectTownAuthority(actor, targetTownData)) {
-            actor.sendMessage(ChatColor.RED + msg("religion_no_authority_force_player"));
+            actor.sendMessage(TextColors.RED + msg("religion_no_authority_force_player"));
             return true;
         }
 
@@ -367,35 +767,50 @@ public class ReligionCommand implements CommandExecutor {
         String currentReligion = normalizeReligionName(resident.getReligionName());
         String townReligion = normalizeReligionName(targetTownData.getReligionName());
         String nationReligion = normalizeReligionName(resolveNationReligion(targetTownData));
+        WDEreligion currentLeaderIdeology = religionManager.getLedIdeology(targetResident.getUUID());
+        if (currentLeaderIdeology != null
+                && !matchesReligion(requestedReligion, currentLeaderIdeology.getReligionName())) {
+            actor.sendMessage(TextColors.RED + msg("religion_leader_must_abdicate"));
+            return true;
+        }
+        WDEreligion currentChurchIdeology = religionManager.getReligion(currentReligion);
+        WDEChurch currentChurch = churchManager.getActiveChurchForResident(resident, currentChurchIdeology);
+        if (currentChurch != null && currentChurch.getHeadUuid().equals(targetResident.getUUID())
+                && !matchesReligion(requestedReligion, currentChurchIdeology.getReligionName())) {
+            actor.sendMessage(TextColors.RED + msg("church_head_must_abdicate"));
+            return true;
+        }
 
         if (!isAllowedForcedResidentReligion(requestedReligion, townReligion, nationReligion)) {
-            actor.sendMessage(ChatColor.RED + msg("religion_forced_player_invalid_religion", formatAllowedForcedResidentReligions(townReligion, nationReligion)));
+            actor.sendMessage(TextColors.RED + msg("religion_forced_player_invalid_religion", formatAllowedForcedResidentReligions(townReligion, nationReligion)));
             return true;
         }
 
         if ("none".equalsIgnoreCase(requestedReligion)) {
             if (isNoneReligion(currentReligion)) {
-                actor.sendMessage(ChatColor.YELLOW + msg("religion_player_already_set_target", targetResident.getName(), msg("common_none")));
+                actor.sendMessage(TextColors.YELLOW + msg("religion_player_already_set_target", targetResident.getName(), msg("common_none")));
                 return true;
             }
 
             String targetNationName = resolveTownNationName(targetTown);
             EconomyBridge.Charge forceCost = applyIdeologicalAllianceDiscount(targetNationName, plugin.getReligionForcedPlayerConversionCostCharge());
             if (!withdrawGovernmentCharge(targetTown, forceCost, "WorldDynamicsEngine religion force player conversion")) {
-                actor.sendMessage(ChatColor.RED + msg("religion_forced_player_not_enough_treasury", formatGovernmentCharge(forceCost)));
+                actor.sendMessage(TextColors.RED + msg("religion_forced_player_not_enough_treasury", formatGovernmentCharge(forceCost)));
                 return true;
             }
 
             resident.setReligionName("None");
             residentManager.saveResidents();
-            actor.sendMessage(ChatColor.YELLOW + msg("religion_forced_player_conversion_paid", formatGovernmentCharge(forceCost)));
-            actor.sendMessage(ChatColor.GREEN + msg("religion_forced_player_cleared", targetResident.getName()));
+            religionManager.onResidentIdeologyChanged(targetResident.getUUID());
+            churchManager.onResidentIdeologyChanged(targetResident.getUUID());
+            actor.sendMessage(TextColors.YELLOW + msg("religion_forced_player_conversion_paid", formatGovernmentCharge(forceCost)));
+            actor.sendMessage(TextColors.GREEN + msg("religion_forced_player_cleared", targetResident.getName()));
             return true;
         }
 
         WDEreligion religion = religionManager.getReligion(requestedReligion);
         if (religion == null && !matchesReligion(requestedReligion, townReligion) && !matchesReligion(requestedReligion, nationReligion)) {
-            actor.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            actor.sendMessage(TextColors.RED + msg("religion_not_found"));
             return true;
         }
 
@@ -403,41 +818,43 @@ public class ReligionCommand implements CommandExecutor {
                 : matchesReligion(requestedReligion, townReligion) ? townReligion : nationReligion;
 
         if (matchesReligion(currentReligion, resolvedReligionName)) {
-            actor.sendMessage(ChatColor.YELLOW + msg("religion_player_already_set_target", targetResident.getName(), resolvedReligionName));
+            actor.sendMessage(TextColors.YELLOW + msg("religion_player_already_set_target", targetResident.getName(), resolvedReligionName));
             return true;
         }
 
         String targetNationName = resolveTownNationName(targetTown);
         EconomyBridge.Charge forceCost = applyIdeologicalAllianceDiscount(targetNationName, plugin.getReligionForcedPlayerConversionCostCharge());
         if (!withdrawGovernmentCharge(targetTown, forceCost, "WorldDynamicsEngine religion force player conversion")) {
-            actor.sendMessage(ChatColor.RED + msg("religion_forced_player_not_enough_treasury", formatGovernmentCharge(forceCost)));
+            actor.sendMessage(TextColors.RED + msg("religion_forced_player_not_enough_treasury", formatGovernmentCharge(forceCost)));
             return true;
         }
 
         resident.setReligionName(resolvedReligionName);
         resident.setReligionChosen(true);
         residentManager.saveResidents();
-        actor.sendMessage(ChatColor.YELLOW + msg("religion_forced_player_conversion_paid", formatGovernmentCharge(forceCost)));
-        actor.sendMessage(ChatColor.GREEN + msg("religion_forced_player_set", targetResident.getName(), resolvedReligionName));
+        religionManager.onResidentIdeologyChanged(targetResident.getUUID());
+        churchManager.onResidentIdeologyChanged(targetResident.getUUID());
+        actor.sendMessage(TextColors.YELLOW + msg("religion_forced_player_conversion_paid", formatGovernmentCharge(forceCost)));
+        actor.sendMessage(TextColors.GREEN + msg("religion_forced_player_set", targetResident.getName(), resolvedReligionName));
         return true;
     }
 
     private boolean handleSetNationReligion(CommandSender sender, String[] args) {
         WorldDynamicsEngine plugin = WorldDynamicsEngine.getInstance();
         if (args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_setnation"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_setnation"));
             return true;
         }
 
         WDEnation nation = nationManager.getNation(args[2]);
         if (nation == null) {
-            sender.sendMessage(ChatColor.RED + msg("nation_not_found_generic"));
+            sender.sendMessage(TextColors.RED + msg("nation_not_found_generic"));
             return true;
         }
 
         Player player = requirePlayer(sender);
         if (player == null || !hasNationAuthority(player, nation)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_no_authority_set_nation"));
+            sender.sendMessage(TextColors.RED + msg("religion_no_authority_set_nation"));
             return true;
         }
 
@@ -445,19 +862,19 @@ public class ReligionCommand implements CommandExecutor {
         if ("none".equalsIgnoreCase(religionName)) {
             nation.setReligionName("None");
             nationManager.saveNations();
-            sender.sendMessage(ChatColor.GREEN + msg("religion_nation_cleared"));
+            sender.sendMessage(TextColors.GREEN + msg("religion_nation_cleared"));
             return true;
         }
 
         WDEreligion religion = religionManager.getReligion(religionName);
         if (religion == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            sender.sendMessage(TextColors.RED + msg("religion_not_found"));
             return true;
         }
 
         String currentReligion = normalizeReligionName(nation.getReligionName());
         if (matchesReligion(currentReligion, religion.getReligionName())) {
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_nation_already_set", religion.getReligionName()));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_nation_already_set", religion.getReligionName()));
             return true;
         }
 
@@ -465,37 +882,37 @@ public class ReligionCommand implements CommandExecutor {
         if (requiresPaidConversion(nation.isReligionChosen(), currentReligion, religion.getReligionName())) {
             Nation townyNation = resolveNation(nation.getNationName());
             if (townyNation == null) {
-                sender.sendMessage(ChatColor.RED + msg("religion_nation_treasury_unavailable"));
+                sender.sendMessage(TextColors.RED + msg("religion_nation_treasury_unavailable"));
                 return true;
             }
 
             EconomyBridge.Charge cost = applyIdeologicalAllianceDiscount(nation.getNationName(), plugin.getReligionNationConversionCostCharge());
             if (!withdrawGovernmentCharge(townyNation, cost, "WorldDynamicsEngine religion nation conversion")) {
-                sender.sendMessage(ChatColor.RED + msg("religion_nation_not_enough_treasury", formatGovernmentCharge(cost)));
+                sender.sendMessage(TextColors.RED + msg("religion_nation_not_enough_treasury", formatGovernmentCharge(cost)));
                 return true;
             }
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_nation_conversion_paid", formatGovernmentCharge(cost)));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_nation_conversion_paid", formatGovernmentCharge(cost)));
         } else if (firstFree) {
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_first_selection_free"));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_first_selection_free"));
         }
 
         nation.setReligionName(religion.getReligionName());
         nation.setReligionChosen(true);
         nationManager.saveNations();
-        sender.sendMessage(ChatColor.GREEN + msg("religion_nation_set", religion.getReligionName()));
+        sender.sendMessage(TextColors.GREEN + msg("religion_nation_set", religion.getReligionName()));
         return true;
     }
 
     private boolean handleSetTownReligion(CommandSender sender, String[] args) {
         WorldDynamicsEngine plugin = WorldDynamicsEngine.getInstance();
         if (args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_settown"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_settown"));
             return true;
         }
 
         WDEtown town = townManager.getTown(args[2]);
         if (town == null) {
-            sender.sendMessage(ChatColor.RED + msg("town_not_found_generic"));
+            sender.sendMessage(TextColors.RED + msg("town_not_found_generic"));
             return true;
         }
 
@@ -504,7 +921,7 @@ public class ReligionCommand implements CommandExecutor {
         boolean nationAuthority = player != null && hasNationAuthorityOverTown(player, town);
         boolean forcedByNation = !directTownAuthority && nationAuthority;
         if (player == null || (!directTownAuthority && !nationAuthority)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_no_authority_set_town"));
+            sender.sendMessage(TextColors.RED + msg("religion_no_authority_set_town"));
             return true;
         }
 
@@ -513,34 +930,34 @@ public class ReligionCommand implements CommandExecutor {
             if (forcedByNation) {
                 String nationReligion = normalizeReligionName(resolveNationReligion(town));
                 if (!isNoneReligion(nationReligion)) {
-                    sender.sendMessage(ChatColor.RED + msg("religion_forced_town_invalid_religion", nationReligion));
+                    sender.sendMessage(TextColors.RED + msg("religion_forced_town_invalid_religion", nationReligion));
                     return true;
                 }
             }
 
             if (isNoneReligion(town.getReligionName())) {
-                sender.sendMessage(ChatColor.YELLOW + msg("religion_town_already_set", msg("common_none")));
+                sender.sendMessage(TextColors.YELLOW + msg("religion_town_already_set", msg("common_none")));
                 return true;
             }
 
             if (forcedByNation) {
                 Nation forcingNation = resolveNation(town.getNationName());
                 if (forcingNation == null) {
-                    sender.sendMessage(ChatColor.RED + msg("religion_nation_treasury_unavailable"));
+                    sender.sendMessage(TextColors.RED + msg("religion_nation_treasury_unavailable"));
                     return true;
                 }
 
                 EconomyBridge.Charge forceCost = applyIdeologicalAllianceDiscount(town.getNationName(), plugin.getReligionForcedTownConversionCostCharge());
                 if (!withdrawGovernmentCharge(forcingNation, forceCost, "WorldDynamicsEngine religion force town conversion")) {
-                    sender.sendMessage(ChatColor.RED + msg("religion_forced_town_not_enough_treasury", formatGovernmentCharge(forceCost)));
+                    sender.sendMessage(TextColors.RED + msg("religion_forced_town_not_enough_treasury", formatGovernmentCharge(forceCost)));
                     return true;
                 }
-                sender.sendMessage(ChatColor.YELLOW + msg("religion_forced_town_conversion_paid", formatGovernmentCharge(forceCost)));
+                sender.sendMessage(TextColors.YELLOW + msg("religion_forced_town_conversion_paid", formatGovernmentCharge(forceCost)));
             }
 
             town.setReligionName("None");
             townManager.saveTowns();
-            sender.sendMessage(ChatColor.GREEN + (forcedByNation
+            sender.sendMessage(TextColors.GREEN + (forcedByNation
                     ? msg("religion_forced_town_cleared", town.getTownName())
                     : msg("religion_town_cleared")));
             return true;
@@ -548,59 +965,59 @@ public class ReligionCommand implements CommandExecutor {
 
         WDEreligion religion = religionManager.getReligion(religionName);
         if (religion == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            sender.sendMessage(TextColors.RED + msg("religion_not_found"));
             return true;
         }
 
         String currentReligion = normalizeReligionName(town.getReligionName());
         if (matchesReligion(currentReligion, religion.getReligionName())) {
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_town_already_set", religion.getReligionName()));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_town_already_set", religion.getReligionName()));
             return true;
         }
 
         if (forcedByNation) {
             String nationReligion = normalizeReligionName(resolveNationReligion(town));
             if (!matchesReligion(religion.getReligionName(), nationReligion)) {
-                sender.sendMessage(ChatColor.RED + msg("religion_forced_town_invalid_religion", nationReligion));
+                sender.sendMessage(TextColors.RED + msg("religion_forced_town_invalid_religion", nationReligion));
                 return true;
             }
 
             Nation forcingNation = resolveNation(town.getNationName());
             if (forcingNation == null) {
-                sender.sendMessage(ChatColor.RED + msg("religion_nation_treasury_unavailable"));
+                sender.sendMessage(TextColors.RED + msg("religion_nation_treasury_unavailable"));
                 return true;
             }
 
             EconomyBridge.Charge forceCost = applyIdeologicalAllianceDiscount(town.getNationName(), plugin.getReligionForcedTownConversionCostCharge());
             if (!withdrawGovernmentCharge(forcingNation, forceCost, "WorldDynamicsEngine religion force town conversion")) {
-                sender.sendMessage(ChatColor.RED + msg("religion_forced_town_not_enough_treasury", formatGovernmentCharge(forceCost)));
+                sender.sendMessage(TextColors.RED + msg("religion_forced_town_not_enough_treasury", formatGovernmentCharge(forceCost)));
                 return true;
             }
-            sender.sendMessage(ChatColor.YELLOW + msg("religion_forced_town_conversion_paid", formatGovernmentCharge(forceCost)));
+            sender.sendMessage(TextColors.YELLOW + msg("religion_forced_town_conversion_paid", formatGovernmentCharge(forceCost)));
         } else {
             boolean firstFree = isFirstReligionSelection(town.isReligionChosen(), currentReligion, religion.getReligionName());
             if (requiresPaidConversion(town.isReligionChosen(), currentReligion, religion.getReligionName())) {
                 Town townyTown = resolveTown(town.getTownName());
                 if (townyTown == null) {
-                    sender.sendMessage(ChatColor.RED + msg("religion_town_treasury_unavailable"));
+                    sender.sendMessage(TextColors.RED + msg("religion_town_treasury_unavailable"));
                     return true;
                 }
 
                 EconomyBridge.Charge cost = applyIdeologicalAllianceDiscount(town.getNationName(), plugin.getReligionTownConversionCostCharge());
                 if (!withdrawGovernmentCharge(townyTown, cost, "WorldDynamicsEngine religion town conversion")) {
-                    sender.sendMessage(ChatColor.RED + msg("religion_town_not_enough_treasury", formatGovernmentCharge(cost)));
+                    sender.sendMessage(TextColors.RED + msg("religion_town_not_enough_treasury", formatGovernmentCharge(cost)));
                     return true;
                 }
-                sender.sendMessage(ChatColor.YELLOW + msg("religion_town_conversion_paid", formatGovernmentCharge(cost)));
+                sender.sendMessage(TextColors.YELLOW + msg("religion_town_conversion_paid", formatGovernmentCharge(cost)));
             } else if (firstFree) {
-                sender.sendMessage(ChatColor.YELLOW + msg("religion_first_selection_free"));
+                sender.sendMessage(TextColors.YELLOW + msg("religion_first_selection_free"));
             }
         }
 
         town.setReligionName(religion.getReligionName());
         town.setReligionChosen(true);
         townManager.saveTowns();
-        sender.sendMessage(ChatColor.GREEN + (forcedByNation
+        sender.sendMessage(TextColors.GREEN + (forcedByNation
                 ? msg("religion_forced_town_set", town.getTownName(), religion.getReligionName())
                 : msg("religion_town_set", religion.getReligionName())));
         return true;
@@ -613,46 +1030,60 @@ public class ReligionCommand implements CommandExecutor {
         }
 
         if (args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_abdicate"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_abdicate"));
             return true;
         }
 
         WDEreligion religion = religionManager.getReligion(args[2]);
         if (religion == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            sender.sendMessage(TextColors.RED + msg("religion_not_found"));
+            return true;
+        }
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            sender.sendMessage(TextColors.RED + msg("religion_synodal_use_church"));
             return true;
         }
 
         if (!isPontiff(player, religion)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_only_pontiff"));
+            sender.sendMessage(TextColors.RED + msg("religion_only_pontiff"));
             return true;
         }
 
         Resident targetResident = resolveResident(args[3]);
         if (targetResident == null) {
-            sender.sendMessage(ChatColor.RED + msg("player_not_found"));
+            sender.sendMessage(TextColors.RED + msg("player_not_found"));
             return true;
         }
 
         UUID targetUuid = targetResident.getUUID();
         if (targetUuid.equals(religion.getPontiffUuid())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_target_already_pontiff"));
+            sender.sendMessage(TextColors.RED + msg("religion_target_already_pontiff"));
             return true;
         }
 
         if (religion.isPlayerExcommunicated(targetUuid)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_target_excommunicated"));
+            sender.sendMessage(TextColors.RED + msg("religion_target_excommunicated"));
             return true;
         }
 
         if (!belongsToReligion(targetResident, religion.getReligionName())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_target_not_same_faith_player"));
+            sender.sendMessage(TextColors.RED + msg("religion_target_not_same_faith_player"));
+            return true;
+        }
+        if (!religionManager.isEligibleNewLeader(religion.getReligionName(), targetUuid)) {
+            sender.sendMessage(TextColors.RED + msg("religion_target_leads_another_ideology"));
             return true;
         }
 
-        religion.setPontiff(targetUuid, targetResident.getName());
-        religionManager.saveReligion(religion);
-        sender.sendMessage(ChatColor.GREEN + msg("religion_abdicated", targetResident.getName(), religion.getReligionName()));
+        try {
+            religionManager.abdicateLeadership(religion.getReligionName(), player.getUniqueId(),
+                    targetUuid, targetResident.getName());
+        } catch (RuntimeException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
+            WorldDynamicsEngine.getInstance().getLogger().severe("Failed to persist ideology abdication: " + ex.getMessage());
+            return true;
+        }
+        sender.sendMessage(TextColors.GREEN + msg("religion_abdicated", targetResident.getName(), religion.getReligionName()));
         return true;
     }
 
@@ -663,18 +1094,22 @@ public class ReligionCommand implements CommandExecutor {
         }
 
         if (args.length < 5) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_excommunicate"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_excommunicate"));
             return true;
         }
 
         WDEreligion religion = religionManager.getReligion(args[2]);
         if (religion == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            sender.sendMessage(TextColors.RED + msg("religion_not_found"));
+            return true;
+        }
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            sender.sendMessage(TextColors.RED + msg("religion_synodal_use_council"));
             return true;
         }
 
         if (!isPontiff(player, religion)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_only_pontiff"));
+            sender.sendMessage(TextColors.RED + msg("religion_only_pontiff"));
             return true;
         }
 
@@ -688,7 +1123,7 @@ public class ReligionCommand implements CommandExecutor {
             case "nation":
                 return handleNationExcommunication(sender, religion, targetName);
             default:
-                sender.sendMessage(ChatColor.RED + msg("religion_usage_excommunicate"));
+                sender.sendMessage(TextColors.RED + msg("religion_usage_excommunicate"));
                 return true;
         }
     }
@@ -700,23 +1135,27 @@ public class ReligionCommand implements CommandExecutor {
         }
 
         if (args.length < 4 || args.length > 7) {
-            sender.sendMessage(ChatColor.RED + msg("religion_usage_setmemes"));
+            sender.sendMessage(TextColors.RED + msg("religion_usage_setmemes"));
             return true;
         }
 
         WDEreligion religion = religionManager.getReligion(args[2]);
         if (religion == null) {
-            sender.sendMessage(ChatColor.RED + msg("religion_not_found"));
+            sender.sendMessage(TextColors.RED + msg("religion_not_found"));
+            return true;
+        }
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            sender.sendMessage(TextColors.RED + msg("religion_synodal_use_council"));
             return true;
         }
 
         if (!isPontiff(player, religion)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_only_pontiff_set_memes"));
+            sender.sendMessage(TextColors.RED + msg("religion_only_pontiff_set_memes"));
             return true;
         }
 
         if (religionManager.isMemeModificationBlocked(religion)) {
-            sender.sendMessage(ChatColor.RED + msg("religion_memes_cooldown",
+            sender.sendMessage(TextColors.RED + msg("religion_memes_cooldown",
                     religionManager.describeMemeModificationCooldown(WorldDynamicsEngine.getInstance().userLang, religion)));
             return true;
         }
@@ -725,18 +1164,18 @@ public class ReligionCommand implements CommandExecutor {
         for (int i = 3; i < args.length; i++) {
             String normalizedMeme = religionManager.normalizeMeme(args[i]);
             if (normalizedMeme == null) {
-                sender.sendMessage(ChatColor.RED + msg("religion_invalid_meme", args[i], String.join("、", religionManager.getValidMemes())));
+                sender.sendMessage(TextColors.RED + msg("religion_invalid_meme", args[i], String.join("、", religionManager.getValidMemes())));
                 return true;
             }
 
             if (!selectedMemes.add(normalizedMeme)) {
-                sender.sendMessage(ChatColor.RED + msg("religion_duplicate_meme", religionManager.getMemeDisplayName(normalizedMeme)));
+                sender.sendMessage(TextColors.RED + msg("religion_duplicate_meme", religionManager.getMemeDisplayName(normalizedMeme)));
                 return true;
             }
 
             String conflictMeme = religionManager.findExclusiveMemeConflict(normalizedMeme, selectedMemes);
             if (conflictMeme != null) {
-                sender.sendMessage(ChatColor.RED + msg(
+                sender.sendMessage(TextColors.RED + msg(
                         "religion_mutually_exclusive_meme",
                         religionManager.getMemeDisplayName(normalizedMeme),
                         religionManager.getMemeDisplayName(conflictMeme)
@@ -746,7 +1185,7 @@ public class ReligionCommand implements CommandExecutor {
         }
 
         if (selectedMemes.isEmpty() || selectedMemes.size() > 4) {
-            sender.sendMessage(ChatColor.RED + msg("religion_memes_must_be_four"));
+            sender.sendMessage(TextColors.RED + msg("religion_memes_must_be_four"));
             return true;
         }
 
@@ -754,7 +1193,7 @@ public class ReligionCommand implements CommandExecutor {
         religionManager.reconcileDoctrineAttitudes(religion);
         religionManager.markMemeModified(religion);
         religionManager.saveReligion(religion);
-        sender.sendMessage(ChatColor.GREEN + msg("religion_memes_set", religion.getReligionName(), formatMemeList(religion.getMemes())));
+        sender.sendMessage(TextColors.GREEN + msg("religion_memes_set", religion.getReligionName(), formatMemeList(religion.getMemes())));
         broadcast("religion_broadcast_memes_updated", religion.getReligionName(), formatMemeList(religion.getMemes()));
         return true;
     }
@@ -762,80 +1201,80 @@ public class ReligionCommand implements CommandExecutor {
     private boolean handlePlayerExcommunication(CommandSender sender, WDEreligion religion, String playerName) {
         Resident resident = resolveResident(playerName);
         if (resident == null) {
-            sender.sendMessage(ChatColor.RED + msg("player_not_found"));
+            sender.sendMessage(TextColors.RED + msg("player_not_found"));
             return true;
         }
 
         if (resident.getUUID().equals(religion.getPontiffUuid())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_cannot_excommunicate_pontiff"));
+            sender.sendMessage(TextColors.RED + msg("religion_cannot_excommunicate_pontiff"));
             return true;
         }
 
         if (!belongsToReligion(resident, religion.getReligionName())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_target_not_same_faith_player"));
+            sender.sendMessage(TextColors.RED + msg("religion_target_not_same_faith_player"));
             return true;
         }
 
         if (religion.isPlayerExcommunicated(resident.getUUID())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_player_already_excommunicated"));
+            sender.sendMessage(TextColors.RED + msg("religion_player_already_excommunicated"));
             return true;
         }
 
         religion.excommunicatePlayer(resident.getUUID(), resident.getName());
         religionManager.saveReligion(religion);
-        sender.sendMessage(ChatColor.GREEN + msg("religion_player_excommunicated", resident.getName(), religion.getReligionName()));
+        sender.sendMessage(TextColors.GREEN + msg("religion_player_excommunicated", resident.getName(), religion.getReligionName()));
         return true;
     }
 
     private boolean handleTownExcommunication(CommandSender sender, WDEreligion religion, String townName) {
         WDEtown town = townManager.getTown(townName);
         if (town == null) {
-            sender.sendMessage(ChatColor.RED + msg("town_not_found_generic"));
+            sender.sendMessage(TextColors.RED + msg("town_not_found_generic"));
             return true;
         }
 
         if (!matchesReligion(town.getReligionName(), religion.getReligionName())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_target_not_same_faith_town"));
+            sender.sendMessage(TextColors.RED + msg("religion_target_not_same_faith_town"));
             return true;
         }
 
         if (religion.isTownExcommunicated(town.getTownName())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_town_already_excommunicated"));
+            sender.sendMessage(TextColors.RED + msg("religion_town_already_excommunicated"));
             return true;
         }
 
         religion.excommunicateTown(town.getTownName());
         religionManager.saveReligion(religion);
-        sender.sendMessage(ChatColor.GREEN + msg("religion_town_excommunicated", town.getTownName(), religion.getReligionName()));
+        sender.sendMessage(TextColors.GREEN + msg("religion_town_excommunicated", town.getTownName(), religion.getReligionName()));
         return true;
     }
 
     private boolean handleNationExcommunication(CommandSender sender, WDEreligion religion, String nationName) {
         WDEnation nation = nationManager.getNation(nationName);
         if (nation == null) {
-            sender.sendMessage(ChatColor.RED + msg("nation_not_found_generic"));
+            sender.sendMessage(TextColors.RED + msg("nation_not_found_generic"));
             return true;
         }
 
         if (!matchesReligion(nation.getReligionName(), religion.getReligionName())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_target_not_same_faith_nation"));
+            sender.sendMessage(TextColors.RED + msg("religion_target_not_same_faith_nation"));
             return true;
         }
 
         if (religion.isNationExcommunicated(nation.getNationName())) {
-            sender.sendMessage(ChatColor.RED + msg("religion_nation_already_excommunicated"));
+            sender.sendMessage(TextColors.RED + msg("religion_nation_already_excommunicated"));
             return true;
         }
 
         religion.excommunicateNation(nation.getNationName());
         religionManager.saveReligion(religion);
-        sender.sendMessage(ChatColor.GREEN + msg("religion_nation_excommunicated", nation.getNationName(), religion.getReligionName()));
+        sender.sendMessage(TextColors.GREEN + msg("religion_nation_excommunicated", nation.getNationName(), religion.getReligionName()));
         return true;
     }
 
     private Player requirePlayer(CommandSender sender) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + msg("common_only_players"));
+            sender.sendMessage(TextColors.RED + msg("common_only_players"));
             return null;
         }
         return player;
@@ -899,7 +1338,9 @@ public class ReligionCommand implements CommandExecutor {
     }
 
     private boolean isPontiff(Player player, WDEreligion religion) {
-        return player != null && religion != null && player.getUniqueId().equals(religion.getPontiffUuid());
+        return player != null && religion != null
+                && religion.getGovernanceMode() != WDEreligion.GovernanceMode.SYNODAL
+                && player.getUniqueId().equals(religion.getPontiffUuid());
     }
 
     private Resident resolveResident(String playerName) {
@@ -1103,7 +1544,7 @@ public class ReligionCommand implements CommandExecutor {
     }
 
     private void broadcast(String key, Object... args) {
-        Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', msg(key, args)));
+        Bukkit.broadcastMessage(TextColors.translateAlternateColorCodes('&', msg(key, args)));
     }
 
     private String msg(String key, Object... args) {

@@ -14,6 +14,59 @@ cooldowns:
   doctrines:
     days: 7
 
+# 意识形态治理模式与枢机选举。
+# 模式状态保存在每个意识形态数据中；此默认值只用于新建组织和旧版配置补齐。
+governance:
+  defaultMode: LIFETIME
+
+# 枢机席位公式：min(maximumSeats, baseSeats + floor((追随者人数 - 1) / followersPerAdditionalSeat))。
+cardinals:
+  baseSeats: 2
+  followersPerAdditionalSeat: 25
+  maximumSeats: 9
+
+# 枢机选举。选民为投票开始和计票时仍是该意识形态追随者的现任枢机。
+# 候选人为未被制裁的现任追随者，个人选票只保存在意识形态数据中，不公开展示。
+elections:
+  intervalDays: 90
+  votingDays: 7
+  # REAL_TIME 或 REALISTIC_SEASONS；日历不可用时回退至现实时间。
+  clock: REAL_TIME
+  world: world
+  # 法定人数按投票期间有资格的枢机人数计算，弃权计入法定人数。
+  quorumRatio: 0.5
+  # 获胜者需获得有效非弃权选票的最低比例。
+  winnerMinimumRatio: 0.5
+  # ALL_FOLLOWERS 或 CARDINALS_ONLY；候选人仍须是有效追随者。
+  candidateScope: ALL_FOLLOWERS
+  # 缺席默认不计入法定人数；弃权默认计入法定人数但不参与候选人票数。
+  absenceCountsTowardQuorum: false
+  abstentionCountsTowardQuorum: true
+  # 每位有效枢机一票，不按职位或城镇人口加权。
+  votingRule: ONE_CARDINAL_ONE_VOTE
+  # 平票时保留现任领袖；另一选项 NO_WINNER 表示本轮不更换。
+  tiePolicy: KEEP_INCUMBENT
+  # RETRY_AFTER_DAYS：保留现任领袖并按 noWinnerRetryDays 重试；KEEP_INCUMBENT：保留并按正常周期重试。
+  noWinnerPolicy: RETRY_AFTER_DAYS
+  noWinnerRetryDays: 30
+
+# 共议制教会规则。居民同时只能加入同一源意识形态下的一座活跃教会。
+churches:
+  maximumPerIdeology: 32
+  membershipCooldownHours: 24
+  governanceActionCooldownHours: 24
+
+# 神圣大会议案由所有未受制裁的活跃教会首脑投票。
+# MEMBERS 按当前有效成员数加权，EQUAL_CHURCHES 为每个教会一票；赞成权重必须严格超过比例门槛。
+council:
+  proposalDurationDays: 7
+  proposalCooldownHours: 12
+  voteWeighting: MEMBERS
+  maximumChurchWeight: 10000
+  quorumRatio: 0.5
+  approvalRatio: 0.5
+  sanctionMaximumDays: 90
+
 # 动物击杀戒律的药水效果；适用戒律缺失时，对应行为不产生效果。
 doctrineEffects:
   animalKilling:
@@ -31,9 +84,9 @@ economy:
   # 金库以 config.yml 第一项默认货币记账，献金使用默认货币。
   treasury:
     enabled: true
-    # 每个 Towny 新日结算一次，面向当前个人信仰的全部信徒，包括离线玩家和领袖。
+    # 每个 Towny 新日结算一次。终身制/枢机制面向该信仰全体个人追随者；共议制仅向当前教会成员征收。
     # 定额税默认币优先、不足时折算其他已配置币种；比例税以全部已配置币种折算财富为基数。
-    # 余额不足仅收现有资金，不记欠税；没有个人信仰的玩家不征收。
+    # 余额不足仅收现有资金，不记欠税；没有个人信仰或未加入共议教会的玩家不征收。
     titheEnabled: true
     # 所有什一税余额查询和扣款使用该世界；需填写已加载的世界，离线玩家也使用它。
     # 在按世界分账的经济插件中，仅计算此世界的余额，避免跨世界重复计入。
@@ -44,6 +97,15 @@ economy:
     defaultTitheType: WEALTH_PERCENTAGE
     defaultTitheAmount: "10"
     logPartialCollection: true
+  # 枢机任免费用以教廷金库默认货币结算，只有成功写入任免状态后才扣款。
+  # 金库仍无玩家提款入口；这些治理费用是唯一允许的内部支出。
+  governance:
+    appointCardinalCost: "500.00"
+    revokeCardinalCost: "250.00"
+    # 新建教会的费用从发起人钱包按指定币种扣除。
+    churchCreation:
+      amount: "5000.00"
+      currency: USD
   charges:
     # 创建意识形态时的费用。
     religionCreation:

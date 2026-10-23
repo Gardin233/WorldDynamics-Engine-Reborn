@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -159,7 +159,7 @@ public final class WarScoreboardManager {
             objective.unregister();
         }
         objective = scoreboard.registerNewObjective(OBJECTIVE_ID, Criteria.DUMMY,
-                ChatColor.DARK_BLUE + "战争计分");
+                TextColors.DARK_BLUE + "战争计分");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         List<String> lines = buildLines(details);
@@ -182,39 +182,39 @@ public final class WarScoreboardManager {
 
     private List<String> buildLines(OrgManager.WarFocusDetails details) {
         List<String> lines = new ArrayList<>();
-        lines.add(ChatColor.GOLD + shortTitle(details.title()));
-        lines.add(ChatColor.GRAY + "理由 " + plugin.getLocaleMessage(details.reason().messageKey()));
-        lines.add((details.defenderPerspective() ? ChatColor.BLUE : ChatColor.RED)
+        lines.add(TextColors.GOLD + shortTitle(details.title()));
+        lines.add(TextColors.GRAY + "理由 " + plugin.getLocaleMessage(details.reason().messageKey()));
+        lines.add((details.defenderPerspective() ? TextColors.BLUE : TextColors.RED)
                 + "身份 " + (details.defenderPerspective() ? "防守方" : "进攻方"));
-        lines.add(ChatColor.GREEN + "我方 " + decimal(details.friendlyScore()));
-        lines.add(ChatColor.RED + "敌方 " + decimal(details.enemyScore()));
+        lines.add(TextColors.GREEN + "我方 " + decimal(details.friendlyScore()));
+        lines.add(TextColors.RED + "敌方 " + decimal(details.enemyScore()));
 
         double friendlyOccupation = sum(details.friendlyOccupation());
         double friendlyKills = sum(details.friendlyKills());
         double enemyOccupation = sum(details.enemyOccupation());
         double enemyKills = sum(details.enemyKills());
-        lines.add(ChatColor.GREEN + "我占 " + decimal(friendlyOccupation));
-        lines.add(ChatColor.GREEN + "我杀 " + decimal(friendlyKills));
-        lines.add(ChatColor.RED + "敌占 " + decimal(enemyOccupation));
-        lines.add(ChatColor.RED + "敌杀 " + decimal(enemyKills));
+        lines.add(TextColors.GREEN + "我占 " + decimal(friendlyOccupation));
+        lines.add(TextColors.GREEN + "我杀 " + decimal(friendlyKills));
+        lines.add(TextColors.RED + "敌占 " + decimal(enemyOccupation));
+        lines.add(TextColors.RED + "敌杀 " + decimal(enemyKills));
 
-        lines.add(ChatColor.YELLOW + "我方国数 " + details.friendlyParticipants().size());
-        lines.add(ChatColor.YELLOW + "敌方国数 " + details.enemyParticipants().size());
+        lines.add(TextColors.YELLOW + "我方国数 " + details.friendlyParticipants().size());
+        lines.add(TextColors.YELLOW + "敌方国数 " + details.enemyParticipants().size());
 
         String topFriendly = topEntry(details.friendlyOccupation(), "我方占领");
         String topEnemy = topEntry(details.enemyOccupation(), "敌方占领");
         if (!topFriendly.isBlank()) {
-            lines.add(ChatColor.AQUA + topFriendly);
+            lines.add(TextColors.AQUA + topFriendly);
         }
         if (!topEnemy.isBlank()) {
-            lines.add(ChatColor.LIGHT_PURPLE + topEnemy);
+            lines.add(TextColors.LIGHT_PURPLE + topEnemy);
         }
 
         if (details.independenceWar()) {
-            lines.add(ChatColor.GOLD + "周期 " + details.elapsedCycles());
+            lines.add(TextColors.GOLD + "周期 " + details.elapsedCycles());
         }
-        lines.add(ChatColor.GRAY + elapsed(details.startedAt()));
-        lines.add(ChatColor.DARK_GRAY + "/wde war focus");
+        lines.add(TextColors.GRAY + elapsed(details.startedAt()));
+        lines.add(TextColors.DARK_GRAY + "/wde war focus");
         return lines.size() > 15 ? lines.subList(0, 15) : lines;
     }
 
@@ -276,7 +276,7 @@ public final class WarScoreboardManager {
         if (count == 0) {
             return value;
         }
-        return value + ChatColor.RESET.toString().repeat(count);
+        return value + TextColors.RESET.toString().repeat(count);
     }
 
     private record FocusContext(WDEresident resident, String nation, String town,

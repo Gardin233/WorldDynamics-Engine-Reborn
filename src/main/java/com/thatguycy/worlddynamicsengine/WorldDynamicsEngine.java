@@ -97,6 +97,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
     private PlayerMenuManager playerMenuManager;
     private OrgManager orgManager;
     private ReligionManager religionManager;
+    private com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyChurchManager ideologyChurchManager;
     private IdeologyTreasuryManager ideologyTreasuryManager;
     private CraftEngineIntegration craftEngineIntegration;
     private PlayerDropManager playerDropManager;
@@ -183,6 +184,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         backgroundManager = new BackgroundManager(this, residentManager);
         orgManager = new OrgManager(this, townManager);
         religionManager = new ReligionManager(this);
+        ideologyChurchManager = new com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyChurchManager(this);
         doctrineBuffManager = new DoctrineBuffManager(this);
         animalKillingDoctrineManager = new AnimalKillingDoctrineManager(this);
         warScoreboardManager = new WarScoreboardManager(this);
@@ -227,6 +229,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         residentManager.saveResidents();
         orgManager.saveOrganizations();
         religionManager.saveReligions();
+        if (ideologyChurchManager != null) ideologyChurchManager.saveAll();
     }
 
     public static WorldDynamicsEngine getInstance() {
@@ -271,6 +274,10 @@ public class WorldDynamicsEngine extends JavaPlugin {
 
     public ReligionManager getReligionManager() {
         return religionManager;
+    }
+
+    public com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyChurchManager getIdeologyChurchManager() {
+        return ideologyChurchManager;
     }
 
     public IdeologyTreasuryManager getIdeologyTreasuryManager() {
@@ -427,6 +434,8 @@ public class WorldDynamicsEngine extends JavaPlugin {
         ConfigurationSerialization.registerClass(WDEresident.class, "WDEresident");
         ConfigurationSerialization.registerClass(WDEorg.class, "WDEorg");
         ConfigurationSerialization.registerClass(WDEreligion.class, "WDEreligion");
+        ConfigurationSerialization.registerClass(com.thatguycy.worlddynamicsengine.model.WDEChurch.class, "WDEChurch");
+        ConfigurationSerialization.registerClass(com.thatguycy.worlddynamicsengine.model.IdeologyCouncilProposal.class, "IdeologyCouncilProposal");
     }
 
     private void ensureResources() {
@@ -823,7 +832,8 @@ public class WorldDynamicsEngine extends JavaPlugin {
         commandHandler.registerSubCommand("town", new TownCommand(townManager));
         commandHandler.registerSubCommand("nation", new NationCommand(nationManager, residentManager));
         commandHandler.registerSubCommand("org", new OrgCommand(nationManager, townManager, orgManager, economyBridge));
-        commandHandler.registerSubCommand("ideology", new ReligionCommand(nationManager, townManager, residentManager, religionManager, economyBridge));
+        commandHandler.registerSubCommand("ideology", new ReligionCommand(
+                nationManager, townManager, residentManager, religionManager, economyBridge, ideologyChurchManager));
         commandHandler.registerSubCommand("diplomacy", new DiplomacyCommand(nationManager, residentManager, economyBridge, orgManager));
 
         rootCommand.setTabCompleter(new MyTabCompleter(orgManager, religionManager));
@@ -873,6 +883,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         residentManager.enableAutoSave();
         orgManager.enableAutoSave();
         religionManager.enableAutoSave();
+        if (ideologyChurchManager != null) ideologyChurchManager.startTasks();
         if (backgroundManager != null) {
             getServer().getScheduler().runTask(this, () -> getServer().getOnlinePlayers().forEach(player -> {
                 backgroundManager.applyPendingBonuses(player);
@@ -987,6 +998,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         if (religionManager != null) {
             religionManager.saveReligions();
         }
+        if (ideologyChurchManager != null) ideologyChurchManager.saveAll();
     }
 
     private void scheduleIdeologyMemeRegistryReload() {
@@ -1510,6 +1522,49 @@ public class WorldDynamicsEngine extends JavaPlugin {
         changed |= ensureChargeDefaults(ideologyConfig, "economy.charges.religionNationConversion", "30000.00");
         changed |= ensureChargeDefaults(ideologyConfig, "economy.charges.religionForcedPlayerConversion", "5000.00");
         changed |= ensureChargeDefaults(ideologyConfig, "economy.charges.religionForcedTownConversion", "20000.00");
+        Map<String, Object> governanceDefaults = Map.ofEntries(
+                Map.entry("governance.defaultMode", "LIFETIME"),
+                Map.entry("cardinals.baseSeats", 2),
+                Map.entry("cardinals.followersPerAdditionalSeat", 25),
+                Map.entry("cardinals.maximumSeats", 9),
+                Map.entry("elections.intervalDays", 90),
+                Map.entry("elections.votingDays", 7),
+                Map.entry("elections.clock", "REAL_TIME"),
+                Map.entry("elections.world", "world"),
+                Map.entry("elections.quorumRatio", 0.5D),
+                Map.entry("elections.winnerMinimumRatio", 0.5D),
+                Map.entry("elections.tiePolicy", "KEEP_INCUMBENT"),
+                Map.entry("elections.noWinnerPolicy", "RETRY_AFTER_DAYS"),
+                Map.entry("elections.votingRule", "ONE_CARDINAL_ONE_VOTE"),
+                Map.entry("elections.candidateScope", "ALL_FOLLOWERS"),
+                Map.entry("elections.absenceCountsTowardQuorum", false),
+                Map.entry("elections.abstentionCountsTowardQuorum", true),
+                Map.entry("elections.noWinnerRetryDays", 30),
+                Map.entry("economy.governance.appointCardinalCost", "500.00"),
+                Map.entry("economy.governance.revokeCardinalCost", "250.00"),
+                Map.entry("economy.governance.churchCreation.amount", "5000.00"),
+                Map.entry("economy.governance.churchCreation.currency", "USD"),
+                Map.entry("churches.maximumPerIdeology", 32),
+                Map.entry("churches.membershipCooldownHours", 24),
+                Map.entry("churches.governanceActionCooldownHours", 24),
+                Map.entry("council.proposalDurationDays", 7),
+                Map.entry("council.proposalCooldownHours", 12),
+                Map.entry("council.voteWeighting", "MEMBERS"),
+                Map.entry("council.maximumChurchWeight", 10000),
+                Map.entry("council.quorumRatio", 0.5D),
+                Map.entry("council.approvalRatio", 0.5D),
+                Map.entry("council.sanctionMaximumDays", 90));
+        for (var entry : governanceDefaults.entrySet()) {
+            if (!ideologyConfig.contains(entry.getKey())) {
+                ideologyConfig.set(entry.getKey(), entry.getValue());
+                changed = true;
+            }
+        }
+        if (!"ONE_CARDINAL_ONE_VOTE".equalsIgnoreCase(
+                ideologyConfig.getString("elections.votingRule", "ONE_CARDINAL_ONE_VOTE"))) {
+            ideologyConfig.set("elections.votingRule", "ONE_CARDINAL_ONE_VOTE");
+            changed = true;
+        }
         Map<String, Object> treasuryDefaults = Map.of(
                 "enabled", true, "titheEnabled", true, "taxWorld", "world",
                 "defaultTitheType", "WEALTH_PERCENTAGE", "defaultTitheAmount", "10",

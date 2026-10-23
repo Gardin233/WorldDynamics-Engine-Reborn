@@ -1,6 +1,7 @@
 package com.thatguycy.worlddynamicsengine.manager.ideology;
 
 import com.thatguycy.worlddynamicsengine.manager.economy.EconomyBridge;
+import com.thatguycy.worlddynamicsengine.model.WDEChurch;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.math.BigDecimal;
@@ -36,7 +37,11 @@ public final class IdeologyTreasuryManager {
 
     public DonationResult donate(Player player, String religionName, BigDecimal amount) {
         if (!validDonationAmount(amount)) return result(DonationStatus.INVALID_AMOUNT);
-        if (plugin.getReligionManager().getReligion(religionName) == null) return result(DonationStatus.NOT_FOUND);
+        WDEreligion religion = plugin.getReligionManager().getReligion(religionName);
+        if (religion == null) return result(DonationStatus.NOT_FOUND);
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            return result(DonationStatus.UNAVAILABLE);
+        }
         EconomyBridge economy = plugin.getEconomyBridge();
         if (player == null || !plugin.religionEnabled || !treasuryEnabled()
                 || economy == null || !economy.supportsExactCurrency(economy.getDefaultCurrency())) {
@@ -74,6 +79,13 @@ public final class IdeologyTreasuryManager {
             for (var resident : plugin.getResidentManager().getAllResidents()) {
                 WDEreligion religion = plugin.getReligionManager().getReligion(resident.getReligionName());
                 if (religion == null || religion.getTitheAmount().signum() <= 0) continue;
+                WDEChurch church = null;
+                if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+                    church = plugin.getIdeologyChurchManager().getActiveChurchForResident(resident, religion);
+                    if (church == null) continue;
+                } else if (plugin.getReligionManager().isCardinalTitheExempt(resident.getUserUUID(), religion)) {
+                    continue;
+                }
                 try {
                     BigDecimal wealth = religion.getTitheType() == WDEreligion.TitheType.WEALTH_PERCENTAGE
                             ? economy.getTotalWealthAsDefault(resident.getUserUUID(), worldName,
@@ -83,14 +95,21 @@ public final class IdeologyTreasuryManager {
                             requested, plugin.getCurrencyExchangeRates().keySet());
                     if (!collection.collectedAnything()) continue;
                     try {
-                        plugin.getReligionManager().creditTreasury(religion.getReligionName(), collection.collectedDefault());
+                        if (church == null) {
+                            plugin.getReligionManager().creditTreasury(religion.getReligionName(), collection.collectedDefault());
+                        } else {
+                            plugin.getIdeologyChurchManager().creditTithe(church,
+                                    collection.collectedDefault(), resident.getUserUUID());
+                        }
                     } catch (RuntimeException ex) {
                         refund(economy, resident.getUserUUID(), worldName, collection.withdrawnAmounts());
                         throw ex;
                     }
                     Player online = plugin.getServer().getPlayer(resident.getUserUUID());
-                    if (online != null) online.sendMessage(plugin.formatLocaleMessage(plugin.userLang, "religion_tithe_collected",
-                            religion.getReligionName(), economy.format(collection.collectedDefault())));
+                    if (online != null) online.sendMessage(plugin.formatLocaleMessage(plugin.userLang,
+                            church == null ? "religion_tithe_collected" : "church_tithe_collected",
+                            church == null ? religion.getReligionName() : church.getChurchName(),
+                            economy.format(collection.collectedDefault())));
                     if (!collection.fullyCovered()
                             && plugin.getIdeologyConfig().getBoolean("economy.treasury.logPartialCollection", true)) {
                         plugin.getLogger().info("Partial ideology tithe for " + resident.getUserUUID()

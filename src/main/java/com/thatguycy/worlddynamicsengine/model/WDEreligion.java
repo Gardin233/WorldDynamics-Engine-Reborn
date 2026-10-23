@@ -2,6 +2,7 @@ package com.thatguycy.worlddynamicsengine.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -23,8 +24,10 @@ public class WDEreligion implements ConfigurationSerializable {
      * 定义定额与财富比例两种什一税计税方式。
      */
     public enum TitheType { FIXED, WEALTH_PERCENTAGE }
+    public enum GovernanceMode { LIFETIME, CARDINAL, SYNODAL }
     public static final BigDecimal MAX_FIXED_TITHE = new BigDecimal("1000000000000");
     private final String religionName;
+    private final UUID ideologyUuid;
     private final UUID founderUuid;
     private final String founderName;
     private final long createdAt;
@@ -40,9 +43,20 @@ public class WDEreligion implements ConfigurationSerializable {
     private BigDecimal treasuryBalance = BigDecimal.ZERO;
     private TitheType titheType = TitheType.FIXED;
     private BigDecimal titheAmount = BigDecimal.ZERO;
+    private GovernanceMode governanceMode = GovernanceMode.LIFETIME;
+    private boolean governanceModeMigrated;
+    private boolean ideologyUuidMigrated;
+    private UUID parentIdeologyUuid;
+    private UUID parentChurchUuid;
+    private final Map<String, String> cardinals = new LinkedHashMap<>();
+    private final List<Map<String, Object>> leadershipHistory = new ArrayList<>();
+    private final Map<String, Object> nextElection = new LinkedHashMap<>();
+    private final Map<String, Object> electionDeadline = new LinkedHashMap<>();
+    private final Map<String, String> electionBallots = new LinkedHashMap<>();
 
     public WDEreligion(String religionName, UUID founderUuid, String founderName, long createdAt) {
         this.religionName = religionName;
+        this.ideologyUuid = UUID.randomUUID();
         this.founderUuid = founderUuid;
         this.founderName = founderName;
         this.createdAt = createdAt;
@@ -55,11 +69,19 @@ public class WDEreligion implements ConfigurationSerializable {
         this.doctrineAttitudes = new LinkedHashMap<>();
         this.memeCooldown = new LinkedHashMap<>();
         this.doctrineCooldowns = new LinkedHashMap<>();
+        this.governanceModeMigrated = true;
+        this.ideologyUuidMigrated = true;
     }
 
     @SuppressWarnings("unchecked")
     public WDEreligion(Map<String, Object> map) {
         this.religionName = String.valueOf(map.getOrDefault("religionName", "Unknown"));
+        String storedIdeologyUuid = String.valueOf(map.getOrDefault("ideologyUuid", ""));
+        this.ideologyUuidMigrated = !storedIdeologyUuid.isBlank();
+        this.ideologyUuid = this.ideologyUuidMigrated
+                ? UUID.fromString(storedIdeologyUuid)
+                : UUID.nameUUIDFromBytes(("wder:ideology:" + this.religionName.toLowerCase(java.util.Locale.ROOT))
+                        .getBytes(StandardCharsets.UTF_8));
         String founderUuidValue = String.valueOf(map.getOrDefault("founderUuid", "00000000-0000-0000-0000-000000000000"));
         this.founderUuid = UUID.fromString(founderUuidValue);
         this.founderName = String.valueOf(map.getOrDefault("founderName", "Unknown"));
@@ -84,6 +106,21 @@ public class WDEreligion implements ConfigurationSerializable {
             this.titheType = TitheType.FIXED;
             this.titheAmount = BigDecimal.ZERO;
         }
+        try {
+            this.governanceMode = GovernanceMode.valueOf(
+                    String.valueOf(map.getOrDefault("governanceMode", "LIFETIME")));
+            this.governanceModeMigrated = map.containsKey("governanceMode");
+        } catch (IllegalArgumentException ignored) {
+            this.governanceMode = GovernanceMode.LIFETIME;
+            this.governanceModeMigrated = false;
+        }
+        copyStringMap(map.get("cardinals"), cardinals);
+        copyHistory(map.get("leadershipHistory"), leadershipHistory);
+        copyFlatMap(map.get("nextElection"), nextElection);
+        copyFlatMap(map.get("electionDeadline"), electionDeadline);
+        copyStringMap(map.get("electionBallots"), electionBallots);
+        this.parentIdeologyUuid = parseOptionalUuid(map.get("parentIdeologyUuid"));
+        this.parentChurchUuid = parseOptionalUuid(map.get("parentChurchUuid"));
 
         Object rawPlayers = map.get("excommunicatedPlayers");
         if (rawPlayers instanceof Map<?, ?> playerMap) {
@@ -126,6 +163,7 @@ public class WDEreligion implements ConfigurationSerializable {
     public @NotNull Map<String, Object> serialize() {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("religionName", religionName);
+        map.put("ideologyUuid", ideologyUuid.toString());
         map.put("founderUuid", founderUuid.toString());
         map.put("founderName", founderName);
         map.put("createdAt", createdAt);
@@ -141,6 +179,14 @@ public class WDEreligion implements ConfigurationSerializable {
         map.put("treasuryBalance", treasuryBalance.toPlainString());
         map.put("titheType", titheType.name());
         map.put("titheAmount", titheAmount.toPlainString());
+        map.put("governanceMode", governanceMode.name());
+        map.put("cardinals", new LinkedHashMap<>(cardinals));
+        map.put("leadershipHistory", copyHistoryForSerialization(leadershipHistory));
+        map.put("nextElection", new LinkedHashMap<>(nextElection));
+        map.put("electionDeadline", new LinkedHashMap<>(electionDeadline));
+        map.put("electionBallots", new LinkedHashMap<>(electionBallots));
+        map.put("parentIdeologyUuid", parentIdeologyUuid == null ? "" : parentIdeologyUuid.toString());
+        map.put("parentChurchUuid", parentChurchUuid == null ? "" : parentChurchUuid.toString());
         return map;
     }
 
@@ -148,12 +194,19 @@ public class WDEreligion implements ConfigurationSerializable {
         return treasuryBalance;
     }
 
-    // This treasury is a permanent sink: there is deliberately no debit or balance setter.
+    // Player-facing withdrawals remain forbidden; governance fees use the dedicated debit method.
     public void creditTreasury(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) {
             throw new IllegalArgumentException("Treasury credits must be positive.");
         }
         treasuryBalance = treasuryBalance.add(amount);
+    }
+
+    public void debitGovernanceFee(BigDecimal amount) {
+        if (amount == null || amount.signum() < 0 || treasuryBalance.compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Insufficient ideology treasury balance.");
+        }
+        treasuryBalance = treasuryBalance.subtract(amount);
     }
 
     public TitheType getTitheType() {
@@ -195,12 +248,38 @@ public class WDEreligion implements ConfigurationSerializable {
         }
     }
 
+    private UUID parseOptionalUuid(Object value) {
+        if (value == null || String.valueOf(value).isBlank()) return null;
+        try {
+            return UUID.fromString(String.valueOf(value));
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
     public static WDEreligion deserialize(Map<String, Object> map) {
         return new WDEreligion(map);
     }
 
     public String getReligionName() {
         return religionName;
+    }
+
+    public UUID getIdeologyUuid() {
+        return ideologyUuid;
+    }
+
+    public UUID getParentIdeologyUuid() {
+        return parentIdeologyUuid;
+    }
+
+    public UUID getParentChurchUuid() {
+        return parentChurchUuid;
+    }
+
+    public void setParentage(UUID parentIdeologyUuid, UUID parentChurchUuid) {
+        this.parentIdeologyUuid = parentIdeologyUuid;
+        this.parentChurchUuid = parentChurchUuid;
     }
 
     public UUID getFounderUuid() {
@@ -224,8 +303,156 @@ public class WDEreligion implements ConfigurationSerializable {
     }
 
     public void setPontiff(UUID pontiffUuid, String pontiffName) {
-        this.pontiffUuid = pontiffUuid;
-        this.pontiffName = pontiffName;
+        transferLeadership(pontiffUuid, pontiffName, "ADMIN_RECOVERY", System.currentTimeMillis());
+    }
+
+    public void transferLeadership(UUID successorUuid, String successorName, String reason, long effectiveAt) {
+        if (successorUuid == null || successorName == null || successorName.isBlank()) {
+            throw new IllegalArgumentException("A leader UUID and name are required.");
+        }
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("previousLeaderUuid", pontiffUuid.toString());
+        entry.put("previousLeaderName", pontiffName);
+        entry.put("successorUuid", successorUuid.toString());
+        entry.put("successorName", successorName);
+        entry.put("reason", reason == null ? "UNSPECIFIED" : reason);
+        entry.put("effectiveAt", effectiveAt);
+        entry.put("previousLeaderAuthorityEndedAt", effectiveAt);
+        leadershipHistory.add(entry);
+        this.pontiffUuid = successorUuid;
+        this.pontiffName = successorName;
+    }
+
+    public GovernanceMode getGovernanceMode() {
+        return governanceMode;
+    }
+
+    public boolean needsGovernanceModeMigration() {
+        return !governanceModeMigrated || !ideologyUuidMigrated;
+    }
+
+    public void setGovernanceMode(GovernanceMode governanceMode) {
+        if (governanceMode == null) {
+            throw new IllegalArgumentException("Governance mode is required.");
+        }
+        this.governanceMode = governanceMode;
+        this.governanceModeMigrated = true;
+        this.ideologyUuidMigrated = true;
+    }
+
+    public Map<String, String> getCardinals() {
+        return new LinkedHashMap<>(cardinals);
+    }
+
+    public boolean isCardinal(UUID playerUuid) {
+        return playerUuid != null && cardinals.containsKey(playerUuid.toString());
+    }
+
+    public void appointCardinal(UUID playerUuid, String playerName) {
+        if (playerUuid == null || playerName == null || playerName.isBlank()) {
+            throw new IllegalArgumentException("A cardinal UUID and name are required.");
+        }
+        cardinals.put(playerUuid.toString(), playerName);
+    }
+
+    public boolean revokeCardinal(UUID playerUuid) {
+        return playerUuid != null && cardinals.remove(playerUuid.toString()) != null;
+    }
+
+    public boolean removeCardinalRecord(String playerUuid) {
+        return playerUuid != null && cardinals.remove(playerUuid) != null;
+    }
+
+    public List<Map<String, Object>> getLeadershipHistory() {
+        return copyHistoryForSerialization(leadershipHistory);
+    }
+
+    public Map<String, Object> getNextElection() {
+        return new LinkedHashMap<>(nextElection);
+    }
+
+    public void setNextElection(Map<String, Object> deadline) {
+        nextElection.clear();
+        copyFlatMap(deadline, nextElection);
+    }
+
+    public Map<String, Object> getElectionDeadline() {
+        return new LinkedHashMap<>(electionDeadline);
+    }
+
+    public void openElection(Map<String, Object> deadline) {
+        electionDeadline.clear();
+        copyFlatMap(deadline, electionDeadline);
+        electionBallots.clear();
+    }
+
+    public void closeElection() {
+        electionDeadline.clear();
+        electionBallots.clear();
+    }
+
+    public boolean isElectionOpen() {
+        return !electionDeadline.isEmpty();
+    }
+
+    public Map<String, String> getElectionBallots() {
+        return new LinkedHashMap<>(electionBallots);
+    }
+
+    public void castElectionBallot(UUID cardinalUuid, String candidateUuid) {
+        if (cardinalUuid == null || !isCardinal(cardinalUuid) || candidateUuid == null || candidateUuid.isBlank()) {
+            throw new IllegalArgumentException("Invalid cardinal election ballot.");
+        }
+        if (electionBallots.containsKey(cardinalUuid.toString())) {
+            throw new IllegalArgumentException("A cardinal may cast only one sealed ballot per election.");
+        }
+        electionBallots.put(cardinalUuid.toString(), candidateUuid);
+    }
+
+    public void recordCardinalChange(UUID playerUuid, String playerName, boolean appointed, long changedAt) {
+        recordCardinalChange(playerUuid, playerName, appointed, changedAt, "LEADER_ACTION");
+    }
+
+    public void recordCardinalChange(UUID playerUuid, String playerName, boolean appointed, long changedAt, String reason) {
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("type", appointed ? "CARDINAL_APPOINTED" : "CARDINAL_REVOKED");
+        entry.put("playerUuid", playerUuid.toString());
+        entry.put("playerName", playerName);
+        entry.put("changedAt", changedAt);
+        entry.put("reason", reason);
+        leadershipHistory.add(entry);
+    }
+
+    public void recordGovernanceChange(GovernanceMode previous, GovernanceMode current, long changedAt) {
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("type", "GOVERNANCE_CHANGED");
+        entry.put("previousMode", previous.name());
+        entry.put("currentMode", current.name());
+        entry.put("changedAt", changedAt);
+        leadershipHistory.add(entry);
+    }
+
+    public void recordElectionResult(int eligibleVoters, int castBallots, Map<String, Integer> tally,
+            UUID winnerUuid, long resolvedAt) {
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("type", "CARDINAL_ELECTION_RESOLVED");
+        entry.put("eligibleVoters", eligibleVoters);
+        entry.put("castBallots", castBallots);
+        entry.put("tally", new LinkedHashMap<>(tally));
+        entry.put("winnerUuid", winnerUuid == null ? "" : winnerUuid.toString());
+        entry.put("resolvedAt", resolvedAt);
+        leadershipHistory.add(entry);
+    }
+
+    public static int cardinalSeatLimit(int followerCount, int baseSeats, int followersPerAdditionalSeat, int maximumSeats) {
+        if (followerCount < 0 || baseSeats < 0 || followersPerAdditionalSeat <= 0 || maximumSeats < 0) {
+            throw new IllegalArgumentException("Invalid cardinal seat formula.");
+        }
+        if (followerCount == 0) {
+            return 0;
+        }
+        long scaled = baseSeats + (long) Math.max(0, followerCount - 1) / followersPerAdditionalSeat;
+        return (int) Math.min(maximumSeats, scaled);
     }
 
     public Map<String, String> getExcommunicatedPlayers() {
@@ -365,6 +592,38 @@ public class WDEreligion implements ConfigurationSerializable {
                 }
             }
         }
+    }
+
+    private void copyStringMap(Object rawValue, Map<String, String> target) {
+        if (rawValue instanceof Map<?, ?> values) {
+            for (Map.Entry<?, ?> entry : values.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    target.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+                }
+            }
+        }
+    }
+
+    private void copyHistory(Object rawValue, List<Map<String, Object>> target) {
+        if (rawValue instanceof Collection<?> entries) {
+            for (Object value : entries) {
+                if (value instanceof Map<?, ?> map) {
+                    Map<String, Object> copy = new LinkedHashMap<>();
+                    copyFlatMap(map, copy);
+                    if (!copy.isEmpty()) {
+                        target.add(copy);
+                    }
+                }
+            }
+        }
+    }
+
+    private List<Map<String, Object>> copyHistoryForSerialization(List<Map<String, Object>> source) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> entry : source) {
+            result.add(new LinkedHashMap<>(entry));
+        }
+        return result;
     }
 
     private Map<String, Map<String, Object>> serializeNestedDoctrineCooldowns() {

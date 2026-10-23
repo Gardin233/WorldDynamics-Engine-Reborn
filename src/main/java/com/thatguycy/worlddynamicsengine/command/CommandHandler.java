@@ -1,8 +1,9 @@
 package com.thatguycy.worlddynamicsengine.command;
 
+import com.thatguycy.worlddynamicsengine.command.system.HelpCommand;
 import java.util.HashMap;
 import java.util.Map;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -29,7 +30,7 @@ public class CommandHandler implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         String root = args.length == 0 ? "menu" : args[0];
         if (!CommandPermissions.root(sender, root)) {
-            sender.sendMessage(ChatColor.RED + com.thatguycy.worlddynamicsengine.WorldDynamicsEngine.getInstance()
+            sender.sendMessage(TextColors.RED + com.thatguycy.worlddynamicsengine.WorldDynamicsEngine.getInstance()
                     .getLocaleMessage("command_no_permission"));
             return true;
         }
@@ -38,8 +39,13 @@ public class CommandHandler implements CommandExecutor {
                 com.thatguycy.worlddynamicsengine.WorldDynamicsEngine.getInstance().getPlayerMenuManager().openHome(player);
                 return true;
             }
-            sender.sendMessage(ChatColor.RED + com.thatguycy.worlddynamicsengine.WorldDynamicsEngine.getInstance().getLocaleMessage("command_unknown_subcommand_docs"));
+            sender.sendMessage(TextColors.RED + com.thatguycy.worlddynamicsengine.WorldDynamicsEngine.getInstance().getLocaleMessage("command_unknown_subcommand_docs"));
             return true;
+        }
+
+        if (args.length >= 2 && "help".equalsIgnoreCase(args[1])
+                && HelpCommand.supportsModule(args[0])) {
+            return HelpCommand.handleModuleHelp(sender, args[0], args);
         }
 
         CommandExecutor subCommand = subCommandMap.get(args[0].toLowerCase());
@@ -47,7 +53,7 @@ public class CommandHandler implements CommandExecutor {
             return subCommand.onCommand(sender, cmd, label, args);
         }
 
-        sender.sendMessage(ChatColor.RED + com.thatguycy.worlddynamicsengine.WorldDynamicsEngine.getInstance().getLocaleMessage("command_unknown_subcommand_docs"));
+        sender.sendMessage(TextColors.RED + com.thatguycy.worlddynamicsengine.WorldDynamicsEngine.getInstance().getLocaleMessage("command_unknown_subcommand_docs"));
         return true;
     }
 }

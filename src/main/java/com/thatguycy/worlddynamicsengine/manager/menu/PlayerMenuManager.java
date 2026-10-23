@@ -16,6 +16,7 @@ import com.thatguycy.worlddynamicsengine.model.organization.SovereignSubjectStat
 import com.thatguycy.worlddynamicsengine.model.war.WarReason;
 import com.thatguycy.worlddynamicsengine.model.WDEnation;
 import com.thatguycy.worlddynamicsengine.model.WDEorg;
+import com.thatguycy.worlddynamicsengine.model.WDEChurch;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEtown;
@@ -31,7 +32,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -72,7 +73,8 @@ public class PlayerMenuManager implements Listener {
         religions = plugin.getReligionManager();
         backgroundCommand = new BackgroundCommand(plugin, backgrounds, plugin.getResidentManager());
         religionCommand = new ReligionCommand(plugin.getNationManager(), plugin.getTownManager(),
-                plugin.getResidentManager(), religions, plugin.getEconomyBridge());
+                plugin.getResidentManager(), religions, plugin.getEconomyBridge(),
+                plugin.getIdeologyChurchManager());
         reload();
     }
 
@@ -110,7 +112,7 @@ public class PlayerMenuManager implements Listener {
 
     private String text(String key, Object... args) {
         String value = messages.getString("ui." + key, key);
-        return ChatColor.translateAlternateColorCodes('&', args.length == 0 ? value : String.format(value, args));
+        return TextColors.translateAlternateColorCodes('&', args.length == 0 ? value : String.format(value, args));
     }
 
     public void sendDoctrineViolation(Player player, String doctrineId) {
@@ -122,7 +124,7 @@ public class PlayerMenuManager implements Listener {
         Long last = notices.get(doctrineId);
         if (last != null && (now - last) / 1000L < cooldown) return;
         notices.put(doctrineId, now);
-        player.sendMessage(ChatColor.translateAlternateColorCodes('&', message
+        player.sendMessage(TextColors.translateAlternateColorCodes('&', message
                 .replace("%player_name%", player.getName())
                 .replace("%doctrine_name%", religions.getDoctrineDisplayName(doctrineId))));
     }
@@ -1609,7 +1611,9 @@ public class PlayerMenuManager implements Listener {
             String name = names.get(i);
             WDEreligion religion = religions.getReligion(name);
             button(menu, i - start, Material.ENCHANTED_BOOK, name,
-                    List.of(text("leader", religion.getPontiffName()), text("preview")),
+                    List.of(text(religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL
+                                    ? "former_leader" : "leader", religion.getPontiffName()),
+                            text("preview")),
                     () -> openReligionDetail(player, name));
         }
         back(menu, () -> openIdeology(player));
@@ -1621,15 +1625,23 @@ public class PlayerMenuManager implements Listener {
         if (religion == null || !plugin.religionEnabled) return;
         Menu menu = menu(player, text("detail", name));
         button(menu, 13, Material.ENCHANTED_BOOK, name,
-                List.of(text("founder", religion.getFounderName()), text("leader", religion.getPontiffName())), null);
+                List.of(text("founder", religion.getFounderName()),
+                        text(religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL
+                                ? "former_leader" : "leader", religion.getPontiffName())), null);
         button(menu, 20, Material.BOOK, text("doctrines", name), List.of(text("readonly")),
                 () -> openDoctrines(player, name, 0));
         button(menu, 24, Material.AMETHYST_SHARD, text("memes", name), List.of(text("readonly")),
                 () -> openMemes(player, name, 0,
                         new LinkedHashSet<>(religions.getConfiguredMemes(religion.getMemes()))));
-        button(menu, 40, Material.GOLD_BLOCK, text("treasury.title", name),
-                List.of(text("treasury.balance", plugin.getEconomyBridge().format(religion.getTreasuryBalance())),
-                        text("treasury.sink")), () -> openIdeologyTreasury(player, name));
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            button(menu, 40, Material.WRITABLE_BOOK, text("church_list.title", churchManager().getChurches(name).stream()
+                            .filter(WDEChurch::isActive).count()),
+                    List.of(text("churches.hint")), () -> player.performCommand("wde ideology church list " + name));
+        } else {
+            button(menu, 40, Material.GOLD_BLOCK, text("treasury.title", name),
+                    List.of(text("treasury.balance", plugin.getEconomyBridge().format(religion.getTreasuryBalance())),
+                            text("treasury.sink")), () -> openIdeologyTreasury(player, name));
+        }
         if (!name.equalsIgnoreCase(resident(player).getReligionName())) {
             button(menu, 31, Material.LIME_DYE, text("join"), List.of(text("conversion_cost", conversionCost(player))),
                     () -> {
@@ -1655,6 +1667,10 @@ public class PlayerMenuManager implements Listener {
     public void openIdeologyTreasury(Player player, String name) {
         WDEreligion religion = religions.getReligion(name);
         if (religion == null || !plugin.religionEnabled) return;
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            player.sendMessage(text("treasury.synodal"));
+            return;
+        }
         Menu menu = menu(player, text("treasury.title", name));
         boolean enabled = plugin.getIdeologyTreasuryManager().treasuryEnabled();
         button(menu, 13, Material.GOLD_BLOCK, text("treasury.balance",
@@ -1726,15 +1742,28 @@ public class PlayerMenuManager implements Listener {
     }
 
     private boolean isLeader(Player player, WDEreligion religion) {
-        return religion != null && player.getUniqueId().equals(religion.getPontiffUuid());
+        if (religion == null) return false;
+        if (religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            WDEChurch church = churchManager().getActiveChurchForResident(resident(player), religion);
+            return church != null && player.getUniqueId().equals(church.getHeadUuid());
+        }
+        return player.getUniqueId().equals(religion.getPontiffUuid());
     }
 
     private boolean canEdit(Player player, WDEreligion religion) {
+        if (religion != null && religion.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            player.sendMessage(text("council.use_command"));
+            return false;
+        }
         if (!plugin.religionEnabled || !isLeader(player, religion)) {
             player.sendMessage(text("no_permission"));
             return false;
         }
         return true;
+    }
+
+    private com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyChurchManager churchManager() {
+        return plugin.getIdeologyChurchManager();
     }
 
     private void openDoctrines(Player player, String name, int page) {
@@ -1996,21 +2025,21 @@ public class PlayerMenuManager implements Listener {
                 meta = item.getItemMeta();
             }
         }
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', title));
+        meta.setDisplayName(TextColors.translateAlternateColorCodes('&', title));
         List<String> lines = new ArrayList<>();
         for (String line : lore) {
             for (String paragraph : line.split("\\R")) {
                 // Wrap long descriptions so custom stories remain readable in a tooltip.
-                String colored = ChatColor.translateAlternateColorCodes('&', paragraph);
+                String colored = TextColors.translateAlternateColorCodes('&', paragraph);
                 int offset = 0;
                 String carry = "";
                 while (offset < colored.length()) {
                     int end = Math.min(offset + 32, colored.length());
-                    if (end < colored.length() && (colored.charAt(end - 1) == ChatColor.COLOR_CHAR
+                    if (end < colored.length() && (colored.charAt(end - 1) == TextColors.COLOR_CHAR
                             || Character.isHighSurrogate(colored.charAt(end - 1)))) end--;
                     String part = colored.substring(offset, end);
-                    lines.add(ChatColor.GRAY + carry + part);
-                    carry = ChatColor.getLastColors(carry + part);
+                    lines.add(TextColors.GRAY + carry + part);
+                    carry = TextColors.getLastColors(carry + part);
                     offset = end;
                 }
             }

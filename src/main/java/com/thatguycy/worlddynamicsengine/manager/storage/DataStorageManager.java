@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -35,6 +36,14 @@ public class DataStorageManager {
                 return StorageType.valueOf(rawValue.trim().toUpperCase());
             } catch (IllegalArgumentException ignored) {
                 return SQLITE;
+            }
+        }
+    }
+
+    public record EntityWrite(String category, String key, ConfigurationSerializable value) {
+        public EntityWrite {
+            if (category == null || category.isBlank() || key == null || key.isBlank() || value == null) {
+                throw new IllegalArgumentException("A storage category, key, and value are required.");
             }
         }
     }
@@ -177,6 +186,41 @@ public class DataStorageManager {
             statement.executeUpdate();
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to save entity " + category + "/" + key + ": " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Atomically persists related entities so ideology reforms cannot split balances and ownership.
+     */
+    public synchronized void saveEntities(Collection<EntityWrite> writes) {
+        if (writes == null || writes.isEmpty()) return;
+        String sql = "INSERT INTO " + TABLE_NAME + " (category, entity_key, payload, updated_at) VALUES (?, ?, ?, ?)"
+                + (storageType == StorageType.MYSQL
+                ? " ON DUPLICATE KEY UPDATE payload = VALUES(payload), updated_at = VALUES(updated_at)"
+                : " ON CONFLICT(category, entity_key) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at");
+        try (Connection connection = openConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                long updatedAt = System.currentTimeMillis();
+                for (EntityWrite write : writes) {
+                    statement.setString(1, write.category());
+                    statement.setString(2, write.key());
+                    statement.setString(3, serialize(write.value()));
+                    statement.setLong(4, updatedAt);
+                    statement.addBatch();
+                }
+                statement.executeBatch();
+                connection.commit();
+            } catch (Exception ex) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackFailure) {
+                    ex.addSuppressed(rollbackFailure);
+                }
+                throw new IllegalStateException("Related entity transaction rolled back.", ex);
+            }
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to atomically save related entities: " + ex.getMessage(), ex);
         }
     }
 

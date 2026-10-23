@@ -9,7 +9,7 @@ import com.thatguycy.worlddynamicsengine.model.WDEtown;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.util.ArrayList;
 import java.util.List;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -32,7 +32,7 @@ public class TownCommand implements CommandExecutor {
             return true;
         }
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + msg("town_usage_root"));
+            sender.sendMessage(TextColors.RED + msg("town_usage_root"));
             return true;
         }
 
@@ -48,7 +48,7 @@ public class TownCommand implements CommandExecutor {
                 if (sender instanceof Player player) {
                     WorldDynamicsEngine.getInstance().getPlayerMenuManager().openTownManagement(player, townName);
                 } else {
-                    sender.sendMessage(ChatColor.RED + msg("common_only_players"));
+                    sender.sendMessage(TextColors.RED + msg("common_only_players"));
                 }
                 return true;
             case "setgovtype":
@@ -66,38 +66,38 @@ public class TownCommand implements CommandExecutor {
             case "setconscriptprivilege":
                 return handleSetConscriptPrivilege(sender, town, args);
             default:
-                sender.sendMessage(ChatColor.RED + msg("town_unknown_subcommand"));
+                sender.sendMessage(TextColors.RED + msg("town_unknown_subcommand"));
                 return true;
         }
     }
 
     private boolean displayTownInfo(CommandSender sender, String townName, WDEtown town) {
         if (town == null) {
-            sender.sendMessage(ChatColor.RED + msg("town_not_found", townName));
+            sender.sendMessage(TextColors.RED + msg("town_not_found", townName));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GOLD + msg("town_info_header", townName));
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_government_type") + ChatColor.WHITE + formatTownGovernmentType(town.getGovernmentType()));
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_religion") + ChatColor.WHITE + town.getReligionName());
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_leader") + ChatColor.WHITE + town.getTownLeader());
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_parent_nation") + ChatColor.WHITE + town.getNationName());
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_organizations") + ChatColor.WHITE + (town.getOrganizationNames().isEmpty() ? msg("common_none") : String.join(", ", town.getOrganizationNames())));
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_resident_tax_type") + ChatColor.WHITE + msg("town_tax_type_" + town.getResidentTaxType().toLowerCase()));
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_resident_tax_amount") + ChatColor.WHITE + formatTaxAmount(town));
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_conscript_limit") + ChatColor.WHITE + town.getConscripts().size() + "/" + townManager.getTownConscriptLimit(town));
-        sender.sendMessage(ChatColor.YELLOW + msg("town_info_conscripts") + ChatColor.WHITE + formatConscripts(town));
+        sender.sendMessage(TextColors.GOLD + msg("town_info_header", townName));
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_government_type") + TextColors.WHITE + formatTownGovernmentType(town.getGovernmentType()));
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_religion") + TextColors.WHITE + town.getReligionName());
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_leader") + TextColors.WHITE + town.getTownLeader());
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_parent_nation") + TextColors.WHITE + town.getNationName());
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_organizations") + TextColors.WHITE + (town.getOrganizationNames().isEmpty() ? msg("common_none") : String.join(", ", town.getOrganizationNames())));
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_resident_tax_type") + TextColors.WHITE + msg("town_tax_type_" + town.getResidentTaxType().toLowerCase()));
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_resident_tax_amount") + TextColors.WHITE + formatTaxAmount(town));
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_conscript_limit") + TextColors.WHITE + town.getConscripts().size() + "/" + townManager.getTownConscriptLimit(town));
+        sender.sendMessage(TextColors.YELLOW + msg("town_info_conscripts") + TextColors.WHITE + formatConscripts(town));
         boolean showElections = !"DICTATORSHIP".equalsIgnoreCase(town.getGovernmentType());
         if (showElections) {
-            sender.sendMessage(ChatColor.YELLOW + msg("town_info_election_interval_days") + ChatColor.WHITE + town.getElectionIntervalDays());
+            sender.sendMessage(TextColors.YELLOW + msg("town_info_election_interval_days") + TextColors.WHITE + town.getElectionIntervalDays());
         }
         if (showElections && town.hasActiveElection()) {
             if ("REPUBLIC".equalsIgnoreCase(town.getGovernmentType())) {
-                sender.sendMessage(ChatColor.YELLOW + msg("town_info_pending_leader") + ChatColor.WHITE + formatCandidateList(town.getTownLeaderCandidates()));
-                sender.sendMessage(ChatColor.YELLOW + msg("town_info_votes") + ChatColor.WHITE + summarizeCandidateVotes(townManager.countTownLeaderVotes(town)));
+                sender.sendMessage(TextColors.YELLOW + msg("town_info_pending_leader") + TextColors.WHITE + formatCandidateList(town.getTownLeaderCandidates()));
+                sender.sendMessage(TextColors.YELLOW + msg("town_info_votes") + TextColors.WHITE + summarizeCandidateVotes(townManager.countTownLeaderVotes(town)));
             } else {
-                sender.sendMessage(ChatColor.YELLOW + msg("town_info_pending_leader") + ChatColor.WHITE + town.getPendingTownLeader());
-                sender.sendMessage(ChatColor.YELLOW + msg("town_info_votes") + ChatColor.WHITE + summarizeVotes(town.getTownLeaderVotes()));
+                sender.sendMessage(TextColors.YELLOW + msg("town_info_pending_leader") + TextColors.WHITE + town.getPendingTownLeader());
+                sender.sendMessage(TextColors.YELLOW + msg("town_info_votes") + TextColors.WHITE + summarizeVotes(town.getTownLeaderVotes()));
             }
         }
         return true;
@@ -105,13 +105,13 @@ public class TownCommand implements CommandExecutor {
 
     private boolean handleSetTownGovernmentType(CommandSender sender, WDEtown town, String[] args) {
         if (town == null || args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("town_usage_setgovtype"));
+            sender.sendMessage(TextColors.RED + msg("town_usage_setgovtype"));
             return true;
         }
 
         Player player = requirePlayer(sender);
         if (player == null || !hasTownAuthority(player, town)) {
-            sender.sendMessage(ChatColor.RED + msg("town_no_authority_govtype"));
+            sender.sendMessage(TextColors.RED + msg("town_no_authority_govtype"));
             return true;
         }
 
@@ -121,7 +121,7 @@ public class TownCommand implements CommandExecutor {
                 .map(this::formatTownGovernmentType)
                 .collect(java.util.stream.Collectors.joining(", "));
         if (!validTypes.contains(normalized)) {
-            sender.sendMessage(ChatColor.RED + msg("town_invalid_govtype", validTypeDisplay));
+            sender.sendMessage(TextColors.RED + msg("town_invalid_govtype", validTypeDisplay));
             return true;
         }
 
@@ -142,19 +142,19 @@ public class TownCommand implements CommandExecutor {
             town.setElectionEndAt(0L);
         }
         townManager.saveTowns();
-        sender.sendMessage(ChatColor.GREEN + msg("town_govtype_set", formatTownGovernmentType(normalized)));
+        sender.sendMessage(TextColors.GREEN + msg("town_govtype_set", formatTownGovernmentType(normalized)));
         return true;
     }
 
     private boolean handleSetTownLeader(CommandSender sender, WDEtown town, String[] args) {
         if (town == null || args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("town_usage_setleader"));
+            sender.sendMessage(TextColors.RED + msg("town_usage_setleader"));
             return true;
         }
 
         Player player = requirePlayer(sender);
         if (player == null || !hasTownAuthority(player, town)) {
-            sender.sendMessage(ChatColor.RED + msg("town_no_authority_leader"));
+            sender.sendMessage(TextColors.RED + msg("town_no_authority_leader"));
             return true;
         }
 
@@ -163,7 +163,7 @@ public class TownCommand implements CommandExecutor {
         }
 
         if (!isResidentOfTown(town.getTownName(), args[3])) {
-            sender.sendMessage(ChatColor.RED + msg("town_selected_player_not_resident"));
+            sender.sendMessage(TextColors.RED + msg("town_selected_player_not_resident"));
             return true;
         }
 
@@ -175,13 +175,13 @@ public class TownCommand implements CommandExecutor {
         town.setElectionEndAt(0L);
         townManager.applyTownLeaderToTowny(town);
         townManager.saveTowns();
-        sender.sendMessage(ChatColor.GREEN + msg("town_leader_set", args[3]));
+        sender.sendMessage(TextColors.GREEN + msg("town_leader_set", args[3]));
         return true;
     }
 
     private boolean handleNominateTownLeader(CommandSender sender, WDEtown town, String[] args) {
         if (town == null || args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("town_usage_nominateleader"));
+            sender.sendMessage(TextColors.RED + msg("town_usage_nominateleader"));
             return true;
         }
 
@@ -191,34 +191,34 @@ public class TownCommand implements CommandExecutor {
         }
 
         if (!"REPUBLIC".equalsIgnoreCase(town.getGovernmentType())) {
-            sender.sendMessage(ChatColor.RED + msg("town_not_republic"));
+            sender.sendMessage(TextColors.RED + msg("town_not_republic"));
             return true;
         }
 
         long nextElectionAt = town.getLastElectionAt() + (Math.max(1, town.getElectionIntervalDays()) * 86400000L);
         if (!town.hasActiveElection() && System.currentTimeMillis() < nextElectionAt) {
-            sender.sendMessage(ChatColor.RED + msg("town_not_in_election_period"));
+            sender.sendMessage(TextColors.RED + msg("town_not_in_election_period"));
             return true;
         }
 
         if (!townManager.isTownResident(town.getTownName(), player.getUniqueId())) {
-            sender.sendMessage(ChatColor.RED + msg("town_only_residents_nominate"));
+            sender.sendMessage(TextColors.RED + msg("town_only_residents_nominate"));
             return true;
         }
 
         if (!isResidentOfTown(town.getTownName(), args[3])) {
-            sender.sendMessage(ChatColor.RED + msg("town_nominated_player_not_resident"));
+            sender.sendMessage(TextColors.RED + msg("town_nominated_player_not_resident"));
             return true;
         }
 
         townManager.startTownElection(town, args[3]);
-        sender.sendMessage(ChatColor.GREEN + msg("town_candidate_set", args[3], formatCandidateList(town.getTownLeaderCandidates())));
+        sender.sendMessage(TextColors.GREEN + msg("town_candidate_set", args[3], formatCandidateList(town.getTownLeaderCandidates())));
         return true;
     }
 
     private boolean handleVoteTownLeader(CommandSender sender, WDEtown town, String[] args) {
         if (town == null || args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("town_usage_voteleader"));
+            sender.sendMessage(TextColors.RED + msg("town_usage_voteleader"));
             return true;
         }
 
@@ -228,27 +228,27 @@ public class TownCommand implements CommandExecutor {
         }
 
         if (!town.hasActiveElection()) {
-            sender.sendMessage(ChatColor.RED + msg("town_no_active_election"));
+            sender.sendMessage(TextColors.RED + msg("town_no_active_election"));
             return true;
         }
 
         if (!townManager.isTownResident(town.getTownName(), player.getUniqueId())) {
-            sender.sendMessage(ChatColor.RED + msg("town_only_residents_vote"));
+            sender.sendMessage(TextColors.RED + msg("town_only_residents_vote"));
             return true;
         }
 
         if ("REPUBLIC".equalsIgnoreCase(town.getGovernmentType())) {
             String candidateName = findMatchingCandidate(town.getTownLeaderCandidates(), args[3]);
             if (candidateName == null) {
-                sender.sendMessage(ChatColor.RED + msg("town_vote_candidate_invalid", formatCandidateList(town.getTownLeaderCandidates())));
+                sender.sendMessage(TextColors.RED + msg("town_vote_candidate_invalid", formatCandidateList(town.getTownLeaderCandidates())));
                 return true;
             }
 
             boolean applied = townManager.castTownLeaderVote(town, player.getUniqueId().toString(), candidateName);
             if (applied) {
-                sender.sendMessage(ChatColor.GREEN + msg("town_election_passed", town.getTownLeader()));
+                sender.sendMessage(TextColors.GREEN + msg("town_election_passed", town.getTownLeader()));
             } else {
-                sender.sendMessage(ChatColor.GREEN + msg("town_vote_recorded", candidateName));
+                sender.sendMessage(TextColors.GREEN + msg("town_vote_recorded", candidateName));
             }
             return true;
         }
@@ -259,28 +259,28 @@ public class TownCommand implements CommandExecutor {
         } else if ("no".equalsIgnoreCase(args[3])) {
             support = false;
         } else {
-            sender.sendMessage(ChatColor.RED + msg("common_vote_yes_no"));
+            sender.sendMessage(TextColors.RED + msg("common_vote_yes_no"));
             return true;
         }
 
         boolean applied = townManager.castTownLeaderVote(town, player.getUniqueId().toString(), support);
         if (applied) {
-            sender.sendMessage(ChatColor.GREEN + msg("town_election_passed", town.getTownLeader()));
+            sender.sendMessage(TextColors.GREEN + msg("town_election_passed", town.getTownLeader()));
         } else {
-            sender.sendMessage(ChatColor.GREEN + msg("town_vote_recorded", town.getPendingTownLeader()));
+            sender.sendMessage(TextColors.GREEN + msg("town_vote_recorded", town.getPendingTownLeader()));
         }
         return true;
     }
 
     private boolean handleSetElectionDays(CommandSender sender, WDEtown town, String[] args) {
         if (town == null || args.length < 4) {
-            sender.sendMessage(ChatColor.RED + msg("town_usage_setelectiondays"));
+            sender.sendMessage(TextColors.RED + msg("town_usage_setelectiondays"));
             return true;
         }
 
         Player player = requirePlayer(sender);
         if (player == null || !hasTownAuthority(player, town)) {
-            sender.sendMessage(ChatColor.RED + msg("town_no_authority_election_interval"));
+            sender.sendMessage(TextColors.RED + msg("town_no_authority_election_interval"));
             return true;
         }
 
@@ -288,59 +288,59 @@ public class TownCommand implements CommandExecutor {
         try {
             days = Integer.parseInt(args[3]);
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + msg("town_election_interval_integer"));
+            sender.sendMessage(TextColors.RED + msg("town_election_interval_integer"));
             return true;
         }
 
         if (days <= 0) {
-            sender.sendMessage(ChatColor.RED + msg("town_election_interval_gt_zero"));
+            sender.sendMessage(TextColors.RED + msg("town_election_interval_gt_zero"));
             return true;
         }
 
         town.setElectionIntervalDays(days);
         townManager.saveTowns();
-        sender.sendMessage(ChatColor.GREEN + msg("town_election_interval_updated", days));
+        sender.sendMessage(TextColors.GREEN + msg("town_election_interval_updated", days));
         return true;
     }
 
     private boolean handleSetConscript(CommandSender sender, WDEtown town, String[] args) {
         if (town == null || args.length < 5) {
-            sender.sendMessage(ChatColor.RED + msg("town_usage_setconscript"));
+            sender.sendMessage(TextColors.RED + msg("town_usage_setconscript"));
             return true;
         }
 
         Player player = requirePlayer(sender);
         if (player == null || !hasDirectTownAuthority(player, town)) {
-            sender.sendMessage(ChatColor.RED + msg("town_no_authority_conscript"));
+            sender.sendMessage(TextColors.RED + msg("town_no_authority_conscript"));
             return true;
         }
 
         String targetName = args[3];
         Boolean enabled = parseEnabled(args[4]);
         if (enabled == null) {
-            sender.sendMessage(ChatColor.RED + msg("common_enabled_disabled"));
+            sender.sendMessage(TextColors.RED + msg("common_enabled_disabled"));
             return true;
         }
 
         if (!isResidentOfTown(town.getTownName(), targetName)) {
-            sender.sendMessage(ChatColor.RED + msg("town_selected_player_not_resident"));
+            sender.sendMessage(TextColors.RED + msg("town_selected_player_not_resident"));
             return true;
         }
 
         if (enabled) {
             if (!town.isConscript(targetName) && town.getConscripts().size() >= townManager.getTownConscriptLimit(town)) {
-                sender.sendMessage(ChatColor.RED + msg("town_conscript_limit_reached", townManager.getTownConscriptLimit(town)));
+                sender.sendMessage(TextColors.RED + msg("town_conscript_limit_reached", townManager.getTownConscriptLimit(town)));
                 return true;
             }
             town.setConscript(targetName, town.isConscriptTaxExempt(targetName));
-            sender.sendMessage(ChatColor.GREEN + msg("town_conscript_set", targetName));
+            sender.sendMessage(TextColors.GREEN + msg("town_conscript_set", targetName));
         } else {
             if (!town.isConscript(targetName)) {
-                sender.sendMessage(ChatColor.RED + msg("town_conscript_not_found", targetName));
+                sender.sendMessage(TextColors.RED + msg("town_conscript_not_found", targetName));
                 return true;
             }
             town.removeConscript(targetName);
-            sender.sendMessage(ChatColor.GREEN + msg("town_conscript_removed", targetName));
+            sender.sendMessage(TextColors.GREEN + msg("town_conscript_removed", targetName));
         }
 
         townManager.saveTowns();
@@ -349,36 +349,36 @@ public class TownCommand implements CommandExecutor {
 
     private boolean handleSetConscriptPrivilege(CommandSender sender, WDEtown town, String[] args) {
         if (town == null || args.length < 6) {
-            sender.sendMessage(ChatColor.RED + msg("town_usage_setconscriptprivilege"));
+            sender.sendMessage(TextColors.RED + msg("town_usage_setconscriptprivilege"));
             return true;
         }
 
         Player player = requirePlayer(sender);
         if (player == null || !hasDirectTownAuthority(player, town)) {
-            sender.sendMessage(ChatColor.RED + msg("town_no_authority_conscript"));
+            sender.sendMessage(TextColors.RED + msg("town_no_authority_conscript"));
             return true;
         }
 
         String targetName = args[3];
         if (!town.isConscript(targetName)) {
-            sender.sendMessage(ChatColor.RED + msg("town_conscript_not_found", targetName));
+            sender.sendMessage(TextColors.RED + msg("town_conscript_not_found", targetName));
             return true;
         }
 
         if (!"taxfree".equalsIgnoreCase(args[4]) && !"免税".equalsIgnoreCase(args[4])) {
-            sender.sendMessage(ChatColor.RED + msg("town_invalid_conscript_privilege"));
+            sender.sendMessage(TextColors.RED + msg("town_invalid_conscript_privilege"));
             return true;
         }
 
         Boolean enabled = parseEnabled(args[5]);
         if (enabled == null) {
-            sender.sendMessage(ChatColor.RED + msg("common_enabled_disabled"));
+            sender.sendMessage(TextColors.RED + msg("common_enabled_disabled"));
             return true;
         }
 
         town.setConscriptTaxExempt(targetName, enabled);
         townManager.saveTowns();
-        sender.sendMessage(ChatColor.GREEN + msg("town_conscript_privilege_updated", targetName, msg("town_conscript_privilege_taxfree"), enabled ? msg("common_enabled") : msg("common_disabled")));
+        sender.sendMessage(TextColors.GREEN + msg("town_conscript_privilege_updated", targetName, msg("town_conscript_privilege_taxfree"), enabled ? msg("common_enabled") : msg("common_disabled")));
         return true;
     }
 
@@ -437,7 +437,7 @@ public class TownCommand implements CommandExecutor {
 
     private Player requirePlayer(CommandSender sender) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + msg("common_only_players"));
+            sender.sendMessage(TextColors.RED + msg("common_only_players"));
             return null;
         }
         return (Player) sender;

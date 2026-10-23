@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 
 /**
  * 描述模因的标识、展示信息、图标和互斥关系，供意识形态组合校验使用。
@@ -71,7 +71,7 @@ public class IdeologyMemeDefinition {
     }
 
     public String getDisplayTitle() {
-        return ChatColor.translateAlternateColorCodes('&', color + title);
+        return TextColors.translateAlternateColorCodes('&', color + title);
     }
 
     public String getIcon() {

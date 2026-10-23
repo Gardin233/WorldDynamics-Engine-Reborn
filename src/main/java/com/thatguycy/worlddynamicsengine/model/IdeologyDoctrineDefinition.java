@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 
 /**
  * 描述戒律及其可选态度、图标和模因约束，不直接执行玩家行为效果。
@@ -88,7 +88,7 @@ public class IdeologyDoctrineDefinition {
     }
 
     public String getDisplayTitle() {
-        return ChatColor.translateAlternateColorCodes('&', color + title);
+        return TextColors.translateAlternateColorCodes('&', color + title);
     }
 
     public String getIcon() {

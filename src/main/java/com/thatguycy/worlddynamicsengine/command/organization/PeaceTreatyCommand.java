@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -42,45 +42,45 @@ public class PeaceTreatyCommand {
             return true;
         }
         if (args.length < 6) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_peacetreaty"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_peacetreaty"));
             return true;
         }
 
         String actorNation = getAuthorizedNationName(player);
         if (actorNation == null) {
-            sender.sendMessage(ChatColor.RED + msg("common_no_authority"));
+            sender.sendMessage(TextColors.RED + msg("common_no_authority"));
             return true;
         }
 
         String targetNation = args[3];
         OrgManager.PeaceTreatyProposalState.ProposalType proposalType = OrgManager.PeaceTreatyProposalState.ProposalType.fromString(args[4]);
         if (proposalType == null) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_peacetreaty"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_peacetreaty"));
             return true;
         }
 
         List<OrgManager.PeaceTreatyClauseState> clauses = parseClauses(String.join(" ", java.util.Arrays.copyOfRange(args, 5, args.length)));
         if (clauses.isEmpty()) {
-            sender.sendMessage(ChatColor.RED + msg("org_peace_treaty_invalid_clause"));
+            sender.sendMessage(TextColors.RED + msg("org_peace_treaty_invalid_clause"));
             return true;
         }
 
         OrgManager.PeaceTreatyProposalResult result = orgManager.proposePeaceTreaty(org, actorNation, targetNation, proposalType, clauses, nationManager);
         if (!result.isSuccess()) {
-            sender.sendMessage(ChatColor.RED + msg(result.getMessageKey()));
+            sender.sendMessage(TextColors.RED + msg(result.getMessageKey()));
             return true;
         }
 
         String scoreDifferenceText = String.format(Locale.US, "%.2f", result.getScoreDifference());
         if (result.getStatus() == OrgManager.PeaceTreatyProposalResult.Status.FORCED_ACCEPTED) {
-            sender.sendMessage(ChatColor.GREEN + msg("org_peace_treaty_forced_accepted",
+            sender.sendMessage(TextColors.GREEN + msg("org_peace_treaty_forced_accepted",
                     targetNation,
                     result.getProposal().getTotalPoints(),
                     scoreDifferenceText));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GREEN + msg("org_peace_treaty_proposed",
+        sender.sendMessage(TextColors.GREEN + msg("org_peace_treaty_proposed",
                 targetNation,
                 proposalType == OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND ? msg("org_peace_treaty_type_demand") : msg("org_peace_treaty_type_surrender"),
                 result.getProposal().getTotalPoints(),
@@ -94,30 +94,30 @@ public class PeaceTreatyCommand {
             return true;
         }
         if (args.length < 5) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_reviewtreaty"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_reviewtreaty"));
             return true;
         }
 
         String actorNation = getAuthorizedNationName(player);
         if (actorNation == null) {
-            sender.sendMessage(ChatColor.RED + msg("common_no_authority"));
+            sender.sendMessage(TextColors.RED + msg("common_no_authority"));
             return true;
         }
 
         String targetNation = args[3];
         Boolean accept = parseReviewDecision(args[4]);
         if (accept == null) {
-            sender.sendMessage(ChatColor.RED + msg("org_usage_reviewtreaty"));
+            sender.sendMessage(TextColors.RED + msg("org_usage_reviewtreaty"));
             return true;
         }
 
         OrgManager.PeaceTreatyReviewResult result = orgManager.reviewPeaceTreaty(org, actorNation, targetNation, accept, nationManager);
         if (result.getStatus() == OrgManager.PeaceTreatyReviewResult.Status.INVALID) {
-            sender.sendMessage(ChatColor.RED + msg(result.getMessageKey()));
+            sender.sendMessage(TextColors.RED + msg(result.getMessageKey()));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GREEN + msg(result.getStatus() == OrgManager.PeaceTreatyReviewResult.Status.ACCEPTED
+        sender.sendMessage(TextColors.GREEN + msg(result.getStatus() == OrgManager.PeaceTreatyReviewResult.Status.ACCEPTED
                 ? "org_peace_treaty_accepted"
                 : "org_peace_treaty_rejected", targetNation));
         return true;
@@ -181,7 +181,7 @@ public class PeaceTreatyCommand {
         if (sender instanceof Player player) {
             return player;
         }
-        sender.sendMessage(ChatColor.RED + msg("common_only_players"));
+        sender.sendMessage(TextColors.RED + msg("common_only_players"));
         return null;
     }
 
@@ -189,7 +189,7 @@ public class PeaceTreatyCommand {
         if (org != null) {
             return true;
         }
-        sender.sendMessage(ChatColor.RED + msg("org_not_found"));
+        sender.sendMessage(TextColors.RED + msg("org_not_found"));
         return false;
     }
 

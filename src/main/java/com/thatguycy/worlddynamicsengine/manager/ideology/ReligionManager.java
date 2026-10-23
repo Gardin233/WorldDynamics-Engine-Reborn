@@ -9,8 +9,10 @@ import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineAttitudeEffect;
 import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineDefinition;
 import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineMemeConstraint;
 import com.thatguycy.worlddynamicsengine.model.IdeologyMemeDefinition;
+import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
+import com.palmergames.bukkit.towny.TownyAPI;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,6 +66,10 @@ public class ReligionManager {
         religions.putAll(dataStorageManager.loadStringKeyed(STORAGE_CATEGORY, WDEreligion.class));
         boolean migrated = false;
         for (WDEreligion religion : religions.values()) {
+            if (religion.needsGovernanceModeMigration()) {
+                religion.setGovernanceMode(religion.getGovernanceMode());
+                migrated = true;
+            }
             migrated |= reconcileDoctrineAttitudes(religion);
         }
         if (migrated) {
@@ -101,14 +107,86 @@ public class ReligionManager {
         } catch (IllegalArgumentException ignored) {
             plugin.getLogger().warning("Invalid default ideology tithe policy; new ideology starts with zero tithe.");
         }
+        try {
+            WDEreligion.GovernanceMode initialMode = WDEreligion.GovernanceMode.valueOf(
+                    config.getString("governance.defaultMode", "LIFETIME").toUpperCase(Locale.ROOT));
+            if (initialMode == WDEreligion.GovernanceMode.SYNODAL) {
+                throw new IllegalArgumentException("Synodal mode is not implemented yet.");
+            }
+            religion.setGovernanceMode(initialMode);
+            if (initialMode == WDEreligion.GovernanceMode.CARDINAL) {
+                religion.setNextElection(createGovernanceDeadline(
+                        Math.max(1, governanceConfig().getInt("elections.intervalDays", 90))));
+            }
+        } catch (IllegalArgumentException ex) {
+            religion.setGovernanceMode(WDEreligion.GovernanceMode.LIFETIME);
+            plugin.getLogger().warning("Invalid or unavailable default ideology governance mode; using LIFETIME.");
+        }
         initializeDoctrineAttitudes(religion);
         religions.put(religion.getReligionName().toLowerCase(), religion);
         saveReligions();
     }
 
     public synchronized boolean isReligionLeader(UUID playerUuid) {
-        return playerUuid != null && religions.values().stream()
-                .anyMatch(religion -> playerUuid.equals(religion.getPontiffUuid()));
+        if (playerUuid == null) return false;
+        boolean ideologyLeader = religions.values().stream()
+                .anyMatch(religion -> religion.getGovernanceMode() != WDEreligion.GovernanceMode.SYNODAL
+                        && playerUuid.equals(religion.getPontiffUuid()));
+        var churchManager = ((WorldDynamicsEngine) plugin).getIdeologyChurchManager();
+        return ideologyLeader || (churchManager != null && churchManager.isChurchHead(playerUuid));
+    }
+
+    public synchronized WDEreligion getLedIdeology(UUID playerUuid) {
+        if (playerUuid == null) return null;
+        return religions.values().stream()
+                .filter(religion -> religion.getGovernanceMode() != WDEreligion.GovernanceMode.SYNODAL
+                        && playerUuid.equals(religion.getPontiffUuid()))
+                .findFirst().orElse(null);
+    }
+
+    public synchronized void publishPersistedReligion(WDEreligion religion) {
+        if (religion == null) return;
+        religions.put(religion.getReligionName().toLowerCase(Locale.ROOT), religion);
+    }
+
+    public synchronized boolean isEligibleNewLeader(String religionName, UUID candidateUuid) {
+        WDEreligion religion = getReligion(religionName);
+        return religion != null && isEligibleCandidate(religion, candidateUuid)
+                && !candidateUuid.equals(religion.getPontiffUuid());
+    }
+
+    public synchronized void abdicateLeadership(String religionName, UUID actor,
+            UUID successor, String successorName) {
+        WDEreligion current = getReligion(religionName);
+        if (current == null) throw new IllegalArgumentException("Ideology not found.");
+        if (current.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            throw new IllegalArgumentException("Synodal churches must use council proposals.");
+        }
+        if (actor == null || !actor.equals(current.getPontiffUuid())) {
+            throw new IllegalArgumentException("Only the current ideology leader may abdicate.");
+        }
+        if (!isEligibleNewLeader(religionName, successor)) {
+            throw new IllegalArgumentException("The successor is not an eligible follower.");
+        }
+        WDEreligion updated = copy(current);
+        updated.transferLeadership(successor, successorName, "VOLUNTARY_ABDICATION",
+                System.currentTimeMillis());
+        persistGovernanceUpdate(updated);
+    }
+
+    public synchronized void restoreLeadership(String religionName, UUID successor, String successorName) {
+        WDEreligion current = getReligion(religionName);
+        if (current == null) throw new IllegalArgumentException("Ideology not found.");
+        if (current.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL) {
+            throw new IllegalArgumentException("Synodal churches must use council proposals.");
+        }
+        if (!isEligibleNewLeader(religionName, successor)) {
+            throw new IllegalArgumentException("The recovery leader is not an eligible follower.");
+        }
+        WDEreligion updated = copy(current);
+        updated.transferLeadership(successor, successorName, "ADMIN_RECOVERY",
+                System.currentTimeMillis());
+        persistGovernanceUpdate(updated);
     }
 
     public synchronized void removeReligion(WDEreligion religion) {
@@ -120,9 +198,173 @@ public class ReligionManager {
         if (religion == null) {
             return;
         }
+        reconcileCardinals(religion);
         reconcileDoctrineAttitudes(religion);
         religions.put(religion.getReligionName().toLowerCase(), religion);
         saveReligions();
+    }
+
+    public synchronized void changeGovernanceMode(String religionName, UUID actor,
+            WDEreligion.GovernanceMode requestedMode) {
+        WDEreligion current = getReligion(religionName);
+        if (current == null) throw new IllegalArgumentException("Ideology not found.");
+        if (actor == null || !actor.equals(current.getPontiffUuid())) {
+            throw new IllegalArgumentException("Only the current ideology leader may reform governance.");
+        }
+        if (requestedMode == WDEreligion.GovernanceMode.SYNODAL) {
+            throw new UnsupportedOperationException("Synodal governance is unavailable until church governance is implemented.");
+        }
+        if (current.getGovernanceMode() == requestedMode) {
+            throw new IllegalArgumentException("The ideology already uses that governance mode.");
+        }
+
+        WDEreligion updated = copy(current);
+        WDEreligion.GovernanceMode previousMode = updated.getGovernanceMode();
+        updated.setGovernanceMode(requestedMode);
+        updated.recordGovernanceChange(previousMode, requestedMode, System.currentTimeMillis());
+        if (requestedMode == WDEreligion.GovernanceMode.CARDINAL) {
+            updated.setNextElection(createGovernanceDeadline(governanceConfig().getInt("elections.intervalDays", 90)));
+        } else {
+            for (Map.Entry<String, String> cardinal : updated.getCardinals().entrySet()) {
+                UUID uuid;
+                try {
+                    uuid = UUID.fromString(cardinal.getKey());
+                } catch (IllegalArgumentException ignored) {
+                    updated.removeCardinalRecord(cardinal.getKey());
+                    continue;
+                }
+                updated.revokeCardinal(uuid);
+                updated.recordCardinalChange(uuid, cardinal.getValue(), false, System.currentTimeMillis(),
+                        "GOVERNANCE_MODE_CHANGED");
+            }
+            updated.closeElection();
+            updated.setNextElection(Map.of());
+        }
+        persistGovernanceUpdate(updated);
+    }
+
+    public synchronized void changeCardinal(String religionName, UUID actor, UUID target,
+            String targetName, boolean appoint) {
+        WDEreligion current = getReligion(religionName);
+        if (current == null) throw new IllegalArgumentException("Ideology not found.");
+        if (actor == null || !actor.equals(current.getPontiffUuid())) {
+            throw new IllegalArgumentException("Only the current ideology leader may appoint cardinals.");
+        }
+        if (current.getGovernanceMode() != WDEreligion.GovernanceMode.CARDINAL) {
+            throw new IllegalArgumentException("Cardinals require CARDINAL governance.");
+        }
+        if (target == null || targetName == null || targetName.isBlank()) {
+            throw new IllegalArgumentException("Invalid cardinal target.");
+        }
+        if ((appoint && current.isCardinal(target)) || (!appoint && !current.isCardinal(target))) {
+            throw new IllegalArgumentException(appoint ? "Player is already a cardinal." : "Player is not a cardinal.");
+        }
+        if (appoint && !isEligibleFollower(current, target)) {
+            throw new IllegalArgumentException("Cardinals must be current, non-excommunicated followers.");
+        }
+        if (appoint) {
+            int limit = getCardinalSeatLimit(current);
+            if (current.getCardinals().size() >= limit) {
+                throw new IllegalArgumentException("The ideology has reached its configured cardinal seat limit.");
+            }
+        }
+
+        String feePath = appoint ? "economy.governance.appointCardinalCost"
+                : "economy.governance.revokeCardinalCost";
+        BigDecimal fee = readGovernanceFee(feePath);
+        WDEreligion updated = copy(current);
+        if (fee.signum() > 0) {
+            updated.debitGovernanceFee(fee);
+        }
+        if (appoint) updated.appointCardinal(target, targetName);
+        else updated.revokeCardinal(target);
+        updated.recordCardinalChange(target, targetName, appoint, System.currentTimeMillis());
+        persistGovernanceUpdate(updated);
+    }
+
+    public synchronized void castElectionVote(String religionName, UUID voter, String candidate) {
+        WDEreligion current = getReligion(religionName);
+        if (current == null) throw new IllegalArgumentException("Ideology not found.");
+        if (current.getGovernanceMode() != WDEreligion.GovernanceMode.CARDINAL || !current.isElectionOpen()) {
+            throw new IllegalArgumentException("There is no open cardinal election.");
+        }
+        if (!isEligibleFollower(current, voter) || !current.isCardinal(voter)) {
+            throw new IllegalArgumentException("Only eligible cardinals may vote.");
+        }
+        String ballot;
+        if ("abstain".equalsIgnoreCase(candidate)) {
+            ballot = "ABSTAIN";
+        } else {
+            UUID candidateUuid;
+            try {
+                candidateUuid = UUID.fromString(candidate);
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("Invalid election candidate.");
+            }
+            if (!isEligibleCandidate(current, candidateUuid)) {
+                throw new IllegalArgumentException("Candidate is not eligible.");
+            }
+            ballot = candidateUuid.toString();
+        }
+        WDEreligion updated = copy(current);
+        updated.castElectionBallot(voter, ballot);
+        persistGovernanceUpdate(updated);
+    }
+
+    public synchronized boolean isCardinalTitheExempt(UUID payerUuid, WDEreligion payerReligion) {
+        if (payerUuid == null || payerReligion == null
+                || payerReligion.getGovernanceMode() != WDEreligion.GovernanceMode.CARDINAL
+                || payerReligion.isPlayerExcommunicated(payerUuid)) {
+            return false;
+        }
+        var townyResident = TownyAPI.getInstance().getResident(payerUuid);
+        if (townyResident == null || !townyResident.hasTown() || townyResident.getTownOrNull() == null) {
+            return false;
+        }
+        String townName = townyResident.getTownOrNull().getName();
+        for (Map.Entry<String, String> cardinal : payerReligion.getCardinals().entrySet()) {
+            UUID cardinalUuid;
+            try {
+                cardinalUuid = UUID.fromString(cardinal.getKey());
+            } catch (IllegalArgumentException ignored) {
+                continue;
+            }
+            if (payerReligion.isPlayerExcommunicated(cardinalUuid)) continue;
+            if (!isEligibleFollower(payerReligion, cardinalUuid)) continue;
+            var cardinalResident = TownyAPI.getInstance().getResident(cardinalUuid);
+            if (cardinalResident != null && cardinalResident.hasTown()
+                    && cardinalResident.getTownOrNull() != null
+                    && cardinalResident.getTownOrNull().getName().equalsIgnoreCase(townName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public synchronized void onResidentIdeologyChanged(UUID residentUuid) {
+        if (residentUuid == null) return;
+        WDEresident resident = ((WorldDynamicsEngine) plugin).getResidentManager().getResident(residentUuid);
+        String currentIdeology = resident == null ? null : resident.getReligionName();
+        for (WDEreligion religion : new ArrayList<>(religions.values())) {
+            if (religion.isCardinal(residentUuid)
+                    && (currentIdeology == null || !religion.getReligionName().equalsIgnoreCase(currentIdeology))) {
+                WDEreligion updated = copy(religion);
+                String name = updated.getCardinals().get(residentUuid.toString());
+                updated.revokeCardinal(residentUuid);
+                updated.recordCardinalChange(residentUuid, name, false, System.currentTimeMillis(),
+                        "MEMBERSHIP_CHANGED");
+                persistGovernanceUpdate(updated);
+            }
+        }
+    }
+
+    public int getCardinalSeatLimit(WDEreligion religion) {
+        if (religion == null) return 0;
+        int followers = eligibleFollowers(religion).size();
+        return WDEreligion.cardinalSeatLimit(followers,
+                Math.max(1, governanceConfig().getInt("cardinals.baseSeats", 2)),
+                Math.max(1, governanceConfig().getInt("cardinals.followersPerAdditionalSeat", 25)),
+                Math.max(1, governanceConfig().getInt("cardinals.maximumSeats", 9)));
     }
 
     public boolean isMemeModificationBlocked(WDEreligion religion) {
@@ -164,7 +406,8 @@ public class ReligionManager {
 
     public synchronized boolean configureTithe(String name, UUID actor, WDEreligion.TitheType type, BigDecimal amount) {
         WDEreligion current = getReligion(name);
-        if (current == null || actor == null || !actor.equals(current.getPontiffUuid())) return false;
+        if (current == null || current.getGovernanceMode() == WDEreligion.GovernanceMode.SYNODAL
+                || actor == null || !actor.equals(current.getPontiffUuid())) return false;
         WDEreligion updated = WDEreligion.deserialize(current.serialize());
         updated.setTithePolicy(type, amount);
         persistTreasuryUpdate(updated);
@@ -600,6 +843,258 @@ public class ReligionManager {
                 saveReligions();
             }
         }.runTaskTimer(plugin, 0L, 20L * 60 * 5);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                tickGovernance();
+            }
+        }.runTaskTimer(plugin, 20L * 60, 20L * 60);
+    }
+
+    private synchronized void tickGovernance() {
+        long now = System.currentTimeMillis();
+        for (WDEreligion religion : new ArrayList<>(religions.values())) {
+            WDEreligion updated = copy(religion);
+            boolean changed = reconcileCardinals(updated);
+            if (updated.getGovernanceMode() != WDEreligion.GovernanceMode.CARDINAL) {
+                if (changed) persistGovernanceUpdate(updated);
+                continue;
+            }
+
+            if (updated.isElectionOpen()) {
+                if (!isDeadlineActive(updated.getElectionDeadline())) {
+                    resolveElection(updated, now);
+                    persistGovernanceUpdate(updated);
+                } else if (changed) {
+                    persistGovernanceUpdate(updated);
+                }
+                continue;
+            }
+
+            Map<String, Object> nextElection = updated.getNextElection();
+            if (nextElection.isEmpty()) {
+                updated.setNextElection(createGovernanceDeadline(
+                        Math.max(1, governanceConfig().getInt("elections.intervalDays", 90))));
+                persistGovernanceUpdate(updated);
+            } else if (!isDeadlineActive(nextElection)) {
+                if (updated.getCardinals().isEmpty()) {
+                    updated.setNextElection(createGovernanceDeadline(
+                            Math.max(1, governanceConfig().getInt("elections.intervalDays", 90))));
+                } else {
+                    updated.openElection(createGovernanceDeadline(
+                            Math.max(1, governanceConfig().getInt("elections.votingDays", 7))));
+                }
+                persistGovernanceUpdate(updated);
+            } else if (changed) {
+                persistGovernanceUpdate(updated);
+            }
+        }
+    }
+
+    private void resolveElection(WDEreligion religion, long now) {
+        Map<UUID, Integer> tally = new LinkedHashMap<>();
+        int validBallots = 0;
+        int castBallots = 0;
+        int abstentions = 0;
+        for (Map.Entry<String, String> ballot : religion.getElectionBallots().entrySet()) {
+            UUID voter;
+            try {
+                voter = UUID.fromString(ballot.getKey());
+            } catch (IllegalArgumentException ignored) {
+                continue;
+            }
+            if (!religion.isCardinal(voter) || !isEligibleFollower(religion, voter)) continue;
+            castBallots++;
+            if ("ABSTAIN".equals(ballot.getValue())) {
+                abstentions++;
+                continue;
+            }
+            try {
+                UUID candidate = UUID.fromString(ballot.getValue());
+                if (isEligibleCandidate(religion, candidate)) {
+                    tally.merge(candidate, 1, Integer::sum);
+                    validBallots++;
+                }
+            } catch (IllegalArgumentException ignored) {
+                // Invalid or newly ineligible candidates do not contribute to the result.
+            }
+        }
+
+        int eligibleVoters = (int) religion.getCardinals().keySet().stream()
+                .filter(key -> {
+                    try {
+                        return isEligibleFollower(religion, UUID.fromString(key));
+                    } catch (IllegalArgumentException ignored) {
+                        return false;
+                    }
+                }).count();
+        double quorumRatio = clampRatio(governanceConfig().getDouble("elections.quorumRatio", 0.5D));
+        double winnerRatio = clampRatio(governanceConfig().getDouble("elections.winnerMinimumRatio", 0.5D));
+        int quorum = (int) Math.ceil(eligibleVoters * quorumRatio);
+        boolean abstentionsCount = governanceConfig().getBoolean("elections.abstentionCountsTowardQuorum", true);
+        int quorumParticipation = castBallots - (abstentionsCount ? 0 : abstentions);
+        if (governanceConfig().getBoolean("elections.absenceCountsTowardQuorum", false)) {
+            quorumParticipation = eligibleVoters - (abstentionsCount ? 0 : abstentions);
+        }
+        int minimumWinnerVotes = (int) Math.ceil(validBallots * winnerRatio);
+        UUID winner = null;
+        int highest = 0;
+        boolean tied = false;
+        for (Map.Entry<UUID, Integer> result : tally.entrySet()) {
+            if (result.getValue() > highest) {
+                winner = result.getKey();
+                highest = result.getValue();
+                tied = false;
+            } else if (result.getValue() == highest) {
+                tied = true;
+            }
+        }
+        if (quorumParticipation < quorum || highest < minimumWinnerVotes || highest == 0) {
+            winner = null;
+        } else if (tied) {
+            winner = "KEEP_INCUMBENT".equalsIgnoreCase(
+                    governanceConfig().getString("elections.tiePolicy", "KEEP_INCUMBENT"))
+                    ? religion.getPontiffUuid() : null;
+        }
+
+        if (winner != null && !winner.equals(religion.getPontiffUuid())
+                && isEligibleCandidate(religion, winner)) {
+            WDEresident elected = ((WorldDynamicsEngine) plugin).getResidentManager().getResident(winner);
+            String name = elected == null ? religion.getCardinals().get(winner.toString()) : elected.getUsername();
+            if (name != null && !name.isBlank()) {
+                religion.transferLeadership(winner, name, "CARDINAL_ELECTION", now);
+            }
+        }
+        Map<String, Integer> recordedTally = new LinkedHashMap<>();
+        for (Map.Entry<UUID, Integer> entry : tally.entrySet()) {
+            recordedTally.put(entry.getKey().toString(), entry.getValue());
+        }
+        religion.recordElectionResult(eligibleVoters, castBallots, recordedTally, winner, now);
+        religion.closeElection();
+        boolean retrySoon = winner == null && "RETRY_AFTER_DAYS".equalsIgnoreCase(
+                governanceConfig().getString("elections.noWinnerPolicy", "RETRY_AFTER_DAYS"));
+        int nextInterval = retrySoon
+                ? governanceConfig().getInt("elections.noWinnerRetryDays", 30)
+                : governanceConfig().getInt("elections.intervalDays", 90);
+        religion.setNextElection(createGovernanceDeadline(Math.max(1, nextInterval)));
+    }
+
+    private boolean reconcileCardinals(WDEreligion religion) {
+        boolean changed = false;
+        for (Map.Entry<String, String> entry : religion.getCardinals().entrySet()) {
+            UUID uuid;
+            try {
+                uuid = UUID.fromString(entry.getKey());
+            } catch (IllegalArgumentException ignored) {
+                religion.removeCardinalRecord(entry.getKey());
+                changed = true;
+                continue;
+            }
+            if (!isEligibleFollower(religion, uuid)) {
+                religion.revokeCardinal(uuid);
+                String reason = religion.isPlayerExcommunicated(uuid)
+                        ? "EXCOMMUNICATED" : "MEMBERSHIP_CHANGED";
+                religion.recordCardinalChange(uuid, entry.getValue(), false, System.currentTimeMillis(), reason);
+                changed = true;
+            }
+        }
+        int maximumSeats = getCardinalSeatLimit(religion);
+        List<Map.Entry<String, String>> activeCardinals = new ArrayList<>(religion.getCardinals().entrySet());
+        for (int index = activeCardinals.size() - 1; activeCardinals.size() > maximumSeats; index--) {
+            Map.Entry<String, String> removed = activeCardinals.get(index);
+            UUID uuid = UUID.fromString(removed.getKey());
+            religion.revokeCardinal(uuid);
+            religion.recordCardinalChange(uuid, removed.getValue(), false, System.currentTimeMillis(),
+                    "SEAT_CAPACITY_REDUCED");
+            activeCardinals.remove(index);
+            changed = true;
+        }
+        return changed;
+    }
+
+    private boolean isEligibleFollower(WDEreligion religion, UUID uuid) {
+        if (religion == null || uuid == null || religion.isPlayerExcommunicated(uuid)) return false;
+        WDEresident resident = ((WorldDynamicsEngine) plugin).getResidentManager().getResident(uuid);
+        return resident != null && religion.getReligionName().equalsIgnoreCase(resident.getReligionName());
+    }
+
+    private boolean isEligibleCandidate(WDEreligion religion, UUID uuid) {
+        if (!isEligibleFollower(religion, uuid)) return false;
+        if ("CARDINALS_ONLY".equalsIgnoreCase(
+                governanceConfig().getString("elections.candidateScope", "ALL_FOLLOWERS"))
+                && !religion.isCardinal(uuid)) return false;
+        return religions.values().stream().noneMatch(other ->
+                !other.getReligionName().equalsIgnoreCase(religion.getReligionName())
+                && uuid.equals(other.getPontiffUuid()));
+    }
+
+    private List<WDEresident> eligibleFollowers(WDEreligion religion) {
+        return ((WorldDynamicsEngine) plugin).getResidentManager().getAllResidents().stream()
+                .filter(resident -> religion.getReligionName().equalsIgnoreCase(resident.getReligionName()))
+                .filter(resident -> !religion.isPlayerExcommunicated(resident.getUserUUID()))
+                .toList();
+    }
+
+    private Map<String, Object> createGovernanceDeadline(int days) {
+        long safeDays = Math.max(1, days);
+        Map<String, Object> deadline = new LinkedHashMap<>();
+        deadline.put("endAt", Math.addExact(System.currentTimeMillis(),
+                Math.multiplyExact(safeDays, TimeUnit.DAYS.toMillis(1))));
+        FileConfiguration config = governanceConfig();
+        if (!"REALISTIC_SEASONS".equalsIgnoreCase(config.getString("elections.clock", "REAL_TIME"))) {
+            deadline.put("clock", "REAL_TIME");
+            return deadline;
+        }
+
+        String world = config.getString("elections.world", "world");
+        var clock = ((WorldDynamicsEngine) plugin).getWarTruceClock();
+        var date = clock == null ? null : clock.currentDate(world);
+        if (date == null) {
+            deadline.put("clock", "REAL_TIME");
+            return deadline;
+        }
+        deadline.put("clock", "REALISTIC_SEASONS");
+        deadline.put("world", world);
+        deadline.put("calendarSignature", date.calendarSignature());
+        deadline.put("endDay", Math.addExact(date.dayNumber(), safeDays));
+        return deadline;
+    }
+
+    private boolean isDeadlineActive(Map<String, Object> deadline) {
+        if (deadline == null || deadline.isEmpty()) return false;
+        var clock = ((WorldDynamicsEngine) plugin).getWarTruceClock();
+        if (clock != null) return clock.isActive(deadline);
+        return deadline.get("endAt") instanceof Number endAt && endAt.longValue() > System.currentTimeMillis();
+    }
+
+    private FileConfiguration governanceConfig() {
+        return ((WorldDynamicsEngine) plugin).getIdeologyConfig();
+    }
+
+    private BigDecimal readGovernanceFee(String path) {
+        try {
+            BigDecimal amount = new BigDecimal(governanceConfig().getString(path, "0"));
+            if (amount.signum() < 0 || amount.scale() > 8 || amount.compareTo(WDEreligion.MAX_FIXED_TITHE) > 0) {
+                throw new NumberFormatException("out of range");
+            }
+            return amount;
+        } catch (NumberFormatException ex) {
+            throw new IllegalStateException("Invalid ideology governance fee configuration: " + path, ex);
+        }
+    }
+
+    private WDEreligion copy(WDEreligion religion) {
+        return WDEreligion.deserialize(religion.serialize());
+    }
+
+    private void persistGovernanceUpdate(WDEreligion updated) {
+        String key = updated.getReligionName().toLowerCase(Locale.ROOT);
+        dataStorageManager.saveEntity(STORAGE_CATEGORY, key, updated);
+        religions.put(key, updated);
+    }
+
+    private double clampRatio(double value) {
+        return Double.isFinite(value) ? Math.max(0D, Math.min(1D, value)) : 0.5D;
     }
 
     private void registerDoctrineEffect(IdeologyDoctrineAttitudeEffect effect) {

@@ -1,7 +1,7 @@
 package com.thatguycy.worlddynamicsengine.model;
 
 import java.util.Objects;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 
 /**
  * 描述一项戒律态度的标识和展示文本，供注册、默认选择及菜单渲染使用。
@@ -40,7 +40,7 @@ public class IdeologyDoctrineAttitudeDefinition {
     }
 
     public String getDisplayTitle() {
-        return ChatColor.translateAlternateColorCodes('&', color + title);
+        return TextColors.translateAlternateColorCodes('&', color + title);
     }
 
     public boolean isValid() {

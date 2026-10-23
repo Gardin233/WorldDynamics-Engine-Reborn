@@ -9,7 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import org.bukkit.block.Block;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -30,12 +30,12 @@ public class DebugCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("wde.debug")) {
-            sender.sendMessage(ChatColor.RED + msg("debug_no_permission"));
+            sender.sendMessage(TextColors.RED + msg("debug_no_permission"));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + msg("debug_usage"));
+            sender.sendMessage(TextColors.RED + msg("debug_usage"));
             return true;
         }
 
@@ -48,41 +48,41 @@ public class DebugCommand implements CommandExecutor {
         }
         if ("realisticseasons".equals(subCommand)) {
             var clock = plugin.getWarTruceClock();
-            sender.sendMessage(ChatColor.GOLD + msg("debug_seasons_header"));
-            sender.sendMessage(ChatColor.YELLOW + msg("debug_seasons_settings",
+            sender.sendMessage(TextColors.GOLD + msg("debug_seasons_header"));
+            sender.sendMessage(TextColors.YELLOW + msg("debug_seasons_settings",
                     clock.enabled() ? msg("debug_seasons_enabled") : msg("debug_seasons_disabled"),
                     clock.configuredWorld()));
             var date = clock.currentDate(clock.configuredWorld());
-            sender.sendMessage(ChatColor.YELLOW + (date == null
+            sender.sendMessage(TextColors.YELLOW + (date == null
                     ? msg("debug_seasons_unavailable") : msg("debug_seasons_date", date.display(), date.dayNumber())));
             return true;
         }
 
-        sender.sendMessage(ChatColor.RED + msg("debug_unknown_subcommand"));
+        sender.sendMessage(TextColors.RED + msg("debug_unknown_subcommand"));
         return true;
     }
 
     private boolean handleCraftEngine(CommandSender sender) {
         var integration = plugin.getCraftEngineIntegration();
         if (integration == null) {
-            sender.sendMessage(ChatColor.RED + msg("debug_craftengine_unavailable"));
+            sender.sendMessage(TextColors.RED + msg("debug_craftengine_unavailable"));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GOLD + msg("debug_craftengine_header", integration.getVersion()));
-        sender.sendMessage(ChatColor.YELLOW + msg("debug_craftengine_loaded_counts",
+        sender.sendMessage(TextColors.GOLD + msg("debug_craftengine_header", integration.getVersion()));
+        sender.sendMessage(TextColors.YELLOW + msg("debug_craftengine_loaded_counts",
                 integration.getLoadedItemIds().size(),
                 integration.getLoadedBlockIds().size()));
 
         if (sender instanceof Player player) {
             ItemStack itemInHand = player.getInventory().getItemInMainHand();
             String itemId = integration.getItemId(itemInHand);
-            sender.sendMessage(ChatColor.YELLOW + msg("debug_craftengine_held_item",
+            sender.sendMessage(TextColors.YELLOW + msg("debug_craftengine_held_item",
                     itemId == null ? msg("debug_craftengine_not_custom") : itemId));
 
             Block targetBlock = player.getTargetBlockExact(8);
             String blockId = integration.getBlockId(targetBlock);
-            sender.sendMessage(ChatColor.YELLOW + msg("debug_craftengine_target_block",
+            sender.sendMessage(TextColors.YELLOW + msg("debug_craftengine_target_block",
                     blockId == null ? msg("debug_craftengine_not_custom") : blockId));
         }
         return true;
@@ -90,19 +90,19 @@ public class DebugCommand implements CommandExecutor {
 
     private boolean handleBalance(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + msg("debug_balance_usage"));
+            sender.sendMessage(TextColors.RED + msg("debug_balance_usage"));
             return true;
         }
 
         EconomyBridge economyBridge = plugin.getEconomyBridge();
         if (economyBridge == null || !economyBridge.hasProvider()) {
-            sender.sendMessage(ChatColor.RED + msg("debug_economy_unavailable"));
+            sender.sendMessage(TextColors.RED + msg("debug_economy_unavailable"));
             return true;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
         if ((target.getName() == null || target.getName().isBlank()) && !target.isOnline()) {
-            sender.sendMessage(ChatColor.RED + msg("debug_player_not_found", args[2]));
+            sender.sendMessage(TextColors.RED + msg("debug_player_not_found", args[2]));
             return true;
         }
 
@@ -110,13 +110,13 @@ public class DebugCommand implements CommandExecutor {
         String playerName = onlineTarget != null ? onlineTarget.getName() : (target.getName() == null ? args[2] : target.getName());
         String worldName = onlineTarget != null && onlineTarget.getWorld() != null ? onlineTarget.getWorld().getName() : "";
 
-        sender.sendMessage(ChatColor.GOLD + msg("debug_balance_header", playerName));
-        sender.sendMessage(ChatColor.YELLOW + msg("debug_balance_provider_mode")
-                + ChatColor.WHITE + (economyBridge.hasModernEconomy() ? msg("debug_provider_modern") : msg("debug_provider_legacy")));
-        sender.sendMessage(ChatColor.YELLOW + msg("debug_balance_default_currency")
-                + ChatColor.WHITE + plugin.getDefaultEconomyCurrency());
-        sender.sendMessage(ChatColor.YELLOW + msg("debug_balance_multicurrency")
-                + ChatColor.WHITE + (economyBridge.supportsMultiCurrency() ? msg("common_enabled") : msg("common_disabled")));
+        sender.sendMessage(TextColors.GOLD + msg("debug_balance_header", playerName));
+        sender.sendMessage(TextColors.YELLOW + msg("debug_balance_provider_mode")
+                + TextColors.WHITE + (economyBridge.hasModernEconomy() ? msg("debug_provider_modern") : msg("debug_provider_legacy")));
+        sender.sendMessage(TextColors.YELLOW + msg("debug_balance_default_currency")
+                + TextColors.WHITE + plugin.getDefaultEconomyCurrency());
+        sender.sendMessage(TextColors.YELLOW + msg("debug_balance_multicurrency")
+                + TextColors.WHITE + (economyBridge.supportsMultiCurrency() ? msg("common_enabled") : msg("common_disabled")));
 
         if (args.length >= 4) {
             String requestedCurrency = args[3];
@@ -136,8 +136,8 @@ public class DebugCommand implements CommandExecutor {
         BigDecimal totalDefault = onlineTarget != null
                 ? economyBridge.getTotalWealthAsDefault(onlineTarget.getUniqueId(), worldName, currencies)
                 : economyBridge.getTotalWealthAsDefault(target.getUniqueId(), worldName, currencies);
-        sender.sendMessage(ChatColor.YELLOW + msg("debug_balance_total_default")
-                + ChatColor.WHITE + economyBridge.format(totalDefault, plugin.getDefaultEconomyCurrency()));
+        sender.sendMessage(TextColors.YELLOW + msg("debug_balance_total_default")
+                + TextColors.WHITE + economyBridge.format(totalDefault, plugin.getDefaultEconomyCurrency()));
         return true;
     }
 
@@ -147,9 +147,9 @@ public class DebugCommand implements CommandExecutor {
         BigDecimal balance = onlineTarget != null
                 ? economyBridge.getBalance(onlineTarget, resolvedCurrency)
                 : economyBridge.getBalance(target.getUniqueId(), worldName, resolvedCurrency);
-        sender.sendMessage(ChatColor.YELLOW + msg("debug_balance_currency_line", resolvedCurrency)
-                + ChatColor.WHITE + economyBridge.format(balance, resolvedCurrency)
-                + ChatColor.GRAY + " [" + (currencySupported ? msg("debug_currency_supported") : msg("debug_currency_unsupported")) + "]");
+        sender.sendMessage(TextColors.YELLOW + msg("debug_balance_currency_line", resolvedCurrency)
+                + TextColors.WHITE + economyBridge.format(balance, resolvedCurrency)
+                + TextColors.GRAY + " [" + (currencySupported ? msg("debug_currency_supported") : msg("debug_currency_unsupported")) + "]");
     }
 
     private List<String> collectDebugCurrencies(EconomyBridge economyBridge) {

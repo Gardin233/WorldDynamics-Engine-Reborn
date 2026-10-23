@@ -4,7 +4,7 @@ import com.palmergames.bukkit.towny.TownyAPI;
 import com.thatguycy.worlddynamicsengine.model.war.WarReason;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.util.List;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -153,48 +153,48 @@ public final class WarCommand implements CommandExecutor {
         List<com.thatguycy.worlddynamicsengine.manager.organization.OrgManager.WarFocusOption> wars =
                 plugin.getWarScoreboardManager().getAvailableWars(player);
         if (wars.isEmpty()) {
-            player.sendMessage(ChatColor.RED + "你当前没有可专注的活跃战争。");
+            player.sendMessage(TextColors.RED + "你当前没有可专注的活跃战争。");
             return true;
         }
         if (args.length == 2) {
             String focused = plugin.getWarScoreboardManager().getFocusedWarKey(player);
-            player.sendMessage(ChatColor.GOLD + "当前可专注的战争：");
+            player.sendMessage(TextColors.GOLD + "当前可专注的战争：");
             for (int i = 0; i < wars.size(); i++) {
                 var war = wars.get(i);
                 boolean current = war.focusKey().equalsIgnoreCase(focused);
-                String marker = current ? ChatColor.GREEN + " [当前]" : "";
-                player.sendMessage(ChatColor.YELLOW + String.valueOf(i + 1) + ". "
-                        + ChatColor.WHITE + war.title()
-                        + ChatColor.GRAY + " - " + plugin.getLocaleMessage(war.reason().messageKey())
+                String marker = current ? TextColors.GREEN + " [当前]" : "";
+                player.sendMessage(TextColors.YELLOW + String.valueOf(i + 1) + ". "
+                        + TextColors.WHITE + war.title()
+                        + TextColors.GRAY + " - " + plugin.getLocaleMessage(war.reason().messageKey())
                         + marker);
             }
-            player.sendMessage(ChatColor.GRAY + "使用 /wde war focus <序号> 切换，或 /wde war focus clear 清除专注。");
+            player.sendMessage(TextColors.GRAY + "使用 /wde war focus <序号> 切换，或 /wde war focus clear 清除专注。");
             return true;
         }
         if ("clear".equalsIgnoreCase(args[2])) {
             plugin.getWarScoreboardManager().clearFocusedWar(player, true);
-            player.sendMessage(ChatColor.YELLOW + "已清除当前专注战争；若你仍在参战，系统会在需要时自动选择一场战争显示。");
+            player.sendMessage(TextColors.YELLOW + "已清除当前专注战争；若你仍在参战，系统会在需要时自动选择一场战争显示。");
             return true;
         }
         int index;
         try {
             index = Integer.parseInt(args[2]);
         } catch (NumberFormatException ex) {
-            player.sendMessage(ChatColor.RED + "请输入有效的战争序号。");
+            player.sendMessage(TextColors.RED + "请输入有效的战争序号。");
             return true;
         }
         if (index < 1 || index > wars.size()) {
-            player.sendMessage(ChatColor.RED + "战争序号超出范围。");
+            player.sendMessage(TextColors.RED + "战争序号超出范围。");
             return true;
         }
         var selected = wars.get(index - 1);
         if (!plugin.getWarScoreboardManager().setFocusedWar(player, selected.focusKey(), true)) {
-            player.sendMessage(ChatColor.RED + "未能切换专注战争，请稍后再试。");
+            player.sendMessage(TextColors.RED + "未能切换专注战争，请稍后再试。");
             return true;
         }
-        player.sendMessage(ChatColor.GREEN + "已将专注战争切换为："
-                + ChatColor.WHITE + selected.title()
-                + ChatColor.GRAY + "（" + plugin.getLocaleMessage(selected.reason().messageKey()) + "）");
+        player.sendMessage(TextColors.GREEN + "已将专注战争切换为："
+                + TextColors.WHITE + selected.title()
+                + TextColors.GRAY + "（" + plugin.getLocaleMessage(selected.reason().messageKey()) + "）");
         return true;
     }
 

@@ -13,7 +13,7 @@ import com.thatguycy.worlddynamicsengine.model.WDEnation;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.util.Arrays;
 import java.util.Map;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -40,22 +40,22 @@ public class DiplomacyCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_unknown_command"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_unknown_command"));
             return true;
         }
 
         if (!command.getName().equalsIgnoreCase("wde") || !args[0].equalsIgnoreCase("diplomacy")) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_unknown_command"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_unknown_command"));
             return true;
         }
 
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_insufficient_arguments"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_insufficient_arguments"));
             return true;
         }
 
         if (!WorldDynamicsEngine.getInstance().govEnabled) {
-            sender.sendMessage(ChatColor.RED + msg("unknownsub"));
+            sender.sendMessage(TextColors.RED + msg("unknownsub"));
             return true;
         }
 
@@ -67,13 +67,13 @@ public class DiplomacyCommand implements CommandExecutor {
                 return handleViewDiplomaticRelations(sender, nationName, WorldDynamicsEngine.getInstance());
             case "setrelation":
                 if (args.length < 4) {
-                    sender.sendMessage(ChatColor.RED + msg("diplomacy_usage_setrelation"));
+                    sender.sendMessage(TextColors.RED + msg("diplomacy_usage_setrelation"));
                     return true;
                 }
                 return handleSetRelation(sender, nationName, args, WorldDynamicsEngine.getInstance());
             case "trading":
                 if (args.length < 4) {
-                    sender.sendMessage(ChatColor.RED + msg("diplomacy_usage_trading"));
+                    sender.sendMessage(TextColors.RED + msg("diplomacy_usage_trading"));
                     return true;
                 }
                 return handleSetTrading(sender, nationName, args, WorldDynamicsEngine.getInstance());
@@ -84,7 +84,7 @@ public class DiplomacyCommand implements CommandExecutor {
             case "readletter":
                 return handleLetters(sender, args);
             default:
-                sender.sendMessage(ChatColor.RED + msg("unknownsub"));
+                sender.sendMessage(TextColors.RED + msg("unknownsub"));
                 return true;
         }
     }
@@ -92,62 +92,62 @@ public class DiplomacyCommand implements CommandExecutor {
     private boolean handleSetRelation(CommandSender sender, String targetNationName, String[] args, JavaPlugin plugin) {
         Nation senderNation = getNationByResident(sender.getName());
         if (senderNation == null) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_must_be_in_nation"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_must_be_in_nation"));
             return true;
         }
 
         if (!hasDiplomaticAuthority(sender)) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_no_authority_relation"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_no_authority_relation"));
             return true;
         }
 
         if (nationManager.getNation(targetNationName) == null) {
-            sender.sendMessage(ChatColor.RED + msg("nation_not_found_with_name", targetNationName));
+            sender.sendMessage(TextColors.RED + msg("nation_not_found_with_name", targetNationName));
             return true;
         }
 
         String relation = args[3].toLowerCase();
         if (!Arrays.asList("friendly", "neutral", "unfriendly").contains(relation)) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_invalid_relation"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_invalid_relation"));
             return true;
         }
 
         if ("unfriendly".equalsIgnoreCase(relation) && orgManager != null && !orgManager.getMilitaryAlliancesByNation(senderNation.getName()).isEmpty()) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_military_alliance_requires_vote"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_military_alliance_requires_vote"));
             return true;
         }
 
         if ("unfriendly".equals(relation)) {
             if (args.length != 5) {
-                sender.sendMessage(ChatColor.RED + msg("war_reason_required"));
+                sender.sendMessage(TextColors.RED + msg("war_reason_required"));
                 return true;
             }
             var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
             String reasonError = orgManager.warReasonFailure(reason, senderNation.getName(), targetNationName);
             if (reasonError != null) {
-                sender.sendMessage(ChatColor.RED + msg(reasonError));
+                sender.sendMessage(TextColors.RED + msg(reasonError));
                 return true;
             }
             var warResult = orgManager.handleMilitaryAllianceWar(senderNation.getName(), targetNationName, nationManager, reason);
             if (!warResult.isSuccess()) {
-                sender.sendMessage(ChatColor.RED + msg(warResult.getFailureMessageKey(), warResult.getFailureMessageArgs()));
+                sender.sendMessage(TextColors.RED + msg(warResult.getFailureMessageKey(), warResult.getFailureMessageArgs()));
                 return true;
             }
         }
         if (!"unfriendly".equalsIgnoreCase(relation)
                 && orgManager != null
                 && orgManager.hasActiveWarBetween(senderNation.getName(), targetNationName)) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_relation_locked_by_war", targetNationName));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_relation_locked_by_war", targetNationName));
             return true;
         }
 
         WDEnation senderWdeNation = nationManager.getNation(senderNation.getName());
         if (senderWdeNation != null) {
             senderWdeNation.setDiplomaticRelation(targetNationName, relation);
-            sender.sendMessage(ChatColor.GREEN + msg("diplomacy_relation_set", relation, targetNationName));
+            sender.sendMessage(TextColors.GREEN + msg("diplomacy_relation_set", relation, targetNationName));
             nationManager.saveNations();
         } else {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_own_nation_data_missing"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_own_nation_data_missing"));
         }
 
         return true;
@@ -287,17 +287,17 @@ public class DiplomacyCommand implements CommandExecutor {
     private boolean handleSetTrading(CommandSender sender, String targetNationName, String[] args, JavaPlugin plugin) {
         Nation senderNation = getNationByResident(sender.getName());
         if (senderNation == null) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_must_be_in_nation"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_must_be_in_nation"));
             return true;
         }
 
         if (!hasDiplomaticAuthority(sender)) {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_no_authority_trading"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_no_authority_trading"));
             return true;
         }
 
         if (nationManager.getNation(targetNationName) == null) {
-            sender.sendMessage(ChatColor.RED + msg("nation_not_found_with_name", targetNationName));
+            sender.sendMessage(TextColors.RED + msg("nation_not_found_with_name", targetNationName));
             return true;
         }
 
@@ -305,10 +305,10 @@ public class DiplomacyCommand implements CommandExecutor {
         WDEnation senderWdeNation = nationManager.getNation(senderNation.getName());
         if (senderWdeNation != null) {
             senderWdeNation.setTradingStatus(targetNationName, tradingEnabled);
-            sender.sendMessage(ChatColor.GREEN + msg("diplomacy_trading_set", tradingEnabled ? msg("common_enabled") : msg("common_disabled"), targetNationName));
+            sender.sendMessage(TextColors.GREEN + msg("diplomacy_trading_set", tradingEnabled ? msg("common_enabled") : msg("common_disabled"), targetNationName));
             nationManager.saveNations();
         } else {
-            sender.sendMessage(ChatColor.RED + msg("diplomacy_own_nation_data_missing"));
+            sender.sendMessage(TextColors.RED + msg("diplomacy_own_nation_data_missing"));
         }
 
         return true;
@@ -366,20 +366,20 @@ public class DiplomacyCommand implements CommandExecutor {
     private boolean handleViewTradingRelations(CommandSender sender, String nationName, JavaPlugin plugin) {
         WDEnation nation = nationManager.getNation(nationName);
         if (nation == null) {
-            sender.sendMessage(ChatColor.RED + msg("nation_not_found_with_name", nationName));
+            sender.sendMessage(TextColors.RED + msg("nation_not_found_with_name", nationName));
             return true;
         }
 
         Map<String, Boolean> tradingStatus = nation.getTradingStatus();
         if (tradingStatus == null || tradingStatus.isEmpty()) {
-            sender.sendMessage(ChatColor.YELLOW + msg("diplomacy_no_trading_relations", nationName));
+            sender.sendMessage(TextColors.YELLOW + msg("diplomacy_no_trading_relations", nationName));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GREEN + msg("diplomacy_trading_relations_header", nationName));
+        sender.sendMessage(TextColors.GREEN + msg("diplomacy_trading_relations_header", nationName));
         tradingStatus.forEach((otherNation, status) -> {
             String statusText = status ? msg("common_enabled") : msg("common_disabled");
-            sender.sendMessage(ChatColor.GOLD + otherNation + ": " + statusText);
+            sender.sendMessage(TextColors.GOLD + otherNation + ": " + statusText);
         });
 
         return true;
@@ -388,19 +388,19 @@ public class DiplomacyCommand implements CommandExecutor {
     private boolean handleViewDiplomaticRelations(CommandSender sender, String nationName, JavaPlugin plugin) {
         WDEnation nation = nationManager.getNation(nationName);
         if (nation == null) {
-            sender.sendMessage(ChatColor.RED + msg("nation_not_found_with_name", nationName));
+            sender.sendMessage(TextColors.RED + msg("nation_not_found_with_name", nationName));
             return true;
         }
 
         Map<String, String> diplomaticRelations = nation.getDiplomaticRelations();
         if (diplomaticRelations == null || diplomaticRelations.isEmpty()) {
-            sender.sendMessage(ChatColor.YELLOW + msg("diplomacy_no_relations", nationName));
+            sender.sendMessage(TextColors.YELLOW + msg("diplomacy_no_relations", nationName));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GREEN + msg("diplomacy_relations_header", nationName));
+        sender.sendMessage(TextColors.GREEN + msg("diplomacy_relations_header", nationName));
         diplomaticRelations.forEach((otherNation, relation) -> {
-            sender.sendMessage(ChatColor.GOLD + otherNation + ": " + relation);
+            sender.sendMessage(TextColors.GOLD + otherNation + ": " + relation);
         });
 
         return true;
@@ -473,19 +473,19 @@ public class DiplomacyCommand implements CommandExecutor {
 
     public boolean handleVisit(CommandSender sender, String destinationNationName, NationManager nationManager, ResidentManager residentManager, EconomyBridge economyBridge) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + msg("common_only_players"));
+            sender.sendMessage(TextColors.RED + msg("common_only_players"));
             return true;
         }
 
         Player player = (Player) sender;
         if (economyBridge == null) {
-            player.sendMessage(ChatColor.RED + msg("diplomacy_economy_provider_missing"));
+            player.sendMessage(TextColors.RED + msg("diplomacy_economy_provider_missing"));
             return true;
         }
 
         Resident townyResident = TownyUniverse.getInstance().getResident(player.getUniqueId());
         if (townyResident == null) {
-            player.sendMessage(ChatColor.RED + msg("diplomacy_towny_data_missing"));
+            player.sendMessage(TextColors.RED + msg("diplomacy_towny_data_missing"));
             return true;
         }
 
@@ -493,37 +493,37 @@ public class DiplomacyCommand implements CommandExecutor {
         Nation playerNation;
         try {
             if (!townyResident.hasTown()) {
-                player.sendMessage(ChatColor.RED + msg("diplomacy_must_be_in_nation"));
+                player.sendMessage(TextColors.RED + msg("diplomacy_must_be_in_nation"));
                 return true;
             }
 
             playerTown = townyResident.getTown();
             if (!playerTown.hasNation()) {
-                player.sendMessage(ChatColor.RED + msg("diplomacy_must_be_in_nation"));
+                player.sendMessage(TextColors.RED + msg("diplomacy_must_be_in_nation"));
                 return true;
             }
 
             playerNation = playerTown.getNation();
         } catch (NotRegisteredException e) {
-            player.sendMessage(ChatColor.RED + msg("diplomacy_towny_nation_missing"));
+            player.sendMessage(TextColors.RED + msg("diplomacy_towny_nation_missing"));
             return true;
         }
 
         if (playerNation == null) {
-            player.sendMessage(ChatColor.RED + msg("diplomacy_must_be_in_nation"));
+            player.sendMessage(TextColors.RED + msg("diplomacy_must_be_in_nation"));
             return true;
         }
 
         String playerNationName = playerNation.getName();
         WDEnation destinationNation = nationManager.getNation(destinationNationName);
         if (destinationNation == null) {
-            player.sendMessage(ChatColor.RED + msg("diplomacy_destination_nation_not_found"));
+            player.sendMessage(TextColors.RED + msg("diplomacy_destination_nation_not_found"));
             return true;
         }
 
         Location capitalSpawnLocation = nationManager.getCapitalSpawnLocation(destinationNation);
         if (capitalSpawnLocation == null) {
-            player.sendMessage(ChatColor.RED + msg("diplomacy_capital_spawn_missing"));
+            player.sendMessage(TextColors.RED + msg("diplomacy_capital_spawn_missing"));
             return true;
         }
 
@@ -531,20 +531,20 @@ public class DiplomacyCommand implements CommandExecutor {
         VisitResult visitResult = checkVisit(playerNationName, destinationNationName, nationManager);
         EconomyBridge.Charge cost = visitResult.getPrice();
         if (!visitResult.isAllowed()) {
-            player.sendMessage(ChatColor.RED + msg(visitResult.getMessageKey()));
+            player.sendMessage(TextColors.RED + msg(visitResult.getMessageKey()));
             return true;
         }
 
         if (!economyBridge.has(player, cost)) {
-            player.sendMessage(ChatColor.RED + msg("diplomacy_not_enough_money_visit", economyBridge.format(cost)));
+            player.sendMessage(TextColors.RED + msg("diplomacy_not_enough_money_visit", economyBridge.format(cost)));
             return true;
         }
 
         if (!economyBridge.withdraw(player, cost).success()) {
-            player.sendMessage(ChatColor.RED + msg("diplomacy_not_enough_money_visit", economyBridge.format(cost)));
+            player.sendMessage(TextColors.RED + msg("diplomacy_not_enough_money_visit", economyBridge.format(cost)));
             return true;
         }
-        player.sendMessage(ChatColor.GREEN + msg("diplomacy_visit_success", destinationNationName, economyBridge.format(cost)));
+        player.sendMessage(TextColors.GREEN + msg("diplomacy_visit_success", destinationNationName, economyBridge.format(cost)));
         player.teleport(capitalSpawnLocation);
         return true;
     }

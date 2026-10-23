@@ -51,7 +51,12 @@ ui:
   single_faith: "&7每名玩家同一时间只能拥有一个个人意识形态。"
   none: "无信仰"
   leader: "&7教主：%s"
+  former_leader: "&7改制前领袖：%s"
   founder: "&7创立者：%s"
+  church_list:
+    title: "&e教会（%s）"
+    hint: "&7点击通过命令查看共议制教会列表。"
+  council_use_command: "&e共议制教义修改须提交神圣大会议案，详见 /wde ideology council。"
   conversion_cost: "&7本次改信费用：%s"
   free: "免费"
   create: "&a创建新信仰"
@@ -59,6 +64,7 @@ ui:
   creation_leader_blocked: "&c你已是宗教领袖，交出所有领袖职位后才能创建新信仰。"
   treasury:
     title: "&1教廷金库：%s"
+    synodal: "&e共议制没有教廷总金库，请使用 /wde ideology church treasury 管理所属教会金库。"
     balance: "&e金库余额：%s"
     sink: "&c只能存入，任何人（包括领袖）都不能取款，献金不可取回。"
     daily: "&7随 Towny 每日结算向全部信徒征收，包括离线玩家和领袖；不足只收现有资金，不记欠税。"

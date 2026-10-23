@@ -33,7 +33,7 @@ public class ResidentManager {
         plugin.getLogger().info("Total residents loaded: " + residents.size());
     }
 
-    public void saveResidents() {
+    public synchronized void saveResidents() {
         dataStorageManager.saveUuidKeyed(STORAGE_CATEGORY, residents);
     }
 
@@ -60,13 +60,20 @@ public class ResidentManager {
         residents.put(resident.getUserUUID(), resident);
     }
 
+    public synchronized void publishResidents(java.util.Collection<WDEresident> updatedResidents) {
+        if (updatedResidents == null) return;
+        for (WDEresident resident : updatedResidents) {
+            if (resident != null) residents.put(resident.getUserUUID(), resident);
+        }
+    }
+
     public void enableAutoSave() {
         new BukkitRunnable() {
             @Override
             public void run() {
                 saveResidents();
             }
-        }.runTaskTimerAsynchronously(plugin, 0L, 20L * 60 * 5);
+        }.runTaskTimer(plugin, 0L, 20L * 60 * 5);
     }
 
     public void syncWithTowny() {

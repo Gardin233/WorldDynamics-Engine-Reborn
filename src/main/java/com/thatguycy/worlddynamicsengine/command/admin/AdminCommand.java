@@ -14,7 +14,7 @@ import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEtown;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.util.*;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.*;
 
 /**
@@ -151,8 +151,8 @@ public final class AdminCommand implements CommandExecutor {
         int pages = Math.max(1, (visible.size() + 7) / 8);
         require(page >= 1 && page <= pages, "admin_invalid_argument");
         send(sender, "admin_help_header", page, pages);
-        visible.stream().skip((page - 1L) * 8).limit(8).forEach(e -> sender.sendMessage(ChatColor.YELLOW + e.usage()));
-        if (page < pages) sender.sendMessage(ChatColor.AQUA + "/wde admin help " + (page + 1));
+        visible.stream().skip((page - 1L) * 8).limit(8).forEach(e -> sender.sendMessage(TextColors.YELLOW + e.usage()));
+        if (page < pages) sender.sendMessage(TextColors.AQUA + "/wde admin help " + (page + 1));
     }
 
     private void system(String action, String[] a) {
@@ -471,12 +471,16 @@ public final class AdminCommand implements CommandExecutor {
                 require(plugin.getResidentManager().getAllResidents().stream().noneMatch(p -> name.equalsIgnoreCase(p.getReligionName()))
                         && plugin.getTownManager().getAllTowns().stream().noneMatch(t -> name.equalsIgnoreCase(t.getReligionName()))
                         && plugin.getNationManager().getAllNations().stream().noneMatch(n -> name.equalsIgnoreCase(n.getReligionName()))
-                        && plugin.getOrgManager().getAllOrganizations().stream().noneMatch(o -> name.equalsIgnoreCase(plugin.getOrgManager().getIdeologicalAllianceIdeology(o))), "admin_in_use");
+                        && plugin.getOrgManager().getAllOrganizations().stream().noneMatch(o -> name.equalsIgnoreCase(plugin.getOrgManager().getIdeologicalAllianceIdeology(o)))
+                        && plugin.getIdeologyChurchManager().getChurches(name).isEmpty()
+                        && plugin.getIdeologyChurchManager().getProposals(name, true).isEmpty(), "admin_in_use");
                 manager.removeReligion(r);
             }
             case "leader" -> {
                 size(a, 5); WDEreligion r = religion(a[3]); Resident player = resident(a[4]);
-                r.setPontiff(player.getUUID(), player.getName()); manager.saveReligion(r);
+                require(manager.isEligibleNewLeader(r.getReligionName(), player.getUUID()),
+                        "religion_target_not_same_faith_player");
+                manager.restoreLeadership(r.getReligionName(), player.getUUID(), player.getName());
             }
             case "assign", "firstfree" -> {
                 size(a, 6); String targetType = a[3].toLowerCase(Locale.ROOT);
@@ -486,9 +490,18 @@ public final class AdminCommand implements CommandExecutor {
                 switch (targetType) {
                     case "player" -> {
                         WDEresident r = playerData(a[4]);
-                        if (name != null) r.setReligionName(name);
+                        if (name != null) {
+                            var currentIdeology = plugin.getReligionManager().getLedIdeology(r.getUserUUID());
+                            require(currentIdeology == null
+                                    || name.equalsIgnoreCase(currentIdeology.getReligionName()), "religion_leader_must_abdicate");
+                            require(!plugin.getIdeologyChurchManager().isChurchHead(r.getUserUUID())
+                                    || name.equalsIgnoreCase(r.getReligionName()), "church_head_must_abdicate");
+                            r.setReligionName(name);
+                        }
                         if (!action.equals("assign") || chosen) r.setReligionChosen(chosen);
                         plugin.getResidentManager().saveResidents();
+                        plugin.getReligionManager().onResidentIdeologyChanged(r.getUserUUID());
+                        plugin.getIdeologyChurchManager().onResidentIdeologyChanged(r.getUserUUID());
                     }
                     case "town" -> {
                         WDEtown t = town(a[4]);
@@ -512,6 +525,7 @@ public final class AdminCommand implements CommandExecutor {
             }
             case "memes" -> {
                 require(a.length >= 5 && a.length <= 8, "admin_invalid_argument"); WDEreligion r = religion(a[3]);
+                require(r.getGovernanceMode() != WDEreligion.GovernanceMode.SYNODAL, "admin_operation_blocked");
                 require(!manager.isMemeModificationBlocked(r), "admin_operation_blocked");
                 Set<String> selected = new LinkedHashSet<>();
                 for (int i = 4; i < a.length; i++) {
@@ -527,6 +541,7 @@ public final class AdminCommand implements CommandExecutor {
             }
             case "doctrine" -> {
                 size(a, 6); WDEreligion r = religion(a[3]);
+                require(r.getGovernanceMode() != WDEreligion.GovernanceMode.SYNODAL, "admin_operation_blocked");
                 var doctrine = manager.getDoctrine(a[4]);
                 require(doctrine != null, "admin_not_found");
                 require(!manager.isDoctrineModificationBlocked(r, doctrine.getId()), "admin_operation_blocked");
@@ -645,10 +660,10 @@ public final class AdminCommand implements CommandExecutor {
     private void confirm(String value) { require(value.equalsIgnoreCase("confirm"), "admin_confirmation_required"); }
     private void require(boolean condition, String key) { if (!condition) throw new AdminFailure(key); }
     private void send(CommandSender sender, String key, Object... values) {
-        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.formatLocaleMessage(key, values)));
+        sender.sendMessage(TextColors.translateAlternateColorCodes('&', plugin.formatLocaleMessage(key, values)));
     }
     private void broadcast(String key, Object... values) {
-        org.bukkit.Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', plugin.formatLocaleMessage(key, values)));
+        org.bukkit.Bukkit.broadcastMessage(TextColors.translateAlternateColorCodes('&', plugin.formatLocaleMessage(key, values)));
     }
     /**
      * 在管理员命令内部携带可展示的校验失败原因，不把业务拒绝视为服务端故障。

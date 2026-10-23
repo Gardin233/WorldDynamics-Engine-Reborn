@@ -329,7 +329,7 @@ public final class NationHistoryManager {
     public String message(String key, Map<String, Object> values) {
         String message = templates.getString("messages." + key, key);
         for (var entry : values.entrySet()) message = message.replace("%" + entry.getKey() + "%", String.valueOf(entry.getValue()));
-        return org.bukkit.ChatColor.translateAlternateColorCodes('&', message);
+        return com.thatguycy.worlddynamicsengine.util.TextColors.translateAlternateColorCodes('&', message);
     }
 
     public List<String> render(NationChronicle book) {

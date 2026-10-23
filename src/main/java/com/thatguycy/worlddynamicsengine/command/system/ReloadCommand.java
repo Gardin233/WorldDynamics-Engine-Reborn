@@ -1,7 +1,7 @@
 package com.thatguycy.worlddynamicsengine.command.system;
 
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
-import org.bukkit.ChatColor;
+import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,20 +19,20 @@ public class ReloadCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("wde.reload")) {
-            sender.sendMessage(ChatColor.RED + msg("reload_no_permission"));
+            sender.sendMessage(TextColors.RED + msg("reload_no_permission"));
             return true;
         }
 
-        sender.sendMessage(ChatColor.YELLOW + msg("reload_in_progress"));
+        sender.sendMessage(TextColors.YELLOW + msg("reload_in_progress"));
         try {
             WorldDynamicsEngine.ReloadResult result = plugin.reloadPluginState();
-            sender.sendMessage(ChatColor.GREEN + msg("reload_success"));
+            sender.sendMessage(TextColors.GREEN + msg("reload_success"));
             if (result.storageChanged()) {
-                sender.sendMessage(ChatColor.YELLOW + msg("reload_storage_changed_requires_restart"));
+                sender.sendMessage(TextColors.YELLOW + msg("reload_storage_changed_requires_restart"));
             }
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to reload plugin state: " + e.getMessage());
-            sender.sendMessage(ChatColor.RED + msg("reload_failed", e.getMessage()));
+            sender.sendMessage(TextColors.RED + msg("reload_failed", e.getMessage()));
         }
         return true;
     }
