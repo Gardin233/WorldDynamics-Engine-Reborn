@@ -11,34 +11,38 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.ToIntBiFunction;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
-import org.bukkit.potion.PotionEffectType;
 
 /**
- * 加载原版及 CE 食物映射，按个人饮食戒律判定力量或虚弱；CE 未映射时不回退底材。
+ * Loads vanilla and CE food mappings and adjusts mood from personal dietary doctrines.
  */
 public final class FoodDoctrineManager {
-    private static final String BUFF_SOURCE = "wde:food_doctrines";
     /**
      * 定义素食、肉食、人肉和血食四类映射标签；标签本身不会使物品变得可食用。
      */
     public enum FoodCategory { VEGETARIAN, MEAT, HUMAN_MEAT, BLOOD }
-    /**
-     * 保存饮食规则是否适用及所有违规项，任一相关规则违规即整体不合规。
-     */
-    public record Assessment(boolean applicable, List<String> violations) {
+    /** 保存饮食规则是否适用、心情增减值及所有违规项。 */
+    public record Assessment(boolean applicable, int compliantCount, int compliantMoodWeight,
+                             int violationMoodWeight, int compliantMoodChange, int violationMoodChange,
+                             List<String> violations, List<DoctrineMoodEntry> moodEntries) {
+        public Assessment(boolean applicable, int compliantCount, int compliantMoodWeight,
+                          int violationMoodWeight, int compliantMoodChange, int violationMoodChange,
+                          List<String> violations) {
+            this(applicable, compliantCount, compliantMoodWeight, violationMoodWeight,
+                    compliantMoodChange, violationMoodChange, violations, List.of());
+        }
+
         public boolean compliant() { return applicable && violations.isEmpty(); }
+        public int violationCount() { return violations.size(); }
     }
     private final WorldDynamicsEngine plugin;
     private Map<Material, FoodCategory> vanilla = Map.of();
     private Map<String, FoodCategory> craftengine = Map.of();
     private boolean enabled;
-    private int durationTicks;
-    private int strengthLevel;
-    private int weaknessLevel;
 
     public FoodDoctrineManager(WorldDynamicsEngine plugin) {
         this.plugin = plugin;
@@ -50,8 +54,11 @@ public final class FoodDoctrineManager {
         if (!file.exists()) plugin.saveResource("foods.yml", false);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         boolean changed = false;
-        for (var entry : Map.<String, Object>of("enabled", true, "effects.durationSeconds", 30,
-                "effects.strengthLevel", 1, "effects.weaknessLevel", 1).entrySet()) {
+        if (config.contains("effects")) {
+            config.set("effects", null);
+            changed = true;
+        }
+        for (var entry : Map.<String, Object>of("enabled", true).entrySet()) {
             if (!config.contains(entry.getKey())) {
                 config.set(entry.getKey(), entry.getValue());
                 changed = true;
@@ -62,9 +69,6 @@ public final class FoodDoctrineManager {
             catch (java.io.IOException ex) { plugin.getLogger().warning("Failed to save food defaults: " + ex.getMessage()); }
         }
         enabled = config.getBoolean("enabled", true);
-        durationTicks = Math.max(1, Math.min(3600, config.getInt("effects.durationSeconds", 30))) * 20;
-        strengthLevel = Math.max(0, Math.min(10, config.getInt("effects.strengthLevel", 1)));
-        weaknessLevel = Math.max(0, Math.min(10, config.getInt("effects.weaknessLevel", 1)));
         Map<Material, FoodCategory> loadedVanilla = new EnumMap<>(Material.class);
         Map<String, FoodCategory> loadedCe = new LinkedHashMap<>();
         for (String type : List.of("vanilla", "craftengine")) {
@@ -104,33 +108,54 @@ public final class FoodDoctrineManager {
 
     public void apply(Player player, FoodCategory category) {
         if (!enabled || !plugin.religionEnabled || category == null || !player.isOnline() || player.isDead()) {
-            plugin.getDoctrineBuffManager().removeSource(player, BUFF_SOURCE);
             return;
         }
         var resident = plugin.getResidentManager().getResident(player.getUniqueId());
         WDEreligion religion = resident == null ? null : plugin.getReligionManager().getReligion(resident.getReligionName());
         if (religion == null) {
-            plugin.getDoctrineBuffManager().removeSource(player, BUFF_SOURCE);
             return;
         }
-        Assessment assessment = evaluate(category,
-                plugin.getReligionManager().getConfiguredDoctrineAttitudes(religion));
+        Map<String, String> attitudes = plugin.getReligionManager().getConfiguredDoctrineAttitudes(religion);
+        String instantAction = category == FoodCategory.HUMAN_MEAT ? "humanMeat" : null;
+        Assessment assessment = evaluate(category, attitudes, plugin.getReligionManager()::getDoctrineMoodWeight,
+                (doctrine, attitude, compliant) -> plugin.getReligionManager()
+                        .getDoctrineMoodChangePerWeight(doctrine, attitude, compliant, instantAction));
         if (!assessment.applicable()) {
-            plugin.getDoctrineBuffManager().removeSource(player, BUFF_SOURCE);
             return;
         }
-        PotionEffectType effect = assessment.compliant() ? PotionEffectType.STRENGTH : PotionEffectType.WEAKNESS;
-        int level = assessment.compliant() ? strengthLevel : weaknessLevel;
-        plugin.getDoctrineBuffManager().replaceTimed(player, BUFF_SOURCE, Map.of(effect, level), durationTicks);
+        for (DoctrineMoodEntry entry : assessment.moodEntries()) {
+            plugin.getMoodManager().applyDoctrineMoodChanges(player,
+                    entry.compliant() ? entry.moodChange() : 0,
+                    entry.compliant() ? 0 : entry.moodChange(),
+                    entry.source());
+        }
         for (String doctrine : assessment.violations()) {
             if (plugin.getPlayerMenuManager() != null) plugin.getPlayerMenuManager().sendDoctrineViolation(player, doctrine);
         }
     }
 
     public static Assessment evaluate(FoodCategory category, Map<String, String> attitudes) {
-        if (category == null) return new Assessment(false, List.of());
+        return evaluate(category, attitudes, (doctrineId, attitudeId) -> 1,
+                (doctrineId, attitudeId, compliant) -> 1);
+    }
+
+    public static Assessment evaluate(FoodCategory category, Map<String, String> attitudes,
+                                      ToIntBiFunction<String, String> moodWeight) {
+        return evaluate(category, attitudes, moodWeight, (doctrineId, attitudeId, compliant) -> 1);
+    }
+
+    public static Assessment evaluate(FoodCategory category, Map<String, String> attitudes,
+                                      ToIntBiFunction<String, String> moodWeight,
+                                      MoodChangeResolver moodChangeResolver) {
+        if (category == null || attitudes == null) return new Assessment(false, 0, 0, 0, 0, 0, List.of());
         List<String> violations = new ArrayList<>();
+        int compliantCount = 0;
+        int compliantMoodWeight = 0;
+        int violationMoodWeight = 0;
+        int compliantMoodChange = 0;
+        int violationMoodChange = 0;
         boolean applicable = false;
+        List<DoctrineMoodEntry> moodEntries = new ArrayList<>();
         for (var entry : attitudes.entrySet()) {
             String id = entry.getKey();
             String attitude = entry.getValue();
@@ -150,10 +175,26 @@ public final class FoodDoctrineManager {
             }
             if (compliant != null) {
                 applicable = true;
-                if (!compliant) violations.add(id);
+                int weight = Math.max(0, moodWeight.applyAsInt(id, entry.getValue()));
+                if (!compliant) {
+                    violations.add(id);
+                    violationMoodWeight += weight;
+                    int moodChange = weight
+                            * Math.max(0, moodChangeResolver.getPerWeightChange(id, entry.getValue(), false));
+                    violationMoodChange += moodChange;
+                    moodEntries.add(new DoctrineMoodEntry(id, entry.getValue(), false, moodChange));
+                } else {
+                    compliantCount++;
+                    compliantMoodWeight += weight;
+                    int moodChange = weight
+                            * Math.max(0, moodChangeResolver.getPerWeightChange(id, entry.getValue(), true));
+                    compliantMoodChange += moodChange;
+                    moodEntries.add(new DoctrineMoodEntry(id, entry.getValue(), true, moodChange));
+                }
             }
         }
-        return new Assessment(applicable, List.copyOf(violations));
+        return new Assessment(applicable, compliantCount, compliantMoodWeight, violationMoodWeight,
+                compliantMoodChange, violationMoodChange, List.copyOf(violations), List.copyOf(moodEntries));
     }
 
     private static boolean matches(String id, String path) {

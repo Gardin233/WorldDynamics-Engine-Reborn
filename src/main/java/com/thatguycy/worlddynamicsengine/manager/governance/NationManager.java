@@ -792,6 +792,61 @@ public class NationManager {
         }
     }
 
+    public boolean forceNationDemocracyPresident(WDEnation nation, String leaderName,
+            long durationDays, String clockName, String worldName) {
+        if (nation == null || leaderName == null || leaderName.isBlank()) return false;
+        if (!applyDemocracyLeadershipToTowny(nation, leaderName)) return false;
+        nation.setGovernmentType("DEMOCRACY");
+        nation.setGovernmentLeader(leaderName);
+        nation.setPendingGovernmentLeader("None");
+        nation.setGovernmentLeaderVotes(new HashMap<>());
+        nation.setGovernmentLeaderCandidates(new ArrayList<>());
+        nation.setGovernmentLeaderBallots(new HashMap<>());
+        nation.setElectionIntervalDays(getDefaultNationElectionIntervalDays());
+        nation.setLastElectionAt(System.currentTimeMillis());
+        nation.setElectionEndAt(0L);
+        setNationRegimeLock(nation, durationDays, clockName, worldName);
+        saveNations();
+        return true;
+    }
+
+    public void setNationRegimeLock(WDEnation nation, long durationDays, String clockName, String worldName) {
+        if (nation == null) return;
+        long days = Math.max(0L, durationDays);
+        long now = System.currentTimeMillis();
+        long dayMillis = 86_400_000L;
+        Map<String, Object> lock = new LinkedHashMap<>();
+        lock.put("endAt", now + days * dayMillis);
+        String world = worldName == null || worldName.isBlank() ? "world" : worldName;
+        var clock = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getWarTruceClock();
+        var date = "REALISTIC_SEASONS".equalsIgnoreCase(clockName) ? clock.currentDate(world) : null;
+        if (date != null) {
+            lock.put("clock", "REALISTIC_SEASONS");
+            lock.put("world", world);
+            lock.put("calendarSignature", date.calendarSignature());
+            lock.put("endDay", date.dayNumber() + days);
+        } else {
+            lock.put("clock", "REAL_TIME");
+        }
+        nation.setSetting("forcedRegimeLock", lock);
+    }
+
+    public boolean isNationRegimeLocked(WDEnation nation) {
+        if (nation == null || !(nation.getSetting("forcedRegimeLock") instanceof Map<?, ?> lock)) return false;
+        long now = System.currentTimeMillis();
+        if ("REALISTIC_SEASONS".equals(String.valueOf(lock.get("clock")))) {
+            Object rawWorld = lock.get("world");
+            String world = rawWorld == null ? "world" : String.valueOf(rawWorld);
+            var date = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin)
+                    .getWarTruceClock().currentDate(world);
+            if (date != null && date.calendarSignature().equals(lock.get("calendarSignature"))
+                    && lock.get("endDay") instanceof Number endDay) {
+                return date.dayNumber() < endDay.longValue();
+            }
+        }
+        return lock.get("endAt") instanceof Number endAt && endAt.longValue() > now;
+    }
+
     public boolean forceNationLeader(WDEnation nation, String leaderName) {
         if (nation == null || leaderName == null || leaderName.isBlank()) {
             return false;

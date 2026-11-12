@@ -74,6 +74,11 @@ public final class AdminTabCompleter {
                 if (stage != null) values.addAll(plugin.getBackgroundManager().getBackgroundIds(stage));
             }
             case "doctrine" -> plugin.getReligionManager().getRegisteredDoctrines().forEach(d -> values.add(d.getId()));
+            case "effect" -> {
+                if (plugin.getMentalCollapseManager() != null) {
+                    values.addAll(plugin.getMentalCollapseManager().getEnabledManualEffectIds());
+                }
+            }
             case "attitude" -> {
                 var doctrine = plugin.getReligionManager().getDoctrine(a[4]);
                 if (doctrine != null) values.addAll(doctrine.getAttitudes().keySet());

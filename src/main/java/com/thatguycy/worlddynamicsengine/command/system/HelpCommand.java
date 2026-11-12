@@ -203,8 +203,9 @@ public class HelpCommand implements CommandExecutor {
                 add(lines, plugin, "/wde ideology vote <意识形态> <候选人|abstain>", "help_cmd_religion_vote");
                 add(lines, plugin, "/wde ideology church <create|list|join|leave|abdicate|disband|treasury>", "help_cmd_religion_church");
                 add(lines, plugin, "/wde ideology council <propose|vote|list>", "help_cmd_religion_council");
+                add(lines, plugin, "/wde ideology ritual <list|register|start>", "help_cmd_religion_ritual");
                 add(lines, plugin, "/wde ideology split <源意识形态> <教会> <新意识形态>", "help_cmd_religion_split");
-                add(lines, plugin, "/wde ideology setplayer <意识形态>", "help_cmd_religion_setplayer");
+                add(lines, plugin, "/wde ideology setplayer <意识形态|none>", "help_cmd_religion_setplayer");
                 add(lines, plugin, "/wde ideology setplayer <玩家> <意识形态|none>", "help_cmd_religion_forceplayer");
                 add(lines, plugin, "/wde ideology setnation <国家> <意识形态|none>", "help_cmd_religion_setnation");
                 add(lines, plugin, "/wde ideology settown <城镇> <意识形态|none>", "help_cmd_religion_settown");
@@ -283,6 +284,7 @@ public class HelpCommand implements CommandExecutor {
             lines.add(TextColors.YELLOW + "/wde admin help" + TextColors.WHITE + " - " + plugin.getLocaleMessage("admin_help_description"));
         }
         lines.add(TextColors.YELLOW + "/wde background status" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_background_status"));
+        lines.add(TextColors.YELLOW + "/wde mood" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_mood_details"));
         lines.add(TextColors.YELLOW + "/wde rally <nation|town>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_rally"));
         lines.add(TextColors.YELLOW + "/wde war declare <nation|town> <target> <reason>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_war"));
         lines.add(TextColors.YELLOW + "/wde background list <childhood|adulthood>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_background_list"));
@@ -299,8 +301,9 @@ public class HelpCommand implements CommandExecutor {
         lines.add(TextColors.YELLOW + "/wde ideology vote <ideology> <candidate|abstain>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_vote"));
         lines.add(TextColors.YELLOW + "/wde ideology church <create|list|join|leave|abdicate|disband|treasury>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_church"));
         lines.add(TextColors.YELLOW + "/wde ideology council <propose|vote|list>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_council"));
+        lines.add(TextColors.YELLOW + "/wde ideology ritual <list|register|start>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_ritual"));
         lines.add(TextColors.YELLOW + "/wde ideology split <source> <church> <newIdeology>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_split"));
-        lines.add(TextColors.YELLOW + "/wde ideology setplayer <ideology>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_setplayer"));
+        lines.add(TextColors.YELLOW + "/wde ideology setplayer <ideology|none>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_setplayer"));
         lines.add(TextColors.YELLOW + "/wde ideology setplayer <player> <ideology|none>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_forceplayer"));
         lines.add(TextColors.YELLOW + "/wde ideology setnation <nation> <ideology|none>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_setnation"));
         lines.add(TextColors.YELLOW + "/wde ideology settown <town> <ideology|none>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_settown"));

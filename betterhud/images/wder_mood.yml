@@ -1,0 +1,6 @@
+wder_mood_icon:
+  type: sequence
+  files:
+    - "mood/mood_empty.png"
+    - "mood/mood_half.png"
+    - "mood/mood_full.png"

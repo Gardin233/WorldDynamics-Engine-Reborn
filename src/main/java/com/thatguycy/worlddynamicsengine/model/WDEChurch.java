@@ -286,6 +286,16 @@ public final class WDEChurch implements ConfigurationSerializable {
         record("CHURCH_DISSOLVED", at, Map.of());
     }
 
+    public void dissolveWithTreasuryPreserved(long at) {
+        if (!isActive()) {
+            throw new IllegalStateException("Only an active church can be archived with its ideology.");
+        }
+        state = State.DISSOLVED;
+        closedAt = at;
+        lastGovernanceActionAt = at;
+        record("IDEOLOGY_DISSOLVED", at, Map.of("preservedTreasury", treasuryBalance.toPlainString()));
+    }
+
     private void record(String type, long at, Map<String, Object> parameters) {
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("type", type);

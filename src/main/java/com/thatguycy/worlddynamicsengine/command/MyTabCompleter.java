@@ -63,6 +63,7 @@ public class MyTabCompleter implements TabCompleter {
                 completions.add("diplomacy");
                 completions.add("org"); // Added 'org'
                 completions.add("ideology");
+                completions.add("mood");
                 // Add more first-level options as needed
             } else if (rootArg.equals("history")) {
                 var history = WorldDynamicsEngine.getInstance().getNationHistoryManager();
@@ -115,6 +116,15 @@ public class MyTabCompleter implements TabCompleter {
                                     r == com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE
                                             && "town".equalsIgnoreCase(args[2]) ? args[3] : targetNation) == null)
                             .map(r -> r.name().toLowerCase(java.util.Locale.ROOT)).forEach(completions::add);
+                } else if (args.length >= 6 && "declare".equalsIgnoreCase(args[1])
+                        && "nation".equalsIgnoreCase(args[2])) {
+                    var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
+                    if (reason != null && com.thatguycy.worlddynamicsengine.model.war.WarGoalType.forReason(reason)
+                            == com.thatguycy.worlddynamicsengine.model.war.WarGoalType.CAPTURE_TOWN) {
+                        completions.addAll(orgManager.getWarGoalTownOptions(reason, actorNation, args[3]));
+                    } else if (reason == com.thatguycy.worlddynamicsengine.model.war.WarReason.DESTROY_THREAT) {
+                        completions.addAll(orgManager.getThreatOrganizationOptions(args[3]));
+                    }
                 }
             } else if (rootArg.equals("help") && args.length == 2) {
                 for (int page = 1; page <= HelpCommand.getPageCount(WorldDynamicsEngine.getInstance(), sender); page++) {
@@ -152,7 +162,7 @@ public class MyTabCompleter implements TabCompleter {
                     completions.addAll(WorldDynamicsEngine.getInstance().getEconomyBridge().currencies());
                 }
             } else if (rootArg.equals("ideology") && args.length == 2) {
-                completions.addAll(Arrays.asList("help", "menu", "create", "info", "list", "setplayer", "setnation", "settown", "setmemes", "abdicate", "excommunicate", "treasury", "donate", "settithe", "governance", "cardinal", "vote", "church", "council", "split"));
+                completions.addAll(Arrays.asList("help", "menu", "create", "info", "list", "setplayer", "setnation", "settown", "setmemes", "abdicate", "excommunicate", "treasury", "donate", "settithe", "governance", "cardinal", "vote", "church", "council", "ritual", "split"));
             } else if (rootArg.equals("ideology") && args.length == 3) {
                 switch (args[1].toLowerCase()) {
                     case "info":
@@ -172,6 +182,9 @@ public class MyTabCompleter implements TabCompleter {
                         break;
                     case "council":
                         completions.addAll(Arrays.asList("propose", "vote", "list"));
+                        break;
+                    case "ritual":
+                        completions.addAll(Arrays.asList("list", "register", "start"));
                         break;
                     case "split":
                         completions.addAll(religionManager.getAllReligionNames());
@@ -214,6 +227,8 @@ public class MyTabCompleter implements TabCompleter {
                                 .contains(args[2].toLowerCase())
                         || args[1].equalsIgnoreCase("council")
                                 && Arrays.asList("propose", "list").contains(args[2].toLowerCase())
+                        || args[1].equalsIgnoreCase("ritual")
+                                && Arrays.asList("list", "register", "start").contains(args[2].toLowerCase())
                         || args[1].equalsIgnoreCase("split")) {
                     completions.addAll(religionManager.getAllReligionNames());
                 } else if (args[1].equalsIgnoreCase("council") && args[2].equalsIgnoreCase("vote")) {
@@ -248,6 +263,12 @@ public class MyTabCompleter implements TabCompleter {
                             .getChurches(args[3]).stream().filter(church -> church.isActive())
                             .forEach(church -> completions.add(church.getChurchName()));
                 }
+            } else if (rootArg.equals("ideology") && args.length == 5
+                    && args[1].equalsIgnoreCase("ritual") && args[2].equalsIgnoreCase("register")) {
+                completions.addAll(Arrays.asList("speech", "duel", "激励演讲", "荣耀对决"));
+            } else if (rootArg.equals("ideology") && (args.length == 6 || args.length == 7)
+                    && args[1].equalsIgnoreCase("ritual") && args[2].equalsIgnoreCase("start")) {
+                completions.addAll(onlinePlayerNames);
             } else if (rootArg.equals("ideology") && args.length == 6
                     && args[1].equalsIgnoreCase("church") && args[2].equalsIgnoreCase("abdicate")) {
                 TownyUniverse.getInstance().getResidents().forEach(resident -> completions.add(resident.getName()));
@@ -471,6 +492,15 @@ public class MyTabCompleter implements TabCompleter {
                         });
                     } catch (Exception ignored) {
                     }
+                }
+            } else if (args.length >= 6 && args[0].equalsIgnoreCase("org")
+                    && args[1].equalsIgnoreCase("declarewar")) {
+                var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
+                if (reason != null && com.thatguycy.worlddynamicsengine.model.war.WarGoalType.forReason(reason)
+                        == com.thatguycy.worlddynamicsengine.model.war.WarGoalType.CAPTURE_TOWN) {
+                    completions.addAll(orgManager.getWarGoalTownOptions(reason, actorNation, args[3]));
+                } else if (reason == com.thatguycy.worlddynamicsengine.model.war.WarReason.DESTROY_THREAT) {
+                    completions.addAll(orgManager.getThreatOrganizationOptions(args[3]));
                 }
             }
         }

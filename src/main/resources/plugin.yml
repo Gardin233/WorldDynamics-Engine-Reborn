@@ -2,7 +2,7 @@ name: WorldDynamicsEngine-Reborn
 version: '${project.version}'
 main: com.thatguycy.worlddynamicsengine.WorldDynamicsEngine
 api-version: '1.21'
-softdepend: [Towny, Vault, VaultUnlocked, AuraSkills, CraftEngine, RealisticSeasons]
+softdepend: [Towny, Vault, VaultUnlocked, AuraSkills, CraftEngine, RealisticSeasons, PlaceholderAPI]
 authors: [Gardin233]
 prefix: 万邦演变引擎:重生
 description: "面向 Paper 与 Towny 的国家治理、外交、战争和战后秩序扩展插件。"

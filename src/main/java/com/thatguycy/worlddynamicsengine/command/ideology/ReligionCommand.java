@@ -12,8 +12,10 @@ import com.thatguycy.worlddynamicsengine.manager.governance.ResidentManager;
 import com.thatguycy.worlddynamicsengine.manager.governance.TownManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyTreasuryManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyChurchManager;
+import com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyRitualManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.ReligionManager;
 import com.thatguycy.worlddynamicsengine.model.IdeologyCouncilProposal;
+import com.thatguycy.worlddynamicsengine.model.IdeologyRitualDefinition;
 import com.thatguycy.worlddynamicsengine.model.WDEnation;
 import com.thatguycy.worlddynamicsengine.model.WDEChurch;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
@@ -47,15 +49,18 @@ public class ReligionCommand implements CommandExecutor {
     private final ReligionManager religionManager;
     private final EconomyBridge economyBridge;
     private final IdeologyChurchManager churchManager;
+    private final IdeologyRitualManager ritualManager;
 
     public ReligionCommand(NationManager nationManager, TownManager townManager, ResidentManager residentManager,
-            ReligionManager religionManager, EconomyBridge economyBridge, IdeologyChurchManager churchManager) {
+            ReligionManager religionManager, EconomyBridge economyBridge, IdeologyChurchManager churchManager,
+            IdeologyRitualManager ritualManager) {
         this.nationManager = nationManager;
         this.townManager = townManager;
         this.residentManager = residentManager;
         this.religionManager = religionManager;
         this.economyBridge = economyBridge;
         this.churchManager = churchManager;
+        this.ritualManager = ritualManager;
     }
 
     @Override
@@ -93,6 +98,7 @@ public class ReligionCommand implements CommandExecutor {
             case "vote" -> handleElectionVote(sender, args);
             case "church" -> handleChurch(sender, args);
             case "council" -> handleCouncil(sender, args);
+            case "ritual" -> handleRitual(sender, args);
             case "split" -> handleSplit(sender, args);
             case "treasury" -> {
                 if (args.length != 3) {
@@ -515,6 +521,80 @@ public class ReligionCommand implements CommandExecutor {
         return true;
     }
 
+    private boolean handleRitual(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(TextColors.RED + msg("religion_usage_ritual"));
+            return true;
+        }
+        String action = args[2].toLowerCase(Locale.ROOT);
+        if ("list".equals(action)) {
+            if (args.length != 4) {
+                sender.sendMessage(TextColors.RED + msg("religion_usage_ritual"));
+                return true;
+            }
+            List<IdeologyRitualDefinition> rituals = ritualManager.getRituals(args[3]);
+            sender.sendMessage(TextColors.GOLD + msg("ritual_list_header", args[3], rituals.size()));
+            for (IdeologyRitualDefinition ritual : rituals) {
+                IdeologyRitualManager.RitualTemplate template =
+                        IdeologyRitualManager.RitualTemplate.resolve(ritual.getTemplateId());
+                sender.sendMessage(TextColors.YELLOW + ritual.getRitualName() + TextColors.GRAY
+                        + " [" + ritual.getRitualUuid() + "] "
+                        + msg("ritual_list_template", template == null
+                        ? ritual.getTemplateId() : template.displayName()));
+            }
+            return true;
+        }
+
+        Player player = requirePlayer(sender);
+        if (player == null) return true;
+        try {
+            switch (action) {
+                case "register" -> {
+                    if (args.length != 6) throw new IllegalArgumentException("usage");
+                    String ritualName = args[5];
+                    IdeologyRitualDefinition definition =
+                            ritualManager.registerRitual(player, args[3], args[4], ritualName);
+                    sender.sendMessage(TextColors.GREEN + msg("ritual_registered",
+                            definition.getRitualName(), economyBridge.format(definition.getCreationCost())));
+                }
+                case "start" -> {
+                    if (args.length != 5 && args.length != 7) throw new IllegalArgumentException("usage");
+                    List<Player> duelists = new ArrayList<>();
+                    if (args.length == 7) {
+                        Player first = Bukkit.getPlayerExact(args[5]);
+                        Player second = Bukkit.getPlayerExact(args[6]);
+                        if (first == null || second == null) {
+                            sender.sendMessage(TextColors.RED + msg("player_not_found"));
+                            return true;
+                        }
+                        duelists.add(first);
+                        duelists.add(second);
+                    }
+                    UUID sessionUuid = ritualManager.startRitual(player, args[3], args[4], duelists);
+                    sender.sendMessage(TextColors.GREEN + msg("ritual_started", args[4], sessionUuid.toString()));
+                }
+                default -> sender.sendMessage(TextColors.RED + msg("religion_usage_ritual"));
+            }
+        } catch (IllegalArgumentException ex) {
+            String detail = ex.getMessage() == null ? "" : ex.getMessage();
+            String key = "usage".equals(detail) ? "religion_usage_ritual"
+                    : detail.contains("template") ? "ritual_template_invalid"
+                    : detail.contains("name") ? "ritual_name_invalid"
+                    : detail.contains("already exists") ? "ritual_already_exists"
+                    : detail.contains("treasur") || detail.contains("balance") ? "ritual_insufficient_treasury"
+                    : detail.contains("leader") || detail.contains("church head") ? "ritual_authority_required"
+                    : detail.contains("Duelists") || detail.contains("duelist") ? "ritual_duelist_invalid"
+                    : detail.contains("participant") || detail.contains("count") ? "ritual_participant_invalid"
+                    : detail.contains("host") || detail.contains("follow") ? "ritual_membership_required"
+                    : "ritual_action_rejected";
+            sender.sendMessage(TextColors.RED + msg(key));
+        } catch (RuntimeException ex) {
+            sender.sendMessage(TextColors.RED + msg("religion_treasury_storage_error"));
+            WorldDynamicsEngine.getInstance().getLogger().severe("Failed ritual operation: " + ex.getMessage());
+        }
+        return true;
+    }
+
     private boolean handleSplit(CommandSender sender, String[] args) {
         Player player = requirePlayer(sender);
         if (player == null) return true;
@@ -685,8 +765,9 @@ public class ReligionCommand implements CommandExecutor {
 
         WDEreligion currentLeaderIdeology = religionManager.getLedIdeology(player.getUniqueId());
         if (currentLeaderIdeology != null
-                && !matchesReligion(requestedReligion, currentLeaderIdeology.getReligionName())) {
-            sender.sendMessage(TextColors.RED + msg("religion_leader_must_abdicate"));
+                && !matchesReligion(requestedReligion, currentLeaderIdeology.getReligionName())
+                && !religionManager.canLeaveLeadership(player.getUniqueId())) {
+            sender.sendMessage(TextColors.RED + msg("religion_leader_no_successor"));
             return true;
         }
         WDEreligion currentChurchIdeology = religionManager.getReligion(currentReligion);
@@ -698,7 +779,17 @@ public class ReligionCommand implements CommandExecutor {
         }
 
         if ("none".equalsIgnoreCase(requestedReligion)) {
-            sender.sendMessage(TextColors.RED + msg("religion_player_clear_disabled"));
+            if (isNoneReligion(currentReligion)) {
+                sender.sendMessage(TextColors.YELLOW
+                        + msg("religion_player_already_set_target", player.getName(), msg("common_none")));
+                return true;
+            }
+            resident.setReligionName("None");
+            resident.setReligionChosen(true);
+            residentManager.saveResidents();
+            religionManager.onResidentIdeologyChanged(player.getUniqueId());
+            churchManager.onResidentIdeologyChanged(player.getUniqueId());
+            sender.sendMessage(TextColors.GREEN + msg("religion_player_cleared"));
             return true;
         }
 
@@ -769,8 +860,9 @@ public class ReligionCommand implements CommandExecutor {
         String nationReligion = normalizeReligionName(resolveNationReligion(targetTownData));
         WDEreligion currentLeaderIdeology = religionManager.getLedIdeology(targetResident.getUUID());
         if (currentLeaderIdeology != null
-                && !matchesReligion(requestedReligion, currentLeaderIdeology.getReligionName())) {
-            actor.sendMessage(TextColors.RED + msg("religion_leader_must_abdicate"));
+                && !matchesReligion(requestedReligion, currentLeaderIdeology.getReligionName())
+                && !religionManager.canLeaveLeadership(targetResident.getUUID())) {
+            actor.sendMessage(TextColors.RED + msg("religion_leader_no_successor"));
             return true;
         }
         WDEreligion currentChurchIdeology = religionManager.getReligion(currentReligion);
@@ -800,6 +892,7 @@ public class ReligionCommand implements CommandExecutor {
             }
 
             resident.setReligionName("None");
+            resident.setReligionChosen(true);
             residentManager.saveResidents();
             religionManager.onResidentIdeologyChanged(targetResident.getUUID());
             churchManager.onResidentIdeologyChanged(targetResident.getUUID());

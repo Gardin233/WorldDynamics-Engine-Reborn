@@ -1,0 +1,16 @@
+# 宗教圣物配置。修改后使用 /wde reload，无需重启。
+enabled: true
+
+effects:
+  # 速度效果等级，范围 0～10；0 表示关闭加成。
+  speedLevel: 1
+
+# 玩家个人信仰者在物品栏或副手持有任意一件圣物时获得速度效果。
+# type 支持 vanilla（原版材质）和 craftengine（完整 CraftEngine 物品 ID）。
+relics:
+  first:
+    type: vanilla
+    id: NETHER_STAR
+  second:
+    type: vanilla
+    id: TOTEM_OF_UNDYING

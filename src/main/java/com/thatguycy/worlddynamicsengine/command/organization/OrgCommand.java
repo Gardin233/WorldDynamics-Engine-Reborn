@@ -229,14 +229,12 @@ public class OrgCommand implements CommandExecutor {
         }
         if (org.isSovereignEmpire()) {
             double chairmanCapability = orgManager.getChairmanCapability(org, nationManager);
-            double regularSubjectCapability = orgManager.getSubjectCapabilityTotal(org, nationManager, false);
-            double garrisonSubjectCapability = orgManager.getSubjectCapabilityTotal(org, nationManager, true);
+            double subjectCapability = orgManager.getWeightedSubjectCapabilityTotal(org, nationManager);
             sender.sendMessage(TextColors.YELLOW + msg("org_info_sovereign_capability_compare")
                     + TextColors.WHITE
                     + msg("org_info_sovereign_capability_compare_value",
                     formatCapability(chairmanCapability),
-                    formatCapability(regularSubjectCapability),
-                    formatCapability(garrisonSubjectCapability)));
+                    formatCapability(subjectCapability)));
         }
 
         List<String> memberNationLines = new ArrayList<>();
@@ -947,7 +945,7 @@ public class OrgCommand implements CommandExecutor {
             return true;
         }
 
-        if (args.length != 5) {
+        if (args.length < 5) {
             sender.sendMessage(TextColors.RED + msg("war_reason_required"));
             return true;
         }
@@ -960,9 +958,31 @@ public class OrgCommand implements CommandExecutor {
 
         String targetNation = args[3];
         var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
+        String goalTownName = null;
+        String goalOrganizationName = null;
+        if (com.thatguycy.worlddynamicsengine.model.war.WarGoalType.forReason(reason)
+                == com.thatguycy.worlddynamicsengine.model.war.WarGoalType.CAPTURE_TOWN) {
+            if (args.length < 6) {
+                sender.sendMessage(TextColors.RED + msg("war_goal_town_required"));
+                return true;
+            }
+            goalTownName = String.join(" ", java.util.Arrays.copyOfRange(args, 5, args.length));
+        } else if (reason == com.thatguycy.worlddynamicsengine.model.war.WarReason.DESTROY_THREAT
+                && args.length >= 6) {
+            goalOrganizationName = String.join(" ", java.util.Arrays.copyOfRange(args, 5, args.length));
+        } else if (args.length != 5) {
+            sender.sendMessage(TextColors.RED + msg("war_reason_required"));
+            return true;
+        }
         String reasonError = orgManager.warReasonFailure(reason, actorNation, targetNation);
         if (reasonError != null) {
             sender.sendMessage(TextColors.RED + msg(reasonError));
+            return true;
+        }
+        String goalError = orgManager.validateWarGoalSelection(reason, actorNation, targetNation,
+                goalTownName, goalOrganizationName);
+        if (goalError != null) {
+            sender.sendMessage(TextColors.RED + msg(goalError));
             return true;
         }
         if (org.hasMemberNation(targetNation)) {
@@ -979,7 +999,8 @@ public class OrgCommand implements CommandExecutor {
             return true;
         }
 
-        OrgManager.MilitaryWarVoteResult result = orgManager.startMilitaryWarVote(org, actorNation, targetNation, nationManager, reason);
+        OrgManager.MilitaryWarVoteResult result = orgManager.startMilitaryWarVote(org, actorNation, targetNation,
+                nationManager, reason, goalTownName, goalOrganizationName);
         return handleMilitaryWarVoteResult(sender, org, targetNation, result, true);
     }
 
@@ -1037,7 +1058,11 @@ public class OrgCommand implements CommandExecutor {
                     ? msg("org_war_vote_started", targetNation, summarizeWeightedVotes(org, result.getProposal().getVotes()))
                     : msg("org_war_vote_recorded", targetNation, summarizeWeightedVotes(org, result.getProposal().getVotes()))));
             case APPROVED -> {
-                sender.sendMessage(TextColors.GREEN + msg("org_war_vote_approved", targetNation));
+                boolean independence = result.getProposal() != null
+                        && result.getProposal().getReason()
+                                == com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE;
+                sender.sendMessage(TextColors.GREEN + msg(independence
+                        ? "war_independence_declared" : "org_war_vote_approved", targetNation));
                 if (result.getWarResult() != null && !result.getWarResult().getRemovedFromAttackerAlliances().isEmpty()) {
                     sender.sendMessage(TextColors.YELLOW + msg("diplomacy_military_overlap_removed", String.join(", ", result.getWarResult().getRemovedFromAttackerAlliances())));
                 }

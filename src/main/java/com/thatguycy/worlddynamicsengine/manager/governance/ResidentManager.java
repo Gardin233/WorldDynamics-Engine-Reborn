@@ -37,6 +37,12 @@ public class ResidentManager {
         dataStorageManager.saveUuidKeyed(STORAGE_CATEGORY, residents);
     }
 
+    public synchronized void saveResident(WDEresident resident) {
+        if (resident == null) return;
+        residents.put(resident.getUserUUID(), resident);
+        dataStorageManager.saveEntity(STORAGE_CATEGORY, resident.getUserUUID().toString(), resident);
+    }
+
     public WDEresident getResident(UUID userUUID) {
         return residents.get(userUUID);
     }

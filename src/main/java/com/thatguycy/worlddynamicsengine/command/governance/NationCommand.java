@@ -278,6 +278,10 @@ public class NationCommand implements CommandExecutor {
             sender.sendMessage(TextColors.RED + msg("nation_invalid_govtype", validGovTypeDisplay));
             return true;
         }
+        if (nationManager.isNationRegimeLocked(nation)) {
+            sender.sendMessage(TextColors.RED + msg("nation_regime_locked"));
+            return true;
+        }
 
         // Set the government type
         nation.setGovernmentType(govType);

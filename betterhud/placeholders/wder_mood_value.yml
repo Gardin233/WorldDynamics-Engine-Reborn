@@ -1,0 +1,4 @@
+wder_mood_value:
+  variable: wder_mood_value
+  placeholder: "%wder_mood%"
+  update: 20

@@ -50,6 +50,20 @@ class WDEChurchGovernanceTest {
     }
 
     @Test
+    void ideologyDissolutionPreservesChurchTreasuryAndHistory() {
+        WDEChurch church = new WDEChurch(UUID.randomUUID(), UUID.randomUUID(),
+                "Source", "North", UUID.randomUUID(), "Head", 1L);
+        church.creditTreasury(new BigDecimal("125"), UUID.randomUUID(), "member", 2L);
+
+        church.dissolveWithTreasuryPreserved(3L);
+        WDEChurch restored = WDEChurch.deserialize(church.serialize());
+
+        assertEquals(WDEChurch.State.DISSOLVED, restored.getState());
+        assertEquals(new BigDecimal("125"), restored.getTreasuryBalance());
+        assertEquals("IDEOLOGY_DISSOLVED", restored.getHistory().getLast().get("type"));
+    }
+
+    @Test
     void councilProposalKeepsVoteAndDecisionAcrossReload() {
         UUID proposalId = UUID.randomUUID();
         UUID ideologyId = UUID.randomUUID();

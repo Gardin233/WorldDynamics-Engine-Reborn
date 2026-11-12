@@ -9,6 +9,28 @@ reasons:
     clock: REAL_TIME
     world: world
 
+warGoals:
+  # 控制目标必须由进攻方在线人口严格超过此比例。
+  controlThresholdPercent: 75.0
+  # 目标条件连续维持超过此时长后，单独进攻方可强制兑现唯一对应的和约条款。
+  holdSeconds: 1800
+  # 战争目标条件采样间隔；占领条件失效时会重置连续计时。
+  progressCheckSeconds: 5
+  # 展现霸权：战败击杀数达到开战时防守阵营人口乘此倍率。
+  dominancePopulationMultiplier: 1.0
+  # 独立方作为防守方时，若进攻方未完成占领目标，防守方分差达到此值可强制要求独立。
+  defenderIndependenceScoreDifference: 40.0
+  # 强制兑现条款的预算成本；仍受 peaceTreaty.maxProposalPoints 限制。
+  clauses:
+    forceDemocracyPoints: 60
+    dissolveThreatOrganizationPoints: 70
+  # 强制民主化后锁定目标国政体的时长。
+  regimeLock:
+    durationDays: 100
+    # REAL_TIME 使用现实天；REALISTIC_SEASONS 使用季节日历天。
+    clock: REAL_TIME
+    world: world
+
 peaceTreaty:
   # 单份和平条约中可消耗的总分数上限。
   maxProposalPoints: 100

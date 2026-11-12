@@ -156,6 +156,16 @@ public class PeaceTreatyCommand {
                         parameters.put("subjectNation", parts[1]);
                     }
                 }
+                case FORCE_DEMOCRATIZATION -> {
+                    if (parts.length >= 2) {
+                        parameters.put("president", parts[1]);
+                    }
+                }
+                case DISSOLVE_THREAT_ORGANIZATION -> {
+                    if (parts.length >= 2) {
+                        parameters.put("organization", parts[1]);
+                    }
+                }
                 case FORCE_CONVERSION, DISSOLVE_ALLIANCE, EXPEL_FROM_ALLIANCE, UNCONDITIONAL_PASSAGE, HUMILIATE, LOOT_CAPITAL, TRIBUTE, FORCE_VASSALIZE, ALLOW_INDEPENDENCE -> {
                 }
             }

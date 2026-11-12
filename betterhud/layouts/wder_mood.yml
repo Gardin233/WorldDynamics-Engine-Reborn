@@ -1,0 +1,10 @@
+wder_mood:
+  images:
+    1:
+      name: wder_mood_icon
+      stack: number:wder_mood_value@t / 10
+      max-stack: 10
+      space: 1
+      x: 15
+      y: 200
+      scale: 0.6

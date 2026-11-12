@@ -5,6 +5,7 @@ import com.thatguycy.worlddynamicsengine.command.CommandHandler;
 import com.thatguycy.worlddynamicsengine.command.diplomacy.DiplomacyCommand;
 import com.thatguycy.worlddynamicsengine.command.governance.NationCommand;
 import com.thatguycy.worlddynamicsengine.command.governance.TownCommand;
+import com.thatguycy.worlddynamicsengine.command.ideology.MoodCommand;
 import com.thatguycy.worlddynamicsengine.command.ideology.ReligionCommand;
 import com.thatguycy.worlddynamicsengine.command.inn.InnCommand;
 import com.thatguycy.worlddynamicsengine.command.MyTabCompleter;
@@ -14,9 +15,11 @@ import com.thatguycy.worlddynamicsengine.command.system.DocCommand;
 import com.thatguycy.worlddynamicsengine.command.system.HelpCommand;
 import com.thatguycy.worlddynamicsengine.command.system.ReloadCommand;
 import com.thatguycy.worlddynamicsengine.integration.craftengine.CraftEngineIntegration;
+import com.thatguycy.worlddynamicsengine.integration.papi.MoodPlaceholderIntegration;
 import com.thatguycy.worlddynamicsengine.listener.background.PlayerBackgroundListener;
 import com.thatguycy.worlddynamicsengine.listener.drop.PlayerDropListener;
 import com.thatguycy.worlddynamicsengine.listener.ideology.IdeologyTreasuryListener;
+import com.thatguycy.worlddynamicsengine.listener.ideology.IdeologyRitualListener;
 import com.thatguycy.worlddynamicsengine.listener.ideology.ArmorDoctrineListener;
 import com.thatguycy.worlddynamicsengine.listener.ideology.AnimalKillingDoctrineListener;
 import com.thatguycy.worlddynamicsengine.listener.inn.InnListener;
@@ -30,7 +33,11 @@ import com.thatguycy.worlddynamicsengine.manager.governance.NationManager;
 import com.thatguycy.worlddynamicsengine.manager.governance.ResidentManager;
 import com.thatguycy.worlddynamicsengine.manager.governance.TownManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyTreasuryManager;
+import com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyRitualManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.AnimalKillingDoctrineManager;
+import com.thatguycy.worlddynamicsengine.manager.ideology.MentalCollapseManager;
+import com.thatguycy.worlddynamicsengine.manager.ideology.MoodManager;
+import com.thatguycy.worlddynamicsengine.manager.ideology.RelicManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.ReligionManager;
 import com.thatguycy.worlddynamicsengine.manager.inn.InnManager;
 import com.thatguycy.worlddynamicsengine.manager.menu.PlayerMenuManager;
@@ -46,6 +53,7 @@ import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEtown;
 import com.thatguycy.worlddynamicsengine.manager.ideology.DoctrineBuffManager;
 import com.thatguycy.worlddynamicsengine.listener.ideology.DoctrineBuffListener;
+import com.thatguycy.worlddynamicsengine.listener.ideology.RelicBuffListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -99,11 +107,16 @@ public class WorldDynamicsEngine extends JavaPlugin {
     private ReligionManager religionManager;
     private com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyChurchManager ideologyChurchManager;
     private IdeologyTreasuryManager ideologyTreasuryManager;
+    private IdeologyRitualManager ideologyRitualManager;
     private CraftEngineIntegration craftEngineIntegration;
     private PlayerDropManager playerDropManager;
     private com.thatguycy.worlddynamicsengine.manager.ideology.FoodDoctrineManager foodDoctrineManager;
+    private RelicManager relicManager;
     private AnimalKillingDoctrineManager animalKillingDoctrineManager;
     private DoctrineBuffManager doctrineBuffManager;
+    private MoodManager moodManager;
+    private MoodPlaceholderIntegration moodPlaceholderIntegration;
+    private MentalCollapseManager mentalCollapseManager;
     private ArmorDoctrineListener armorDoctrineListener;
     private WarScoreboardManager warScoreboardManager;
     private InnManager innManager;
@@ -177,6 +190,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         playerDropManager = new PlayerDropManager(this);
         playerDropManager.reloadDefinitions();
         foodDoctrineManager = new com.thatguycy.worlddynamicsengine.manager.ideology.FoodDoctrineManager(this);
+        relicManager = new RelicManager(this);
         warTruceClock = new WarTruceClock(this);
         townManager = new TownManager(this);
         nationManager = new NationManager(this, townManager);
@@ -185,7 +199,11 @@ public class WorldDynamicsEngine extends JavaPlugin {
         orgManager = new OrgManager(this, townManager);
         religionManager = new ReligionManager(this);
         ideologyChurchManager = new com.thatguycy.worlddynamicsengine.manager.ideology.IdeologyChurchManager(this);
+        ideologyRitualManager = new IdeologyRitualManager(this);
         doctrineBuffManager = new DoctrineBuffManager(this);
+        moodManager = new MoodManager(this);
+        registerMoodPlaceholder();
+        mentalCollapseManager = new MentalCollapseManager(this);
         animalKillingDoctrineManager = new AnimalKillingDoctrineManager(this);
         warScoreboardManager = new WarScoreboardManager(this);
         ideologyTreasuryManager = new IdeologyTreasuryManager(this);
@@ -205,7 +223,13 @@ public class WorldDynamicsEngine extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (moodPlaceholderIntegration != null) {
+            moodPlaceholderIntegration.unregister();
+            moodPlaceholderIntegration = null;
+        }
         if (doctrineBuffManager != null) doctrineBuffManager.clearAll();
+        if (mentalCollapseManager != null) mentalCollapseManager.stopTasks();
+        if (ideologyRitualManager != null) ideologyRitualManager.cancelAll();
         if (warScoreboardManager != null) warScoreboardManager.clearAll();
         if (playerMenuManager != null) playerMenuManager.closeMenus();
         if (innManager != null) innManager.refundPending();
@@ -280,6 +304,10 @@ public class WorldDynamicsEngine extends JavaPlugin {
         return ideologyChurchManager;
     }
 
+    public IdeologyRitualManager getIdeologyRitualManager() {
+        return ideologyRitualManager;
+    }
+
     public IdeologyTreasuryManager getIdeologyTreasuryManager() {
         return ideologyTreasuryManager;
     }
@@ -324,8 +352,20 @@ public class WorldDynamicsEngine extends JavaPlugin {
         return foodDoctrineManager;
     }
 
+    public RelicManager getRelicManager() {
+        return relicManager;
+    }
+
     public DoctrineBuffManager getDoctrineBuffManager() {
         return doctrineBuffManager;
+    }
+
+    public MoodManager getMoodManager() {
+        return moodManager;
+    }
+
+    public MentalCollapseManager getMentalCollapseManager() {
+        return mentalCollapseManager;
     }
 
     public WarScoreboardManager getWarScoreboardManager() {
@@ -436,6 +476,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         ConfigurationSerialization.registerClass(WDEreligion.class, "WDEreligion");
         ConfigurationSerialization.registerClass(com.thatguycy.worlddynamicsengine.model.WDEChurch.class, "WDEChurch");
         ConfigurationSerialization.registerClass(com.thatguycy.worlddynamicsengine.model.IdeologyCouncilProposal.class, "IdeologyCouncilProposal");
+        ConfigurationSerialization.registerClass(com.thatguycy.worlddynamicsengine.model.IdeologyRitualDefinition.class, "IdeologyRitualDefinition");
     }
 
     private void ensureResources() {
@@ -452,6 +493,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         saveDefaultResource("backgrounds.yml");
         saveDefaultResource("drops.yml");
         saveDefaultResource("foods.yml");
+        saveDefaultResource("relics.yml");
         saveDefaultResource("inn.yml");
         saveDefaultResource("lang/messages_en.yml");
         saveDefaultResource("lang/messages_es.yml");
@@ -697,6 +739,22 @@ public class WorldDynamicsEngine extends JavaPlugin {
                     warConfigChanged = true;
                 }
             }
+            for (var entry : java.util.Map.<String, Object>of(
+                    "warGoals.controlThresholdPercent", 75.0D,
+                    "warGoals.holdSeconds", 1800L,
+                    "warGoals.progressCheckSeconds", 5L,
+                    "warGoals.dominancePopulationMultiplier", 1.0D,
+                    "warGoals.defenderIndependenceScoreDifference", 40.0D,
+                    "warGoals.clauses.forceDemocracyPoints", 60,
+                    "warGoals.clauses.dissolveThreatOrganizationPoints", 70,
+                    "warGoals.regimeLock.durationDays", 100L,
+                    "warGoals.regimeLock.clock", "REAL_TIME",
+                    "warGoals.regimeLock.world", "world").entrySet()) {
+                if (!warConfig.contains(entry.getKey())) {
+                    warConfig.set(entry.getKey(), entry.getValue());
+                    warConfigChanged = true;
+                }
+            }
             if (!warConfig.contains("peaceTreaty.tribute.taxRatePercent")) {
                 warConfig.set("peaceTreaty.tribute.taxRatePercent", 5.0D);
                 warConfigChanged = true;
@@ -833,7 +891,9 @@ public class WorldDynamicsEngine extends JavaPlugin {
         commandHandler.registerSubCommand("nation", new NationCommand(nationManager, residentManager));
         commandHandler.registerSubCommand("org", new OrgCommand(nationManager, townManager, orgManager, economyBridge));
         commandHandler.registerSubCommand("ideology", new ReligionCommand(
-                nationManager, townManager, residentManager, religionManager, economyBridge, ideologyChurchManager));
+                nationManager, townManager, residentManager, religionManager, economyBridge,
+                ideologyChurchManager, ideologyRitualManager));
+        commandHandler.registerSubCommand("mood", new MoodCommand(this));
         commandHandler.registerSubCommand("diplomacy", new DiplomacyCommand(nationManager, residentManager, economyBridge, orgManager));
 
         rootCommand.setTabCompleter(new MyTabCompleter(orgManager, religionManager));
@@ -848,12 +908,19 @@ public class WorldDynamicsEngine extends JavaPlugin {
         }
         getServer().getPluginManager().registerEvents(new TownyEventListener(this, orgManager, economyBridge), this);
         getServer().getPluginManager().registerEvents(new IdeologyTreasuryListener(this), this);
+        getServer().getPluginManager().registerEvents(new IdeologyRitualListener(ideologyRitualManager), this);
         getServer().getPluginManager().registerEvents(new DoctrineBuffListener(doctrineBuffManager), this);
         getServer().getPluginManager().registerEvents(
                 new AnimalKillingDoctrineListener(animalKillingDoctrineManager), this);
-        armorDoctrineListener = new ArmorDoctrineListener(this, residentManager, religionManager, doctrineBuffManager);
+        armorDoctrineListener = new ArmorDoctrineListener(this, residentManager, religionManager, moodManager);
         getServer().getPluginManager().registerEvents(armorDoctrineListener, this);
         armorDoctrineListener.initializeOnlinePlayers();
+        getServer().getPluginManager().registerEvents(mentalCollapseManager, this);
+        mentalCollapseManager.initializeOnlinePlayers();
+        RelicBuffListener relicBuffListener = new RelicBuffListener(
+                this, relicManager, residentManager, religionManager, doctrineBuffManager);
+        getServer().getPluginManager().registerEvents(relicBuffListener, this);
+        relicBuffListener.initializeOnlinePlayers();
         getServer().getPluginManager().registerEvents(new com.thatguycy.worlddynamicsengine.listener.ideology.FoodDoctrineListener(this), this);
         getServer().getPluginManager().registerEvents(new TownyLifecycleListener(this), this);
         getServer().getPluginManager().registerEvents(new NeutralityListener(this), this);
@@ -872,8 +939,23 @@ public class WorldDynamicsEngine extends JavaPlugin {
         getLogger().info("Towny startup data loaded; runtime town and nation records are event-managed.");
     }
 
+    private void registerMoodPlaceholder() {
+        if (!getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            getLogger().info("PlaceholderAPI not detected; mood placeholder is inactive.");
+            return;
+        }
+        moodPlaceholderIntegration = new MoodPlaceholderIntegration(this);
+        if (moodPlaceholderIntegration.register()) {
+            getLogger().info("PlaceholderAPI mood placeholder registered: %wder_mood%.");
+        } else {
+            getLogger().warning("Failed to register the PlaceholderAPI mood placeholder.");
+            moodPlaceholderIntegration = null;
+        }
+    }
+
     private void startBackgroundTasks() {
         if (doctrineBuffManager != null) doctrineBuffManager.start();
+        if (moodManager != null) moodManager.start();
         if (warScoreboardManager != null) warScoreboardManager.start();
         if (innManager != null) innManager.start();
         residentManager.syncWithTowny();
@@ -938,6 +1020,8 @@ public class WorldDynamicsEngine extends JavaPlugin {
         String storageSignatureBeforeReload = buildStorageSignature();
 
         if (doctrineBuffManager != null) doctrineBuffManager.clearAll();
+        if (mentalCollapseManager != null) mentalCollapseManager.stopTasks();
+        if (ideologyRitualManager != null) ideologyRitualManager.cancelAll();
         if (warScoreboardManager != null) warScoreboardManager.clearAll();
         if (innManager != null) innManager.refundPending();
         saveRuntimeState();
@@ -955,7 +1039,9 @@ public class WorldDynamicsEngine extends JavaPlugin {
             playerDropManager.reloadDefinitions();
         }
         if (foodDoctrineManager != null) foodDoctrineManager.reload();
+        if (relicManager != null) relicManager.reload();
         if (animalKillingDoctrineManager != null) animalKillingDoctrineManager.reload();
+        if (ideologyRitualManager != null) ideologyRitualManager.loadAll();
         if (backgroundManager == null && residentManager != null) {
             backgroundManager = new BackgroundManager(this, residentManager);
         } else if (backgroundManager != null) {
@@ -1576,14 +1662,73 @@ public class WorldDynamicsEngine extends JavaPlugin {
                 changed = true;
             }
         }
-        Map<String, Object> animalKillingDefaults = Map.of(
-                "enabled", true, "durationSeconds", 30, "resistanceLevel", 1, "weaknessLevel", 1);
-        for (var entry : animalKillingDefaults.entrySet()) {
-            String path = "doctrineEffects.animalKilling." + entry.getKey();
+        Map<String, Object> moodDefaults = Map.of(
+                "mood.changes.compliant", 1,
+                "mood.changes.violation", 1,
+                "mood.decayMinutes", 30,
+                "mood.instantActions.animalKilling.compliant", 1,
+                "mood.instantActions.animalKilling.violation", 1,
+                "mood.instantActions.humanMeat.compliant", 1,
+                "mood.instantActions.humanMeat.violation", 1,
+                "mood.doctrineActions.animalKilling.enabled",
+                        ideologyConfig.getBoolean("doctrineEffects.animalKilling.enabled", true));
+        for (var entry : moodDefaults.entrySet()) {
+            String path = entry.getKey();
             if (!ideologyConfig.contains(path)) {
-                ideologyConfig.set(path, entry.getValue());
+                ideologyConfig.set(entry.getKey(), entry.getValue());
                 changed = true;
             }
+        }
+        Map<String, Object> expectationDefaults = Map.of(
+                "mood.expectations.newPlayer.stepHours", 2,
+                "mood.expectations.newPlayer.moodBonuses", List.of(30, 24, 18, 12, 6, 0),
+                "mood.expectations.roles.townMayor", -8,
+                "mood.expectations.roles.nationKing", -12
+        );
+        for (var entry : expectationDefaults.entrySet()) {
+            if (!ideologyConfig.contains(entry.getKey())) {
+                ideologyConfig.set(entry.getKey(), entry.getValue());
+                changed = true;
+            }
+        }
+        Map<String, Object> collapseDefaults = Map.ofEntries(
+                Map.entry("mood.collapse.severity.mildMinimumMood", 34),
+                Map.entry("mood.collapse.severity.moderateMinimumMood", 17),
+                Map.entry("mood.collapse.effects.sadWander.enabled", true),
+                Map.entry("mood.collapse.effects.sadWander.durationSeconds", 300),
+                Map.entry("mood.collapse.effects.sadWander.walkSpeed", 0.11D),
+                Map.entry("mood.collapse.effects.sadWander.wanderRadius", 6.0D),
+                Map.entry("mood.collapse.effects.darkVision.enabled", true),
+                Map.entry("mood.collapse.effects.darkVision.durationSeconds", 180),
+                Map.entry("mood.collapse.effects.crazyTalk.enabled", true),
+                Map.entry("mood.collapse.effects.crazyTalk.durationSeconds", 180),
+                Map.entry("mood.collapse.effects.crazyTalk.intervalSeconds", 15),
+                Map.entry("mood.collapse.effects.crazyTalk.messages",
+                        List.of("我听见有人在呼唤我。", "这世界看起来不太对劲。")),
+                Map.entry("mood.collapse.effects.catatonicStupor.enabled", true),
+                Map.entry("mood.collapse.effects.catatonicStupor.durationSeconds", 120),
+                Map.entry("mood.collapse.effects.faithCrisis.enabled", true),
+                Map.entry("mood.collapse.effects.faithCrisis.durationSeconds", 120),
+                Map.entry("mood.collapse.release.moodBonus", 40),
+                Map.entry("mood.collapse.release.durationMinutes", 30)
+        );
+        for (var entry : collapseDefaults.entrySet()) {
+            if (!ideologyConfig.contains(entry.getKey())) {
+                ideologyConfig.set(entry.getKey(), entry.getValue());
+                changed = true;
+            }
+        }
+        if (ideologyConfig.contains("mood.collapse.effects.sadWander.intervalTicks")) {
+            ideologyConfig.set("mood.collapse.effects.sadWander.intervalTicks", null);
+            changed = true;
+        }
+        if (ideologyConfig.contains("mood.collapse.effects.faithCrisis.intervalSeconds")) {
+            ideologyConfig.set("mood.collapse.effects.faithCrisis.intervalSeconds", null);
+            changed = true;
+        }
+        if (ideologyConfig.contains("doctrineEffects")) {
+            ideologyConfig.set("doctrineEffects", null);
+            changed = true;
         }
         changed |= migrateLegacyDoctrineRegistryToMemeRegistry();
         changed |= migrateExistingDoctrineNamespaces();

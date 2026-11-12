@@ -92,6 +92,12 @@ public final class IdeologyChurchManager {
         return churchUuid == null ? null : churches.get(churchUuid);
     }
 
+    public synchronized void publishPersistedChurch(WDEChurch church) {
+        if (church != null) {
+            churches.put(church.getChurchUuid(), church);
+        }
+    }
+
     public synchronized IdeologyCouncilProposal getProposal(UUID proposalUuid) {
         return proposalUuid == null ? null : proposals.get(proposalUuid);
     }
@@ -334,6 +340,53 @@ public final class IdeologyChurchManager {
         }
         commit(buildChurchResidentWrites(List.of(updated), detached),
                 List.of(), List.of(updated), List.of(), detached);
+    }
+
+    public synchronized void closeIdeology(WDEreligion ideology) {
+        if (ideology == null) return;
+        long now = System.currentTimeMillis();
+        Set<UUID> ideologyChurchIds = new LinkedHashSet<>();
+        List<WDEChurch> changedChurches = new ArrayList<>();
+        for (WDEChurch church : churches.values()) {
+            if (!church.getSourceIdeologyUuid().equals(ideology.getIdeologyUuid())) continue;
+            ideologyChurchIds.add(church.getChurchUuid());
+            if (church.isActive()) {
+                WDEChurch updated = copy(church);
+                updated.dissolveWithTreasuryPreserved(now);
+                changedChurches.add(updated);
+            }
+        }
+
+        List<WDEresident> changedResidents = new ArrayList<>();
+        for (WDEresident resident : residents.getAllResidents()) {
+            boolean followsIdeology = ideology.getReligionName().equalsIgnoreCase(resident.getReligionName());
+            boolean belongsToChurch = resident.getChurchUuid() != null
+                    && ideologyChurchIds.contains(resident.getChurchUuid());
+            if (!followsIdeology && !belongsToChurch) continue;
+            WDEresident updated = copy(resident);
+            if (followsIdeology) updated.setReligionName("None");
+            if (belongsToChurch) updated.setChurchUuid(null, now);
+            changedResidents.add(updated);
+        }
+
+        List<IdeologyCouncilProposal> changedProposals = new ArrayList<>();
+        for (IdeologyCouncilProposal proposal : proposals.values()) {
+            if (!proposal.getSourceIdeologyUuid().equals(ideology.getIdeologyUuid())
+                    || proposal.getState() != IdeologyCouncilProposal.State.PENDING
+                    && proposal.getState() != IdeologyCouncilProposal.State.APPROVED) {
+                continue;
+            }
+            IdeologyCouncilProposal updated = IdeologyCouncilProposal.deserialize(proposal.serialize());
+            updated.fail(now, "IDEOLOGY_DISSOLVED");
+            changedProposals.add(updated);
+        }
+
+        List<DataStorageManager.EntityWrite> writes =
+                buildChurchResidentWrites(changedChurches, changedResidents);
+        for (IdeologyCouncilProposal proposal : changedProposals) {
+            writes.add(write(PROPOSALS_CATEGORY, proposal.getProposalUuid().toString(), proposal));
+        }
+        commit(writes, List.of(), changedChurches, changedProposals, changedResidents, false);
     }
 
     public synchronized void splitChurch(Player player, String ideologyName, String churchToken, String newIdeologyName) {
@@ -1107,10 +1160,24 @@ public final class IdeologyChurchManager {
             Collection<WDEChurch> changedChurches,
             Collection<IdeologyCouncilProposal> changedProposals,
             Collection<WDEresident> changedResidents) {
+        commit(writes, changedReligions, changedChurches, changedProposals, changedResidents, true);
+    }
+
+    private void commit(Collection<DataStorageManager.EntityWrite> writes,
+            Collection<WDEreligion> changedReligions,
+            Collection<WDEChurch> changedChurches,
+            Collection<IdeologyCouncilProposal> changedProposals,
+            Collection<WDEresident> changedResidents,
+            boolean reconcileResidentIdeologies) {
         storage.saveEntities(writes);
         for (WDEreligion ideology : changedReligions) religions.publishPersistedReligion(ideology);
         for (WDEChurch church : changedChurches) churches.put(church.getChurchUuid(), church);
         for (IdeologyCouncilProposal proposal : changedProposals) proposals.put(proposal.getProposalUuid(), proposal);
         residents.publishResidents(changedResidents);
+        if (reconcileResidentIdeologies) {
+            for (WDEresident resident : changedResidents) {
+                religions.onResidentIdeologyChanged(resident.getUserUUID());
+            }
+        }
     }
 }

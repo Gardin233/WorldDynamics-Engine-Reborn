@@ -2,6 +2,7 @@ package com.thatguycy.worlddynamicsengine.command.war;
 
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.thatguycy.worlddynamicsengine.model.war.WarReason;
+import com.thatguycy.worlddynamicsengine.model.war.WarGoalType;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.util.List;
 import com.thatguycy.worlddynamicsengine.util.TextColors;
@@ -37,18 +38,19 @@ public final class WarCommand implements CommandExecutor {
             send(player, plugin.getOrgManager().surrenderTownWar(town, target) ? "war_town_surrendered" : "war_declaration_blocked");
             return true;
         }
-        if (args.length != 5 || !"declare".equalsIgnoreCase(args[1])) {
+        if (args.length < 5 || !"declare".equalsIgnoreCase(args[1])) {
             send(player, "war_usage"); return true;
         }
         WarReason reason = WarReason.parse(args[4]);
         if (reason == null) { send(player, "war_reason_invalid"); return true; }
         if ("town".equalsIgnoreCase(args[2])) {
+            if (args.length != 5) { send(player, "war_usage"); return true; }
             if (town == null || town.getMayor() == null || !town.getMayor().getUUID().equals(player.getUniqueId())) {
                 send(player, "common_no_authority"); return true;
             }
             if (reason == WarReason.INDEPENDENCE) {
                 var result = plugin.getOrgManager().declareTownIndependence(town, args[3], plugin.getNationManager());
-                if (result.isSuccess()) send(player, "war_declared", args[3], plugin.getLocaleMessage(reason.messageKey()));
+                if (result.isSuccess()) send(player, "war_independence_declared", args[3]);
                 else send(player, result.getFailureMessageKey(), result.getFailureMessageArgs());
                 return true;
             }
@@ -73,9 +75,20 @@ public final class WarCommand implements CommandExecutor {
         }
         String target = args[3];
         var group = plugin.getOrgManager().getOrganization(target);
+        String goalTownName = null;
+        String goalOrganizationName = null;
         if (reason == WarReason.DESTROY_THREAT && group != null
                 && (group.isSovereignEmpire() || plugin.getOrgManager().isMilitaryAlliance(group))) {
+            goalOrganizationName = group.getOrganizationName();
             target = group.getChairmanNationName();
+            if (args.length != 5) { send(player, "war_usage"); return true; }
+        } else if (WarGoalType.forReason(reason) == WarGoalType.CAPTURE_TOWN) {
+            if (args.length < 6) { send(player, "war_goal_town_required"); return true; }
+            goalTownName = String.join(" ", java.util.Arrays.copyOfRange(args, 5, args.length));
+        } else if (reason == WarReason.DESTROY_THREAT && args.length >= 6) {
+            goalOrganizationName = String.join(" ", java.util.Arrays.copyOfRange(args, 5, args.length));
+        } else if (args.length != 5) {
+            send(player, "war_usage"); return true;
         }
         if (nation.getName().equalsIgnoreCase(target)) {
             send(player, "war_reason_invalid"); return true;
@@ -87,17 +100,24 @@ public final class WarCommand implements CommandExecutor {
         if (reasonError != null) {
             send(player, reasonError); return true;
         }
+        String goalError = plugin.getOrgManager().validateWarGoalSelection(reason, nation.getName(), target,
+                goalTownName, goalOrganizationName);
+        if (goalError != null) {
+            send(player, goalError); return true;
+        }
         var alliances = plugin.getOrgManager().getMilitaryAlliancesByNation(nation.getName());
         if (!alliances.isEmpty()) {
             var alliance = alliances.getFirst();
             var result = plugin.getOrgManager().startMilitaryWarVote(alliance, nation.getName(), target,
-                    plugin.getNationManager(), reason);
+                    plugin.getNationManager(), reason, goalTownName, goalOrganizationName);
             sendMilitaryWarVoteResult(player, alliance, target, result);
         } else {
             var result = plugin.getOrgManager().handleMilitaryAllianceWar(nation.getName(), target,
-                    plugin.getNationManager(), reason);
+                    plugin.getNationManager(), reason, goalTownName, goalOrganizationName);
             if (result.isSuccess()) {
-                send(player, "war_declared", target, plugin.getLocaleMessage(reason.messageKey()));
+                send(player, reason == WarReason.INDEPENDENCE ? "war_independence_declared" : "war_declared",
+                        reason == WarReason.INDEPENDENCE ? new Object[]{target}
+                                : new Object[]{target, plugin.getLocaleMessage(reason.messageKey())});
             } else {
                 send(player, result.getFailureMessageKey(), result.getFailureMessageArgs());
             }
@@ -112,7 +132,15 @@ public final class WarCommand implements CommandExecutor {
         String key = "war_declaration_blocked";
         Object[] args = new Object[0];
         switch (result.getStatus()) {
-            case APPROVED -> key = "war_vote_approved";
+            case APPROVED -> {
+                if (result.getProposal() != null
+                        && result.getProposal().getReason() == WarReason.INDEPENDENCE) {
+                    key = "war_independence_declared";
+                    args = new Object[]{target};
+                } else {
+                    key = "war_vote_approved";
+                }
+            }
             case PENDING -> key = "war_vote_pending";
             case ALREADY_PENDING -> {
                 key = "org_war_vote_already_pending";

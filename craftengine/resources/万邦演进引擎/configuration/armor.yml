@@ -1,0 +1,135 @@
+items:
+  world_dynamics_engine:herder_hood:
+
+    material: minecraft:leather_helmet
+    model:
+      type: minecraft:model
+      path: world_dynamics_engine:item/herder_hood
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/herder_hood
+    data:
+      item_name: "牧首兜帽"
+    settings:
+      equipment:
+        asset_id: world_dynamics_engine:herder
+        slot: head
+  world_dynamics_engine:herder_robe:
+
+    material: minecraft:leather_chestplate
+    model:
+      type: minecraft:model
+      path: world_dynamics_engine:item/herder
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/herder_robe
+    data:
+      item_name: "牧首法袍"
+    settings:
+      equipment:
+        asset_id: world_dynamics_engine:herder
+        slot: chest
+  world_dynamics_engine:lamb_hood:
+
+    material: minecraft:leather_helmet
+    model:
+      type: minecraft:model
+      path: world_dynamics_engine:item/lamb_hood
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/lamb_hood
+    data:
+      item_name: "教徒兜帽"
+    settings:
+      equipment:
+        asset_id: world_dynamics_engine:lamb
+        slot: head
+  world_dynamics_engine:lamb_robe:
+
+    material: minecraft:leather_chestplate
+    model:
+      type: minecraft:model
+      path: world_dynamics_engine:item/lamb_shirt
+      generation:
+        parent: minecraft:item/generated
+        textures:
+          layer0: world_dynamics_engine:item/lamb_shirt
+    data:
+      item_name: "教徒法袍"
+    settings:
+      equipment:
+        asset_id: world_dynamics_engine:lamb
+        slot: chest
+equipments:
+  world_dynamics_engine:herder:
+    type: component
+    humanoid: "world_dynamics_engine:entity/equipment/humanoid/herder"
+    humanoid_leggings: "world_dynamics_engine:entity/equipment/humanoid_leggings/herder"
+  world_dynamics_engine:lamb:
+    type: component
+    humanoid: "world_dynamics_engine:entity/equipment/humanoid/lamb"
+    humanoid_leggings: "world_dynamics_engine:entity/equipment/humanoid_leggings/lamb"
+recipes:
+  world_dynamics_engine:herder_hood:
+    type: shaped
+    pattern:
+      - "LLL"
+      - "L L"
+      - "B G"
+    ingredients:
+      L:
+        item: minecraft:white_wool
+      B:
+        item: world_dynamics_engine:blood
+      G:
+        item: minecraft:gold_ingot
+    result:
+      id: world_dynamics_engine:herder_hood
+      count: 1
+  world_dynamics_engine:herder_robe:
+    type: shaped
+    pattern:
+      - "LGL"
+      - "LBL"
+      - "LLL"
+    ingredients:
+      L:
+        item: minecraft:white_wool
+      B:
+        item: world_dynamics_engine:blood
+      G:
+        item: minecraft:gold_ingot
+    result:
+      id: world_dynamics_engine:herder_robe
+      count: 1
+  world_dynamics_engine:lamb_hood:
+    type: shaped
+    pattern:
+      - "LLL"
+      - "L L"
+      - " B "
+    ingredients:
+      L:
+        item: minecraft:red_wool
+      B:
+        item: world_dynamics_engine:blood
+    result:
+      id: world_dynamics_engine:lamb_hood
+      count: 1  
+  world_dynamics_engine:lamb_robe:
+    type: shaped
+    pattern:
+      - "L L"
+      - "LBL"
+      - "LLL"
+    ingredients:
+      L:
+        item: minecraft:red_wool
+      B:
+        item: world_dynamics_engine:blood
+    result:
+      id: world_dynamics_engine:lamb_robe
+      count: 1

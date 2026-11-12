@@ -67,17 +67,90 @@ council:
   approvalRatio: 0.5
   sanctionMaximumDays: 90
 
-# 动物击杀戒律的药水效果；适用戒律缺失时，对应行为不产生效果。
-doctrineEffects:
-  animalKilling:
-    # 总开关。
-    enabled: true
-    # 效果持续时间，限制为 1～3600 秒。
-    durationSeconds: 30
-    # 未破戒时的抗性提升等级；0 表示不施加。
-    resistanceLevel: 1
-    # 破戒时的虚弱等级；0 表示不施加。
-    weaknessLevel: 1
+# 意识形态仪式系统。
+# 仪式定义由意识形态最高统治机构创建；终身制/枢机制扣教廷金库，共议制按活跃教会金库占比分摊。
+rituals:
+  creationCost: "10000.00"
+  durationSeconds: 900
+  rangeBlocks: 48.0
+  weights:
+    follower: 0.02
+    cardinal: 0.05
+    ideologyLeader: 0.20
+    synodalChurchHead: 0.20
+
+# 心情按戒律态度权重累加；每个增减量默认在 30 分钟后消散。
+# 护甲戒律仅在合规状态切换时结算；进食和动物击杀在每次相关行为时结算。
+mood:
+  decayMinutes: 30
+  # 新玩家按累计在线时长逐档减少心情期望加成；每档默认 2 小时。
+  expectations:
+    newPlayer:
+      stepHours: 2
+      moodBonuses: [30, 24, 18, 12, 6, 0]
+    # 镇长与国王身份修正会叠加，并持续到 Towny 身份变化。
+    roles:
+      townMayor: -8
+      nationKing: -12
+  changes:
+    # attitude 未设置 moodChange 时使用此遵守增益/违背扣减基数。
+    compliant: 1
+    violation: 1
+  # 瞬时行为独立调整基础平复值，仍乘以相关戒律态度的 moodWeight。
+  instantActions:
+    animalKilling:
+      compliant: 1
+      violation: 1
+    humanMeat:
+      compliant: 1
+      violation: 1
+  doctrineActions:
+    animalKilling:
+      enabled: true
+  collapse:
+    # 剩余心情 34～49 为轻度，17～33 为中度，0～16 为重度。
+    severity:
+      mildMinimumMood: 34
+      moderateMinimumMood: 17
+    effects:
+      sadWander:
+        enabled: true
+        durationSeconds: 300
+        # 每 tick 的水平行走速度（方块/tick）与随机目的地最大距离（方块）。
+        walkSpeed: 0.11
+        wanderRadius: 6.0
+      darkVision:
+        enabled: true
+        durationSeconds: 180
+      crazyTalk:
+        enabled: true
+        durationSeconds: 180
+        # 发言间隔及候选语句；以发病玩家身份发送。
+        intervalSeconds: 15
+        messages:
+          - "我听见有人在呼唤我。"
+          - "我的日子好像永远都是那么糟糕"
+          - "为什么要让我过这样的生活"
+          - "不要不要不要不要不要不要不要"
+          - "我活的好苦。。。"
+          - "我恨这个世界"
+          - "好烦好烦好烦好烦好烦好烦好烦"
+          - "我做错了好多事，我是一个罪人"
+          - "我绝对不可救药，不可饶恕了"
+          - "谁也不要管我!谁也不要烦我!"
+          - "讨厌讨厌讨厌讨厌讨厌"
+          - "我想要休息，我想要喘口气.."
+          - "世界对我不公!"
+      catatonicStupor:
+        enabled: true
+        durationSeconds: 120
+      faithCrisis:
+        enabled: true
+        durationSeconds: 120
+    # 崩溃结束后获得的“得到宣泄”临时心情加成。
+    release:
+      moodBonus: 40
+      durationMinutes: 30
 
 economy:
   # 教廷单向金库：任何玩家可献金，所有玩家（包括领袖）均不能取款。
@@ -137,13 +210,17 @@ economy:
 # 模因注册表。
 # 用途：
 # 1. 这里只负责注册“可识别的模因定义”，用于意识形态模因系统。
-# 2. 模因本身不直接提供任何特殊效果逻辑，只负责展示以及对戒律态度的筛选限制。
+# 2. 模因可定义心情区间效果，以及灵感/崩溃结果效果；当前默认均为空。
 # 3. 每条模因至少需要 id、title 和 description。
 # 4. 可选字段 icon 使用原版物品名称或 CraftEngine 物品 ID，直接定义该模因在 GUI 中的图标。
 # 5. 可选字段 exclusive_with 用于声明互斥模因；只需一侧声明即可双向生效。
 # 6. 其他插件可监听 WDER 提供的模因注册事件，在运行时追加新的模因定义。
 # 7. 后续为某个意识形态分配模因时，建议直接保存 meme id，而不是标题文本。
 # 8. 删除某个定义会停用对应选项；重载时不会自动补回，玩家已保存的选择会保留但不生效。
+# 9. 每个模因可选配置 moodEffects.ranges、moodEffects.collapse 和 moodEffects.inspiration。
+#    collapse 可填 sad_wander、dark_vision、crazy_talk、catatonic_stupor、faith_crisis 限制崩溃效果池；
+#    当前选择的模因都未填写时，从该崩溃等级的全部启用效果中随机。
+#    ranges 项格式为 {min: 0, max: 24, effects: [effect_id]}，心情上下限均包含。
 memes:
   registry:
     original_sin:
@@ -232,8 +309,11 @@ memes:
 # 4. 可选字段 icon 使用原版物品名称或 CraftEngine 物品 ID，直接定义该戒律在 GUI 中的图标
 # 5. 每条戒律的第一项 attitude 会作为新意识形态的默认态度
 # 6. 某些模因可限制戒律不能切换到指定态度，并强制回到该模因对应的默认态度
-# 7. 模因不负责任何戒律效果实现；戒律态度的实际效果仅通过外部注册接口注入
+# 7. 戒律态度根据玩家行为调整心情，不直接赋予药水效果。
 # 8. 删除某个定义会停用对应选项；重载时不会自动补回，已保存的态度会保留但不生效。
+# 9. 可选 moodWeight 为 0～10；越极端的态度可设置越高，缺省为 1。
+# 10. 每个 attitude 可选设置 moodChange.compliant 和 moodChange.violation（0～100，均填非负数；违背值会作为扣减）；实际增减再乘以该态度的 moodWeight。
+#     未设置时继承 mood.changes；动物击杀与食用人肉未设置时继承各自的 mood.instantActions。
 doctrines:
   registry:
     "namespace:wde/war":
@@ -251,6 +331,9 @@ doctrines:
         - neutral:
             title: "中立"
             color: "&7"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "战争作为政治上的最后手段，我们不会滥用也不会放弃"
         - hate:
             title: "厌恶"
@@ -269,18 +352,22 @@ doctrines:
         - naked:
             title: "全裸"
             color: "&e"
+            moodWeight: 3
             lore: "身体不该被护甲束缚，赤裸才是最自然的状态。"
         - pants_only:
             title: "仅裤子"
             color: "&6"
+            moodWeight: 1
             lore: "最低限度的遮蔽已经足够，其余护甲都显得多余。"
         - unrestricted:
             title: "无规则"
             color: "&7"
+            moodWeight: 1
             lore: "穿不穿护甲都只是个人选择，无需上升为信条。"
         - fully_covered:
             title: "完全遮蔽"
             color: "&9"
+            moodWeight: 3
             lore: "身体应被严密遮蔽，完整护甲象征体面与秩序。"
     "namespace:wder/cannibalism":
       title: "食人"
@@ -290,30 +377,37 @@ doctrines:
         - abhor:
             title: "厌恶"
             color: "&4"
+            moodWeight: 3
             lore: "食人是最污秽的禁忌，应被彻底排斥。"
         - fear:
             title: "畏惧"
             color: "&6"
+            moodWeight: 2
             lore: "食人的想法令人本能恐惧，最好远远避开。"
         - disgust:
             title: "反感"
             color: "&e"
+            moodWeight: 1
             lore: "这种行为令人不适，即便不是绝对禁忌也不应鼓励。"
         - accept:
             title: "认可"
             color: "&a"
+            moodWeight: 1
             lore: "在特定处境下，食人可以被视为可接受的选择。"
         - enjoy:
             title: "喜好"
             color: "&b"
+            moodWeight: 2
             lore: "食用同类被当作某种独特而强烈的偏好。"
         - crave:
             title: "渴望"
             color: "&d"
+            moodWeight: 3
             lore: "对人肉有明显追求，它被看作特殊满足。"
         - greedy:
             title: "贪婪"
             color: "&5"
+            moodWeight: 4
             lore: "对血肉的占有欲永无止境，食人被视为应被放纵的欲望。"
     "namespace:wder/blood_feeding":
       title: "血食"
@@ -324,30 +418,37 @@ doctrines:
         - abhor:
             title: "厌恶"
             color: "&4"
+            moodWeight: 3
             lore: "饮血是不可接受的禁忌。"
         - fear:
             title: "畏惧"
             color: "&6"
+            moodWeight: 2
             lore: "血食令人不安，应当回避。"
         - disgust:
             title: "反感"
             color: "&e"
+            moodWeight: 1
             lore: "排斥食用血液。"
         - accept:
             title: "认可"
             color: "&a"
+            moodWeight: 1
             lore: "血食是可以接受的进食方式。"
         - enjoy:
             title: "喜好"
             color: "&b"
+            moodWeight: 2
             lore: "血食带来满足。"
         - crave:
             title: "渴望"
             color: "&d"
+            moodWeight: 3
             lore: "渴望饮血或食用血液。"
         - greedy:
             title: "贪婪"
             color: "&5"
+            moodWeight: 4
             lore: "对血食有强烈而持续的需求。"
     "namespace:wder/multiculturalism":
       title: "多元文化"
@@ -403,26 +504,32 @@ doctrines:
         - taboo:
             title: "禁忌"
             color: "&4"
+            moodWeight: 3
             lore: "杀生本身就是禁忌，轻易动刀不可接受。"
         - fear:
             title: "恐惧"
             color: "&6"
+            moodWeight: 2
             lore: "屠宰令人本能不安，应尽可能回避。"
         - oppose:
             title: "反对"
             color: "&e"
+            moodWeight: 1
             lore: "不赞同主动宰杀，但并未上升到绝对禁令。"
         - neutral:
             title: "无态度"
             color: "&7"
+            moodWeight: 1
             lore: "这只是日常生存行为，没有特别道德倾向。"
         - support:
             title: "支持"
             color: "&a"
+            moodWeight: 1
             lore: "宰杀动物是正当资源获取方式，应被允许。"
         - love:
             title: "喜爱"
             color: "&b"
+            moodWeight: 2
             lore: "屠宰与分肉被当作令人满足的事务。"
     "namespace:wder/betrayal":
       title: "变节"
@@ -495,18 +602,22 @@ doctrines:
         - abhor:
             title: "厌恶"
             color: "&4"
+            moodWeight: 3
             lore: "无辜动物不该被屠害，这种行为令人厌恶。"
         - fear:
             title: "畏惧"
             color: "&6"
+            moodWeight: 2
             lore: "这种伤害会引起本能恐惧，最好彻底避开。"
         - disgust:
             title: "反感"
             color: "&e"
+            moodWeight: 1
             lore: "并不认同这种行为，哪怕并非绝对禁令。"
         - neutral:
             title: "无态度"
             color: "&7"
+            moodWeight: 1
             lore: "这不被视为特殊道德议题。"
     "namespace:wder/lighting":
       title: "照明"
@@ -542,26 +653,32 @@ doctrines:
         - abhor_meat:
             title: "厌恶"
             color: "&4"
+            moodWeight: 3
             lore: "食肉令人排斥，克制肉欲才算纯净。"
         - fear_meat:
             title: "畏惧"
             color: "&6"
+            moodWeight: 2
             lore: "肉食让人感到本能不安，应尽可能远离。"
         - disgust_meat:
             title: "反感"
             color: "&e"
+            moodWeight: 1
             lore: "虽然并非绝对禁忌，但仍明显不喜欢肉食。"
         - anti_vegetarian_disgust:
             title: "反感素食"
             color: "&e"
+            moodWeight: 1
             lore: "排斥长期素食，认为它违背正常生活。"
         - anti_vegetarian_hate:
             title: "憎恶素食"
             color: "&c"
+            moodWeight: 2
             lore: "将素食视为严重偏差，难以容忍。"
         - anti_vegetarian_abhor:
             title: "厌恶素食"
             color: "&4"
+            moodWeight: 3
             lore: "素食被看作令人厌恶的禁欲倾向，应明确抵制。"
     "namespace:wder/mining":
       title: "采矿"

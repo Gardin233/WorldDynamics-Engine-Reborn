@@ -9,6 +9,7 @@ import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineAttitudeEffect;
 import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineDefinition;
 import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineMemeConstraint;
 import com.thatguycy.worlddynamicsengine.model.IdeologyMemeDefinition;
+import com.thatguycy.worlddynamicsengine.model.IdeologyMemeMoodEffect;
 import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -48,6 +51,8 @@ public class ReligionManager {
     private final Map<String, IdeologyMemeDefinition> registeredMemes;
     private final Map<String, IdeologyDoctrineDefinition> registeredDoctrines;
     private final Map<String, List<IdeologyDoctrineAttitudeEffect>> doctrineEffectsByAttitude;
+    private final Map<UUID, String> observedResidentReligions = new HashMap<>();
+    private final Set<UUID> dissolvingReligions = new LinkedHashSet<>();
 
     public ReligionManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -75,6 +80,7 @@ public class ReligionManager {
         if (migrated) {
             dataStorageManager.saveStringKeyed(STORAGE_CATEGORY, religions);
         }
+        refreshResidentReligionSnapshot();
     }
 
     public synchronized void saveReligions() {
@@ -144,6 +150,16 @@ public class ReligionManager {
                 .findFirst().orElse(null);
     }
 
+    public synchronized boolean canLeaveLeadership(UUID leaderUuid) {
+        WDEreligion religion = getLedIdeology(leaderUuid);
+        if (religion == null) return true;
+        List<WDEresident> otherFollowers = eligibleFollowers(religion).stream()
+                .filter(follower -> !leaderUuid.equals(follower.getUserUUID()))
+                .toList();
+        return otherFollowers.isEmpty()
+                || otherFollowers.stream().anyMatch(follower -> isEligibleCandidate(religion, follower.getUserUUID()));
+    }
+
     public synchronized void publishPersistedReligion(WDEreligion religion) {
         if (religion == null) return;
         religions.put(religion.getReligionName().toLowerCase(Locale.ROOT), religion);
@@ -190,8 +206,70 @@ public class ReligionManager {
     }
 
     public synchronized void removeReligion(WDEreligion religion) {
-        religions.remove(religion.getReligionName().toLowerCase(), religion);
-        saveReligions();
+        if (religion == null || !eligibleFollowers(religion).isEmpty()) {
+            throw new IllegalStateException("An ideology can only dissolve after its eligible followers reach zero.");
+        }
+        dissolveReligion(religion);
+    }
+
+    public synchronized void forceRemoveReligion(WDEreligion religion) {
+        if (religion == null) return;
+        dissolveReligion(religion);
+    }
+
+    private void dissolveReligion(WDEreligion religion) {
+        String key = religion.getReligionName().toLowerCase(Locale.ROOT);
+        UUID ideologyUuid = religion.getIdeologyUuid();
+        if (religions.get(key) != religion || !dissolvingReligions.add(ideologyUuid)) return;
+        try {
+            WorldDynamicsEngine engine = (WorldDynamicsEngine) plugin;
+            dataStorageManager.saveEntity("religion_archives", ideologyUuid.toString(), religion);
+            if (engine.getIdeologyChurchManager() != null) {
+                engine.getIdeologyChurchManager().closeIdeology(religion);
+            }
+
+            for (var town : engine.getTownManager().getAllTowns()) {
+                if (religion.getReligionName().equalsIgnoreCase(town.getReligionName())) {
+                    town.setReligionName("None");
+                }
+            }
+            engine.getTownManager().saveTowns();
+
+            for (var nation : engine.getNationManager().getAllNations()) {
+                if (religion.getReligionName().equalsIgnoreCase(nation.getReligionName())) {
+                    nation.setReligionName("None");
+                }
+            }
+            engine.getNationManager().saveNations();
+
+            for (var organization : engine.getOrgManager().getAllOrganizations()) {
+                if (engine.getOrgManager().isIdeologicalAlliance(organization)
+                        && religion.getReligionName().equalsIgnoreCase(
+                        engine.getOrgManager().getIdeologicalAllianceIdeology(organization))) {
+                    organization.setSetting("allianceIdeology", "None");
+                }
+            }
+            engine.getOrgManager().saveOrganizations();
+
+            religions.remove(key, religion);
+            saveReligions();
+            refreshResidentReligionSnapshot();
+        } finally {
+            dissolvingReligions.remove(ideologyUuid);
+        }
+    }
+
+    private void refreshResidentReligionSnapshot() {
+        observedResidentReligions.clear();
+        for (WDEresident resident : ((WorldDynamicsEngine) plugin).getResidentManager().getAllResidents()) {
+            observedResidentReligions.put(resident.getUserUUID(), resident.getReligionName());
+        }
+    }
+
+    private synchronized void dissolveEmptyReligions() {
+        for (WDEreligion religion : new ArrayList<>(religions.values())) {
+            if (eligibleFollowers(religion).isEmpty()) removeReligion(religion);
+        }
     }
 
     public synchronized void saveReligion(WDEreligion religion) {
@@ -345,6 +423,38 @@ public class ReligionManager {
         if (residentUuid == null) return;
         WDEresident resident = ((WorldDynamicsEngine) plugin).getResidentManager().getResident(residentUuid);
         String currentIdeology = resident == null ? null : resident.getReligionName();
+        String previousIdeology = resident == null
+                ? observedResidentReligions.remove(residentUuid)
+                : observedResidentReligions.put(residentUuid, currentIdeology);
+        if (previousIdeology != null && currentIdeology != null
+                && !previousIdeology.equalsIgnoreCase(currentIdeology)) {
+            WDEreligion previousReligion = getReligion(previousIdeology);
+            if (previousReligion != null) {
+                List<WDEresident> followers = eligibleFollowers(previousReligion);
+                if (followers.isEmpty()) {
+                    removeReligion(previousReligion);
+                } else if (previousReligion.getPontiffUuid().equals(residentUuid)) {
+                    List<WDEresident> successors = followers.stream()
+                            .filter(follower -> isEligibleCandidate(previousReligion, follower.getUserUUID()))
+                            .toList();
+                    if (successors.isEmpty()) {
+                        plugin.getLogger().warning("Could not transfer ideology leadership after leader "
+                                + residentUuid + " left " + previousReligion.getReligionName()
+                                + ": no eligible follower is available.");
+                        return;
+                    }
+                    WDEresident successor = successors.get(ThreadLocalRandom.current().nextInt(successors.size()));
+                    String successorName = successor.getUsername();
+                    if (successorName == null || successorName.isBlank()) {
+                        successorName = successor.getUserUUID().toString();
+                    }
+                    WDEreligion updated = copy(previousReligion);
+                    updated.transferLeadership(successor.getUserUUID(), successorName,
+                            "LEADER_LEFT_FAITH", System.currentTimeMillis());
+                    persistGovernanceUpdate(updated);
+                }
+            }
+        }
         for (WDEreligion religion : new ArrayList<>(religions.values())) {
             if (religion.isCardinal(residentUuid)
                     && (currentIdeology == null || !religion.getReligionName().equalsIgnoreCase(currentIdeology))) {
@@ -700,6 +810,27 @@ public class ReligionManager {
         return normalizedAttitudeId == null ? null : doctrine.getAttitude(normalizedAttitudeId);
     }
 
+    public int getDoctrineMoodWeight(String doctrineId, String attitudeId) {
+        IdeologyDoctrineAttitudeDefinition attitude = getDoctrineAttitudeDefinition(doctrineId, attitudeId);
+        return attitude == null ? 1 : attitude.getMoodWeight();
+    }
+
+    public int getDoctrineMoodChangePerWeight(String doctrineId, String attitudeId, boolean compliant,
+                                              String instantAction) {
+        IdeologyDoctrineAttitudeDefinition attitude = getDoctrineAttitudeDefinition(doctrineId, attitudeId);
+        int attitudeOverride = attitude == null ? -1
+                : compliant ? attitude.getCompliantMoodChange() : attitude.getViolationMoodChange();
+        if (attitudeOverride >= 0) return attitudeOverride;
+
+        String changeType = compliant ? "compliant" : "violation";
+        var config = ((WorldDynamicsEngine) plugin).getIdeologyConfig();
+        if (config == null) return 1;
+        String sharedPath = "mood.changes." + changeType;
+        int sharedDefault = Math.max(0, config.getInt(sharedPath, 1));
+        if (instantAction == null) return sharedDefault;
+        return Math.max(0, config.getInt("mood.instantActions." + instantAction + "." + changeType, sharedDefault));
+    }
+
     public boolean initializeDoctrineAttitudes(WDEreligion religion) {
         return reconcileDoctrineAttitudes(religion);
     }
@@ -849,11 +980,16 @@ public class ReligionManager {
                 tickGovernance();
             }
         }.runTaskTimer(plugin, 20L * 60, 20L * 60);
+        Bukkit.getScheduler().runTask(plugin, this::dissolveEmptyReligions);
     }
 
     private synchronized void tickGovernance() {
         long now = System.currentTimeMillis();
         for (WDEreligion religion : new ArrayList<>(religions.values())) {
+            if (eligibleFollowers(religion).isEmpty()) {
+                removeReligion(religion);
+                continue;
+            }
             WDEreligion updated = copy(religion);
             boolean changed = reconcileCardinals(updated);
             if (updated.getGovernanceMode() != WDEreligion.GovernanceMode.CARDINAL) {
@@ -1144,7 +1280,12 @@ public class ReligionManager {
                     ideologyConfig.getString(basePath + ".color", ""),
                     ideologyConfig.getString(basePath + ".icon", ""),
                     "config",
-                    parseMemeExclusiveWith(ideologyConfig.get(basePath + ".exclusive_with"))
+                    parseMemeExclusiveWith(ideologyConfig.get(basePath + ".exclusive_with")),
+                    parseMemeMoodEffects(ideologyConfig.get(basePath + ".moodEffects.ranges")),
+                    Map.of(
+                            "collapse", parseStringList(ideologyConfig.get(basePath + ".moodEffects.collapse")),
+                            "inspiration", parseStringList(ideologyConfig.get(basePath + ".moodEffects.inspiration"))
+                    )
             );
             if (!meme.isValid()) {
                 plugin.getLogger().warning("Skipped ideology meme with missing title: " + key);
@@ -1239,12 +1380,55 @@ public class ReligionManager {
         String title = getStringValue(values, "title", rawAttitudeId);
         String lore = getStringValue(values, "lore", "");
         String color = getStringValue(values, "color", "");
-        IdeologyDoctrineAttitudeDefinition attitude = new IdeologyDoctrineAttitudeDefinition(attitudeId, title, lore, color);
+        int moodWeight = Math.max(0, Math.min(10,
+                integerValue(values.get("moodWeight"), defaultMoodWeight(doctrineId, attitudeId))));
+        Map<?, ?> moodChange = asMap(values.get("moodChange"));
+        int compliantMoodChange = moodChange.containsKey("compliant")
+                ? integerValue(moodChange.get("compliant"), -1) : -1;
+        int violationMoodChange = moodChange.containsKey("violation")
+                ? integerValue(moodChange.get("violation"), -1) : -1;
+        IdeologyDoctrineAttitudeDefinition attitude =
+                new IdeologyDoctrineAttitudeDefinition(attitudeId, title, lore, color, moodWeight,
+                        compliantMoodChange, violationMoodChange);
         if (!attitude.isValid()) {
             plugin.getLogger().warning("Skipped doctrine attitude with missing title: " + rawAttitudeId);
             return;
         }
         attitudes.add(attitude);
+    }
+
+    private int defaultMoodWeight(String doctrineId, String attitudeId) {
+        String doctrinePath = doctrineId.substring(doctrineId.lastIndexOf('/') + 1);
+        String attitude = attitudeId.substring(attitudeId.lastIndexOf('/') + 1);
+        return switch (doctrinePath) {
+            case "armor_wearing" -> Set.of("naked", "fully_covered").contains(attitude) ? 3 : 1;
+            case "cannibalism", "blood_feeding" -> switch (attitude) {
+                case "abhor" -> 3;
+                case "fear" -> 2;
+                case "disgust", "accept" -> 1;
+                case "enjoy" -> 2;
+                case "crave" -> 3;
+                case "greedy" -> 4;
+                default -> 1;
+            };
+            case "meat_eating" -> switch (attitude) {
+                case "abhor_meat", "anti_vegetarian_abhor" -> 3;
+                case "fear_meat", "anti_vegetarian_hate" -> 2;
+                default -> 1;
+            };
+            case "slaughter_animals" -> switch (attitude) {
+                case "taboo" -> 3;
+                case "fear" -> 2;
+                case "love" -> 2;
+                default -> 1;
+            };
+            case "killing_innocent_animals" -> switch (attitude) {
+                case "abhor" -> 3;
+                case "fear" -> 2;
+                default -> 1;
+            };
+            default -> 1;
+        };
     }
 
     private List<IdeologyDoctrineMemeConstraint> parseDoctrineMemeConstraints(String doctrineId, Object rawConstraints) {
@@ -1293,6 +1477,42 @@ public class ReligionManager {
             }
         }
         return exclusiveWith;
+    }
+
+    private List<IdeologyMemeMoodEffect> parseMemeMoodEffects(Object rawValue) {
+        List<IdeologyMemeMoodEffect> effects = new ArrayList<>();
+        if (!(rawValue instanceof Collection<?> ranges)) return effects;
+        for (Object rawRange : ranges) {
+            Map<?, ?> range = asMap(rawRange);
+            if (range.isEmpty()) continue;
+            int minimum = integerValue(range.get("min"), -1);
+            int maximum = integerValue(range.get("max"), -1);
+            List<String> effectIds = parseStringList(range.get("effects"));
+            if (minimum < 0 || maximum < minimum || maximum > 100) {
+                plugin.getLogger().warning("Skipped invalid mood effect range for meme: " + range);
+                continue;
+            }
+            effects.add(new IdeologyMemeMoodEffect(minimum, maximum, effectIds));
+        }
+        return effects;
+    }
+
+    private List<String> parseStringList(Object rawValue) {
+        if (!(rawValue instanceof Collection<?> values)) return List.of();
+        List<String> strings = new ArrayList<>();
+        for (Object value : values) {
+            if (value != null && !String.valueOf(value).isBlank()) strings.add(String.valueOf(value).trim());
+        }
+        return List.copyOf(strings);
+    }
+
+    private int integerValue(Object value, int defaultValue) {
+        if (value instanceof Number number) return number.intValue();
+        try {
+            return value == null ? defaultValue : Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException ignored) {
+            return defaultValue;
+        }
     }
 
     private List<String> normalizeAttitudeIdList(String doctrineId, Object rawValue) {

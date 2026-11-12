@@ -60,6 +60,7 @@ public final class TownyLifecycleListener implements Listener {
             plugin.getNationHistoryManager().renameTown(event.getTown().getNationOrNull().getName(),
                     event.getOldName(), event.getTown().getName());
         }
+        plugin.getOrgManager().renameWarGoalTown(event.getOldName(), event.getTown().getName());
         towns.renameTown(event.getOldName(), event.getTown().getName());
         nations.refreshTownHierarchy();
     }

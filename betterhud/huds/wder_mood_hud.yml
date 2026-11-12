@@ -1,0 +1,7 @@
+wder_mood_hud:
+  layouts:
+    1:
+      name: wder_mood
+      x: 50
+      y: -100
+      scale: 0.5

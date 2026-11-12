@@ -4,12 +4,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import com.thatguycy.worlddynamicsengine.util.TextColors;
 
 /**
- * 描述模因的标识、展示信息、图标和互斥关系，供意识形态组合校验使用。
+ * Describes a meme's display data, exclusivity, mood ranges and outcome effect identifiers.
  */
 public class IdeologyMemeDefinition {
     private final String id;
@@ -19,6 +22,8 @@ public class IdeologyMemeDefinition {
     private final String icon;
     private final String source;
     private final Set<String> exclusiveWith;
+    private final List<IdeologyMemeMoodEffect> moodEffects;
+    private final Map<String, List<String>> outcomeEffects;
 
     public IdeologyMemeDefinition(String id, String title, String description) {
         this(id, title, description, "", "", "config", Collections.emptySet());
@@ -37,6 +42,19 @@ public class IdeologyMemeDefinition {
     }
 
     public IdeologyMemeDefinition(String id, String title, String description, String color, String icon, String source, Collection<String> exclusiveWith) {
+        this(id, title, description, color, icon, source, exclusiveWith, Collections.emptyList());
+    }
+
+    public IdeologyMemeDefinition(String id, String title, String description, String color, String icon,
+                                  String source, Collection<String> exclusiveWith,
+                                  Collection<IdeologyMemeMoodEffect> moodEffects) {
+        this(id, title, description, color, icon, source, exclusiveWith, moodEffects, Collections.emptyMap());
+    }
+
+    public IdeologyMemeDefinition(String id, String title, String description, String color, String icon,
+                                  String source, Collection<String> exclusiveWith,
+                                  Collection<IdeologyMemeMoodEffect> moodEffects,
+                                  Map<String, List<String>> outcomeEffects) {
         this.id = normalizeId(id);
         this.title = title == null ? "" : title.trim();
         this.description = description == null ? "" : description.trim();
@@ -52,6 +70,16 @@ public class IdeologyMemeDefinition {
                 }
             }
         }
+        this.moodEffects = moodEffects == null ? Collections.emptyList() : List.copyOf(moodEffects);
+        Map<String, List<String>> normalizedOutcomes = new LinkedHashMap<>();
+        if (outcomeEffects != null) {
+            outcomeEffects.forEach((outcome, effects) -> {
+                if (outcome != null && effects != null) {
+                    normalizedOutcomes.put(outcome.trim().toLowerCase(Locale.ROOT), List.copyOf(effects));
+                }
+            });
+        }
+        this.outcomeEffects = Collections.unmodifiableMap(normalizedOutcomes);
     }
 
     public String getId() {
@@ -88,6 +116,15 @@ public class IdeologyMemeDefinition {
 
     public boolean isExclusiveWith(String memeId) {
         return exclusiveWith.contains(normalizeId(memeId));
+    }
+
+    public List<IdeologyMemeMoodEffect> getMoodEffects() {
+        return moodEffects;
+    }
+
+    public List<String> getOutcomeEffects(String outcome) {
+        if (outcome == null) return Collections.emptyList();
+        return outcomeEffects.getOrDefault(outcome.trim().toLowerCase(Locale.ROOT), Collections.emptyList());
     }
 
     public boolean isValid() {

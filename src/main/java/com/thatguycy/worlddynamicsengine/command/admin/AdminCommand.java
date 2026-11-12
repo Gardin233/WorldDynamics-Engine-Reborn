@@ -69,6 +69,7 @@ public final class AdminCommand implements CommandExecutor {
             new Entry("war", "independencescore", "<org> <subject> <rebelScore> <empireScore>"),
             new Entry("war", "truce", "<nation> <opponent> <hours|0>"),
             new Entry("war", "reviewtreaty", "<org> <receiverNation> <opponent> <accept|reject> confirm"),
+            new Entry("ideology", "collapse", "<player> <effect>"),
             new Entry("ideology", "create", "<name> <founderPlayer>"),
             new Entry("ideology", "delete", "<ideology> confirm"),
             new Entry("ideology", "leader", "<ideology> <player>"),
@@ -215,6 +216,7 @@ public final class AdminCommand implements CommandExecutor {
                 size(a, 5);
                 String type = a[4].toUpperCase(Locale.ROOT);
                 require(List.of("DICTATORSHIP", "DEMOCRACY", "NOBLE_COUNCIL").contains(type), "admin_invalid_argument");
+                require(!plugin.getNationManager().isNationRegimeLocked(n), "nation_regime_locked");
                 n.setGovernmentType(type); cancelNationElection(n); cancelArmyElection(n);
                 n.setLastElectionAt(System.currentTimeMillis());
                 n.setElectionIntervalDays(plugin.getNationManager().getDefaultNationElectionIntervalDays());
@@ -458,23 +460,31 @@ public final class AdminCommand implements CommandExecutor {
     private void ideology(String action, String[] a) {
         var manager = plugin.getReligionManager();
         switch (action) {
+            case "collapse" -> {
+                size(a, 5);
+                var target = org.bukkit.Bukkit.getPlayerExact(a[3]);
+                require(target != null, "admin_not_found");
+                require(plugin.getMentalCollapseManager() != null
+                        && plugin.getMentalCollapseManager().triggerManualCollapse(target, a[4]),
+                        "admin_operation_blocked");
+            }
             case "create" -> {
                 size(a, 5); validName(a[3]); Resident founder = resident(a[4]);
                 require(!manager.religionExists(a[3]), "admin_operation_blocked");
                 require(!manager.isReligionLeader(founder.getUUID()), "religion_leader_cannot_create");
                 manager.addReligion(new WDEreligion(a[3], founder.getUUID(), founder.getName(), System.currentTimeMillis()));
+                WDEresident founderData = plugin.getResidentManager()
+                        .getOrCreateResident(founder.getUUID(), founder.getName());
+                founderData.setReligionName(a[3]);
+                founderData.setReligionChosen(true);
+                plugin.getResidentManager().saveResidents();
+                manager.onResidentIdeologyChanged(founder.getUUID());
+                plugin.getIdeologyChurchManager().onResidentIdeologyChanged(founder.getUUID());
                 broadcast("religion_broadcast_created", a[3], founder.getName());
             }
             case "delete" -> {
                 size(a, 5); confirm(a[4]); WDEreligion r = religion(a[3]);
-                String name = r.getReligionName();
-                require(plugin.getResidentManager().getAllResidents().stream().noneMatch(p -> name.equalsIgnoreCase(p.getReligionName()))
-                        && plugin.getTownManager().getAllTowns().stream().noneMatch(t -> name.equalsIgnoreCase(t.getReligionName()))
-                        && plugin.getNationManager().getAllNations().stream().noneMatch(n -> name.equalsIgnoreCase(n.getReligionName()))
-                        && plugin.getOrgManager().getAllOrganizations().stream().noneMatch(o -> name.equalsIgnoreCase(plugin.getOrgManager().getIdeologicalAllianceIdeology(o)))
-                        && plugin.getIdeologyChurchManager().getChurches(name).isEmpty()
-                        && plugin.getIdeologyChurchManager().getProposals(name, true).isEmpty(), "admin_in_use");
-                manager.removeReligion(r);
+                manager.forceRemoveReligion(r);
             }
             case "leader" -> {
                 size(a, 5); WDEreligion r = religion(a[3]); Resident player = resident(a[4]);
@@ -491,9 +501,9 @@ public final class AdminCommand implements CommandExecutor {
                     case "player" -> {
                         WDEresident r = playerData(a[4]);
                         if (name != null) {
-                            var currentIdeology = plugin.getReligionManager().getLedIdeology(r.getUserUUID());
-                            require(currentIdeology == null
-                                    || name.equalsIgnoreCase(currentIdeology.getReligionName()), "religion_leader_must_abdicate");
+                            require(name.equalsIgnoreCase(r.getReligionName())
+                                    || plugin.getReligionManager().canLeaveLeadership(r.getUserUUID()),
+                                    "religion_leader_no_successor");
                             require(!plugin.getIdeologyChurchManager().isChurchHead(r.getUserUUID())
                                     || name.equalsIgnoreCase(r.getReligionName()), "church_head_must_abdicate");
                             r.setReligionName(name);

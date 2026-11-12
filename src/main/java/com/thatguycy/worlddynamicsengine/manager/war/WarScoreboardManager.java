@@ -184,6 +184,38 @@ public final class WarScoreboardManager {
         List<String> lines = new ArrayList<>();
         lines.add(TextColors.GOLD + shortTitle(details.title()));
         lines.add(TextColors.GRAY + "理由 " + plugin.getLocaleMessage(details.reason().messageKey()));
+        OrgManager.WarGoalDisplay goal = plugin.getOrgManager().getWarGoalDisplay(details.focusKey());
+        if (goal != null) {
+            String goalTypeKey = switch (goal.type()) {
+                case CAPTURE_TOWN -> "war_goal_type_capture_town";
+                case OCCUPY_CAPITAL -> "war_goal_type_occupy_capital";
+                case SHOW_HEGEMONY -> "war_goal_type_show_hegemony";
+                case NONE -> "";
+            };
+            if (!goalTypeKey.isBlank()) {
+                lines.add(TextColors.YELLOW + plugin.getLocaleMessage(goalTypeKey) + " " + shortName(goal.target()));
+            }
+            if (goal.type() == com.thatguycy.worlddynamicsengine.model.war.WarGoalType.SHOW_HEGEMONY) {
+                lines.add(TextColors.GOLD + plugin.formatLocaleMessage(plugin.userLang,
+                        "war_goal_progress_defeats", goal.progress(), goal.required()));
+            } else if (!goal.conditionMet()) {
+                lines.add(TextColors.GRAY + plugin.formatLocaleMessage(plugin.userLang,
+                        "war_goal_progress_waiting",
+                        plugin.getWarConfig().getDouble("warGoals.controlThresholdPercent", 75D)));
+            }
+            if (!goal.forcedTreatyAllowed()) {
+                lines.add(TextColors.GRAY + plugin.getLocaleMessage("war_goal_no_forced_treaty"));
+            } else if (goal.forcedReady()) {
+                lines.add(TextColors.GREEN + plugin.getLocaleMessage("war_goal_progress_ready"));
+            } else if (goal.conditionMet()) {
+                lines.add(TextColors.YELLOW + plugin.formatLocaleMessage(plugin.userLang,
+                        "war_goal_progress_hold", Math.max(1L, (goal.holdRemainingMillis() + 59_999L) / 60_000L)));
+            }
+            if (details.defenderPerspective()
+                    && plugin.getOrgManager().canDefenderForceIndependence(details.focusKey())) {
+                lines.add(TextColors.GREEN + plugin.getLocaleMessage("war_goal_defender_independence_ready"));
+            }
+        }
         lines.add((details.defenderPerspective() ? TextColors.BLUE : TextColors.RED)
                 + "身份 " + (details.defenderPerspective() ? "防守方" : "进攻方"));
         lines.add(TextColors.GREEN + "我方 " + decimal(details.friendlyScore()));
