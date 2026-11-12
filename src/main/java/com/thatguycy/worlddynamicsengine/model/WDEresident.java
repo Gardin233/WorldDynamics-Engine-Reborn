@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +18,7 @@ import org.bukkit.configuration.serialization.SerializableAs;
 @SerializableAs("WDEresident")
 public class WDEresident implements ConfigurationSerializable {
     private static final long DEFAULT_MOOD_DURATION_MILLIS = 30L * 60L * 1000L;
+    public static final String DEHUMANIZED_FLAG = "wde:dehumanized";
 
     private UUID userUUID;
     private String username;
@@ -29,6 +31,7 @@ public class WDEresident implements ConfigurationSerializable {
     private String focusedWarKey;
     private int mood;
     private final List<MoodChange> moodChanges = new ArrayList<>();
+    private final Map<String, Integer> persistentMoodChanges = new LinkedHashMap<>();
     private String activeCollapseId;
     private long activeCollapseExpiresAt;
     private Set<String> appliedBackgroundBonusIds;
@@ -36,7 +39,11 @@ public class WDEresident implements ConfigurationSerializable {
 
     private record MoodChange(String source, int delta, long expiresAt) {}
 
-    public record MoodChangeEntry(String source, int delta, long expiresAt) {}
+    public record MoodChangeEntry(String source, int delta, long expiresAt, boolean permanent) {
+        public MoodChangeEntry(String source, int delta, long expiresAt) {
+            this(source, delta, expiresAt, false);
+        }
+    }
 
     public WDEresident(UUID userUUID, String username) {
         this.userUUID = userUUID;
@@ -60,6 +67,7 @@ public class WDEresident implements ConfigurationSerializable {
         this.userUUID = UUID.fromString(String.valueOf(map.get("userUUID")));
         this.username = String.valueOf(map.getOrDefault("username", "Unknown"));
         this.religionName = String.valueOf(map.getOrDefault("religionName", "None"));
+        this.flags = readStringSet(map.get("flags"));
         String churchUuidValue = normalizeStringValue(map.get("churchUuid"));
         this.churchUuid = churchUuidValue.isBlank() ? null : UUID.fromString(churchUuidValue);
         Object rawChurchChangedAt = map.get("churchChangedAt");
@@ -90,15 +98,29 @@ public class WDEresident implements ConfigurationSerializable {
             moodChanges.add(new MoodChange("legacy", number.intValue() - 50,
                     System.currentTimeMillis() + DEFAULT_MOOD_DURATION_MILLIS));
         }
+        Object rawPersistentMoodChanges = map.get("persistentMoodChanges");
+        if (rawPersistentMoodChanges instanceof Map<?, ?> changes) {
+            for (Map.Entry<?, ?> entry : changes.entrySet()) {
+                String source = normalizeStringValue(entry.getKey());
+                if (!(entry.getValue() instanceof Number delta) || source.isBlank() || delta.intValue() == 0) {
+                    continue;
+                }
+                persistentMoodChanges.put(source, clampMoodDelta(delta.intValue()));
+            }
+        }
+        if (isDehumanized()) {
+            moodChanges.clear();
+            persistentMoodChanges.clear();
+            mood = 50;
+        }
         refreshMood(System.currentTimeMillis());
         this.activeCollapseId = normalizeStringValue(map.get("activeCollapseId"));
         Object rawCollapseExpiresAt = map.get("activeCollapseExpiresAt");
         this.activeCollapseExpiresAt = rawCollapseExpiresAt instanceof Number number ? number.longValue() : 0L;
-        if (this.activeCollapseId.isBlank() || this.activeCollapseExpiresAt <= System.currentTimeMillis()) {
+        if (this.activeCollapseId.isBlank()) {
             clearActiveCollapse();
         }
         this.appliedBackgroundBonusIds = readStringSet(map.get("appliedBackgroundBonusIds"));
-        this.flags = readStringSet(map.get("flags"));
     }
 
     // Method for serialization
@@ -122,6 +144,7 @@ public class WDEresident implements ConfigurationSerializable {
                     "expiresAt", change.expiresAt()));
         }
         map.put("moodChanges", serializedMoodChanges);
+        map.put("persistentMoodChanges", new LinkedHashMap<>(persistentMoodChanges));
         map.put("activeCollapseId", activeCollapseId);
         map.put("activeCollapseExpiresAt", activeCollapseExpiresAt);
         map.put("appliedBackgroundBonusIds", appliedBackgroundBonusIds);
@@ -227,6 +250,12 @@ public class WDEresident implements ConfigurationSerializable {
     }
 
     public void setMood(int mood) {
+        if (isDehumanized()) {
+            moodChanges.clear();
+            persistentMoodChanges.clear();
+            this.mood = 50;
+            return;
+        }
         this.mood = clampMood(mood);
         moodChanges.clear();
         int delta = this.mood - 50;
@@ -242,6 +271,7 @@ public class WDEresident implements ConfigurationSerializable {
     }
 
     public int addMoodChange(String source, int delta, long expiresAt) {
+        if (isDehumanized()) return 50;
         long now = System.currentTimeMillis();
         refreshMood(now);
         int boundedDelta = Math.max(-100, Math.min(100, delta));
@@ -254,9 +284,48 @@ public class WDEresident implements ConfigurationSerializable {
         return mood;
     }
 
+    /** Replaces all persistent changes from one source family with its current value. */
+    public boolean replacePersistentMoodChanges(String sourcePrefix, String source, int delta) {
+        if (isDehumanized()) return false;
+        String normalizedPrefix = normalizeStringValue(sourcePrefix);
+        if (normalizedPrefix.isBlank()) return false;
+        String normalizedSource = normalizeStringValue(source);
+        int boundedDelta = clampMoodDelta(delta);
+        if (!normalizedSource.startsWith(normalizedPrefix) || boundedDelta == 0) normalizedSource = "";
+        String legacyPrefix = normalizedPrefix.startsWith("doctrine|")
+                && normalizedPrefix.endsWith("|") && normalizedPrefix.length() > "doctrine||".length()
+                ? "doctrine:" + normalizedPrefix.substring("doctrine|".length(), normalizedPrefix.length() - 1) + ":"
+                : "";
+
+        Map<String, Integer> previous = new LinkedHashMap<>();
+        persistentMoodChanges.forEach((key, value) -> {
+            if (key.startsWith(normalizedPrefix)) previous.put(key, value);
+        });
+        boolean removedLegacyTimedChanges = moodChanges.removeIf(change ->
+                change.source().startsWith(normalizedPrefix)
+                        || (!legacyPrefix.isBlank() && change.source().startsWith(legacyPrefix)));
+        persistentMoodChanges.keySet().removeIf(key -> key.startsWith(normalizedPrefix));
+        if (!normalizedSource.isBlank()) persistentMoodChanges.put(normalizedSource, boundedDelta);
+
+        Map<String, Integer> current = new LinkedHashMap<>();
+        persistentMoodChanges.forEach((key, value) -> {
+            if (key.startsWith(normalizedPrefix)) current.put(key, value);
+        });
+        if (previous.equals(current) && !removedLegacyTimedChanges) return false;
+        mood = calculateMood(System.currentTimeMillis());
+        return true;
+    }
+
     /** Removes expired deltas and recalculates mood from the neutral baseline. */
     public boolean refreshMood(long now) {
         int previous = mood;
+        if (isDehumanized()) {
+            boolean changed = !moodChanges.isEmpty() || !persistentMoodChanges.isEmpty() || mood != 50;
+            moodChanges.clear();
+            persistentMoodChanges.clear();
+            mood = 50;
+            return changed;
+        }
         boolean removed = moodChanges.removeIf(change -> change.expiresAt() <= now);
         mood = calculateMood(now);
         return removed || mood != previous;
@@ -267,10 +336,14 @@ public class WDEresident implements ConfigurationSerializable {
     }
 
     public List<MoodChangeEntry> getActiveMoodChanges(long now) {
-        return moodChanges.stream()
+        if (isDehumanized()) return List.of();
+        List<MoodChangeEntry> changes = new ArrayList<>(moodChanges.stream()
                 .filter(change -> change.expiresAt() > now)
                 .map(change -> new MoodChangeEntry(change.source(), change.delta(), change.expiresAt()))
-                .toList();
+                .toList());
+        persistentMoodChanges.forEach((source, delta) ->
+                changes.add(new MoodChangeEntry(source, delta, Long.MAX_VALUE, true)));
+        return List.copyOf(changes);
     }
 
     public String getActiveCollapseId() {
@@ -296,11 +369,17 @@ public class WDEresident implements ConfigurationSerializable {
     }
 
     private int calculateMood(long now) {
+        if (isDehumanized()) return 50;
         long total = 50L;
         for (MoodChange change : moodChanges) {
             if (change.expiresAt() > now) total += change.delta();
         }
+        for (int delta : persistentMoodChanges.values()) total += delta;
         return clampMood(total);
+    }
+
+    private static int clampMoodDelta(int delta) {
+        return Math.max(-100, Math.min(100, delta));
     }
 
     public boolean hasSelectedChildhoodBackground() {
@@ -332,6 +411,22 @@ public class WDEresident implements ConfigurationSerializable {
 
     public boolean hasFlag(String flag) {
         return flags.contains(flag);
+    }
+
+    public boolean isDehumanized() {
+        return hasFlag(DEHUMANIZED_FLAG);
+    }
+
+    public void setDehumanized(boolean dehumanized) {
+        if (dehumanized) {
+            flags.add(DEHUMANIZED_FLAG);
+            moodChanges.clear();
+            persistentMoodChanges.clear();
+            mood = 50;
+        } else {
+            flags.remove(DEHUMANIZED_FLAG);
+            mood = calculateMood(System.currentTimeMillis());
+        }
     }
 
     public static WDEresident deserialize(Map<String, Object> map) {

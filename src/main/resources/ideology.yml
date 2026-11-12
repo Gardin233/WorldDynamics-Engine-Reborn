@@ -79,8 +79,8 @@ rituals:
     ideologyLeader: 0.20
     synodalChurchHead: 0.20
 
-# 心情按戒律态度权重累加；每个增减量默认在 30 分钟后消散。
-# 护甲戒律仅在合规状态切换时结算；进食和动物击杀在每次相关行为时结算。
+# 进食与动物击杀的心情变化按戒律态度权重累加，默认 30 分钟后消散。
+# 护甲戒律是长期状态修正，无限时；只在装备、信仰或态度相关事件时重新计算。
 mood:
   decayMinutes: 30
   # 新玩家按累计在线时长逐档减少心情期望加成；每档默认 2 小时。
@@ -147,6 +147,27 @@ mood:
       faithCrisis:
         enabled: true
         durationSeconds: 120
+      humanityCollapse:
+        # 个人“非人化”戒律选为 required 时自动崩溃固定触发此流程。
+        enabled: true
+        durationSeconds: 180
+        titleFadeInTicks: 5
+        titleStayTicks: 40
+        titleFadeOutTicks: 10
+        # delaySeconds 为崩溃开始后的延迟；标题、副标题和聊天内容均支持 %player_name% 与颜色码。
+        sequence:
+          - delaySeconds: 2
+            title: "&5人性崩溃"
+            subtitle: "&7你开始失去对自我的认同。"
+            chat: "&7你是谁，已经不再重要。"
+          - delaySeconds: 7
+            title: "&d剥离旧我"
+            subtitle: "&7曾经定义你的规则正在消散。"
+            chat: "&d旧有的人性已经无法约束你。"
+          - delaySeconds: 13
+            title: "&5非人化"
+            subtitle: "&7你终于超越了人类身份。"
+            chat: "&5从现在起，你不再属于人类。"
     # 崩溃结束后获得的“得到宣泄”临时心情加成。
     release:
       moodBonus: 40

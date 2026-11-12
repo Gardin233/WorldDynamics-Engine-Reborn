@@ -1,6 +1,7 @@
 package com.thatguycy.worlddynamicsengine.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -48,6 +49,57 @@ class WDEresidentMoodTest {
     }
 
     @Test
+    void persistentMoodChangesSurviveSerializationAndReplaceWithoutExpiring() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        long now = System.currentTimeMillis();
+        String prefix = "doctrine|namespace:wder/armor_wearing|";
+        String compliant = prefix + "namespace:wder/armor_wearing/naked|compliant";
+        String violation = prefix + "namespace:wder/armor_wearing/naked|violation";
+        resident.addMoodChange(
+                "doctrine:namespace:wder/armor_wearing:namespace:wder/armor_wearing/naked:violation",
+                -7, now + 30L * 60L * 1000L);
+        assertEquals(43, resident.getMoodAt(now));
+
+        assertTrue(resident.replacePersistentMoodChanges(prefix, compliant, 9));
+        assertEquals(59, resident.getMoodAt(now));
+        assertEquals(59, resident.getMoodAt(now + 365L * 24L * 60L * 60L * 1000L));
+        assertFalse(resident.replacePersistentMoodChanges(prefix, compliant, 9));
+
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+        assertEquals(59, restored.getMoodAt(now));
+        assertEquals(1, restored.getActiveMoodChanges(now).size());
+        WDEresident.MoodChangeEntry entry = restored.getActiveMoodChanges(now).getFirst();
+        assertTrue(entry.permanent());
+        assertEquals(9, entry.delta());
+
+        assertTrue(restored.replacePersistentMoodChanges(prefix, violation, -6));
+        assertEquals(44, restored.getMoodAt(now));
+        assertTrue(restored.replacePersistentMoodChanges(prefix, null, 0));
+        assertEquals(50, restored.getMoodAt(now));
+    }
+
+    @Test
+    void dehumanizedStatusLocksMoodAtFiftyAndBlocksAllChanges() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        long now = System.currentTimeMillis();
+        resident.addMoodChange("relief", 40, now + 60_000L);
+        resident.replacePersistentMoodChanges("doctrine|armor|", "doctrine|armor|attitude|compliant", 10);
+
+        resident.setDehumanized(true);
+        assertEquals(50, resident.getMoodAt(now));
+        assertTrue(resident.getActiveMoodChanges(now).isEmpty());
+        assertEquals(50, resident.addMoodChange("manual", -25, now + 60_000L));
+
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+        assertTrue(restored.isDehumanized());
+        assertEquals(50, restored.getMood());
+        assertTrue(restored.getActiveMoodChanges(now).isEmpty());
+        assertFalse(restored.replacePersistentMoodChanges("doctrine|armor|",
+                "doctrine|armor|attitude|violation", -20));
+        assertEquals(50, restored.getMood());
+    }
+
+    @Test
     void legacyMoodWithoutTimedChangesMigratesToThirtyMinuteDelta() {
         long now = System.currentTimeMillis();
         WDEresident resident = WDEresident.deserialize(Map.of(
@@ -73,6 +125,19 @@ class WDEresidentMoodTest {
         assertEquals(expiresAt, restored.getActiveCollapseExpiresAt());
         assertTrue(restored.hasFlag("wde:manual_collapse"));
         assertTrue(restored.hasActiveCollapse(System.currentTimeMillis()));
+    }
+
+    @Test
+    void expiredCollapseIsPreservedForCompletionAfterReconnect() {
+        WDEresident resident = WDEresident.deserialize(Map.of(
+                "userUUID", UUID.randomUUID().toString(),
+                "username", "Player",
+                "activeCollapseId", "humanity_collapse",
+                "activeCollapseExpiresAt", System.currentTimeMillis() - 1_000L
+        ));
+
+        assertEquals("humanity_collapse", resident.getActiveCollapseId());
+        assertFalse(resident.hasActiveCollapse(System.currentTimeMillis()));
     }
 
     @Test

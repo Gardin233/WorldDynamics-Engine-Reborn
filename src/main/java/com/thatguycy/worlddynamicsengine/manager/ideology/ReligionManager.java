@@ -421,7 +421,9 @@ public class ReligionManager {
 
     public synchronized void onResidentIdeologyChanged(UUID residentUuid) {
         if (residentUuid == null) return;
-        WDEresident resident = ((WorldDynamicsEngine) plugin).getResidentManager().getResident(residentUuid);
+        WorldDynamicsEngine engine = (WorldDynamicsEngine) plugin;
+        engine.refreshArmorDoctrineForPlayer(residentUuid);
+        WDEresident resident = engine.getResidentManager().getResident(residentUuid);
         String currentIdeology = resident == null ? null : resident.getReligionName();
         String previousIdeology = resident == null
                 ? observedResidentReligions.remove(residentUuid)
@@ -915,6 +917,7 @@ public class ReligionManager {
         }
 
         religion.setDoctrineAttitude(doctrine.getId(), normalizedAttitudeId);
+        ((WorldDynamicsEngine) plugin).refreshArmorDoctrineForReligion(religion.getReligionName());
         return normalizedAttitudeId;
     }
 

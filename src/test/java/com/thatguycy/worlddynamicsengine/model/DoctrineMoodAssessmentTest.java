@@ -54,7 +54,7 @@ class DoctrineMoodAssessmentTest {
     }
 
     @Test
-    void humanFoodCanComplyWithOneDoctrineAndViolateAnother() {
+    void cannibalismDoctrineOverridesMeatEatingForHumanMeat() {
         FoodDoctrineManager.Assessment assessment = FoodDoctrineManager.evaluate(
                 FoodDoctrineManager.FoodCategory.HUMAN_MEAT,
                 Map.of(
@@ -64,8 +64,39 @@ class DoctrineMoodAssessmentTest {
         );
 
         assertEquals(1, assessment.compliantCount());
-        assertEquals(1, assessment.violationCount());
+        assertEquals(0, assessment.violationCount());
         assertEquals(1, assessment.compliantMoodWeight());
+        assertEquals(0, assessment.violationMoodWeight());
+        assertEquals(1, assessment.moodEntries().size());
+        assertEquals("namespace:wder/cannibalism", assessment.moodEntries().getFirst().doctrineId());
+    }
+
+    @Test
+    void cannibalismViolationSuppressesMeatEatingBonusForHumanMeat() {
+        FoodDoctrineManager.Assessment assessment = FoodDoctrineManager.evaluate(
+                FoodDoctrineManager.FoodCategory.HUMAN_MEAT,
+                Map.of(
+                        "namespace:wder/meat_eating", "namespace:wder/meat_eating/anti_vegetarian_hate",
+                        "namespace:wder/cannibalism", "namespace:wder/cannibalism/abhor"
+                )
+        );
+
+        assertEquals(0, assessment.compliantCount());
+        assertEquals(1, assessment.violationCount());
+        assertEquals(0, assessment.compliantMoodWeight());
+        assertEquals(1, assessment.violationMoodWeight());
+        assertEquals(1, assessment.moodEntries().size());
+        assertEquals("namespace:wder/cannibalism", assessment.moodEntries().getFirst().doctrineId());
+    }
+
+    @Test
+    void meatEatingDoctrineStillAppliesToHumanMeatWithoutCannibalismDoctrine() {
+        FoodDoctrineManager.Assessment assessment = FoodDoctrineManager.evaluate(
+                FoodDoctrineManager.FoodCategory.HUMAN_MEAT,
+                Map.of("namespace:wder/meat_eating", "namespace:wder/meat_eating/abhor_meat")
+        );
+
+        assertEquals(1, assessment.violationCount());
         assertEquals(1, assessment.violationMoodWeight());
     }
 
@@ -81,7 +112,7 @@ class DoctrineMoodAssessmentTest {
         );
 
         assertEquals(2, assessment.compliantMoodWeight());
-        assertEquals(3, assessment.violationMoodWeight());
+        assertEquals(0, assessment.violationMoodWeight());
     }
 
     @Test
@@ -97,10 +128,8 @@ class DoctrineMoodAssessmentTest {
         );
 
         assertEquals(8, assessment.compliantMoodChange());
-        assertEquals(3, assessment.violationMoodChange());
-        assertEquals(2, assessment.moodEntries().size());
-        assertTrue(assessment.moodEntries().stream().anyMatch(entry -> entry.source().equals(
-                "doctrine|namespace:wder/meat_eating|namespace:wder/meat_eating/abhor_meat|violation")));
+        assertEquals(0, assessment.violationMoodChange());
+        assertEquals(1, assessment.moodEntries().size());
         assertTrue(assessment.moodEntries().stream().anyMatch(entry -> entry.source().equals(
                 "doctrine|namespace:wder/cannibalism|namespace:wder/cannibalism/enjoy|compliant")));
     }

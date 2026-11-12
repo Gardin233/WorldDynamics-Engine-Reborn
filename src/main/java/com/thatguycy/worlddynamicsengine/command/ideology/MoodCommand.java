@@ -36,13 +36,14 @@ public final class MoodCommand implements CommandExecutor {
             return true;
         }
         send(sender, "mood_details_header", moods.getMood(player));
+        WDEresident resident = plugin.getResidentManager().getResident(player.getUniqueId());
         if (moods.isMoodExempt(player)) {
-            send(sender, "mood_details_op_exempt");
+            send(sender, resident != null && resident.isDehumanized()
+                    ? "mood_details_dehumanized" : "mood_details_op_exempt");
             return true;
         }
 
         long now = System.currentTimeMillis();
-        WDEresident resident = plugin.getResidentManager().getResident(player.getUniqueId());
         int recordedMood = resident == null ? 50 : resident.getMoodAt(now);
         int expectation = moods.getExpectationModifier(player);
         send(sender, "mood_details_recorded", recordedMood);
@@ -61,8 +62,12 @@ public final class MoodCommand implements CommandExecutor {
             String color = change.delta() > 0 ? TextColors.GREEN
                     : change.delta() < 0 ? TextColors.RED : TextColors.GRAY;
             String delta = change.delta() > 0 ? "+" + change.delta() : Integer.toString(change.delta());
-            send(sender, "mood_details_entry", color, delta, sourceName(change.source()),
-                    formatRemaining(change.expiresAt() - now));
+            if (change.permanent()) {
+                send(sender, "mood_details_entry_permanent", color, delta, sourceName(change.source()));
+            } else {
+                send(sender, "mood_details_entry", color, delta, sourceName(change.source()),
+                        formatRemaining(change.expiresAt() - now));
+            }
         }
         return true;
     }

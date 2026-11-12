@@ -156,20 +156,22 @@ public final class FoodDoctrineManager {
         int violationMoodChange = 0;
         boolean applicable = false;
         List<DoctrineMoodEntry> moodEntries = new ArrayList<>();
+        boolean hasCannibalismDoctrine = category == FoodCategory.HUMAN_MEAT
+                && attitudes.keySet().stream().anyMatch(id -> matches(id, "cannibalism"));
         for (var entry : attitudes.entrySet()) {
             String id = entry.getKey();
             String attitude = entry.getValue();
             if (attitude == null) continue;
             attitude = attitude.substring(attitude.lastIndexOf('/') + 1);
             Boolean compliant = null;
-            if (matches(id, "meat_eating") && category != FoodCategory.BLOOD) {
+            if (matches(id, "meat_eating") && category != FoodCategory.BLOOD && !hasCannibalismDoctrine) {
                 if (Set.of("abhor_meat", "fear_meat", "disgust_meat").contains(attitude))
                     compliant = category == FoodCategory.VEGETARIAN;
                 else if (Set.of("anti_vegetarian_disgust", "anti_vegetarian_hate", "anti_vegetarian_abhor").contains(attitude))
                     compliant = category != FoodCategory.VEGETARIAN;
                 else if (Set.of("neutral", "unrestricted").contains(attitude)) compliant = true;
-            } else if (matches(id, "cannibalism") && category == FoodCategory.HUMAN_MEAT
-                    || matches(id, "blood_feeding") && category == FoodCategory.BLOOD) {
+            } else if ((matches(id, "cannibalism") && category == FoodCategory.HUMAN_MEAT)
+                    || (matches(id, "blood_feeding") && category == FoodCategory.BLOOD)) {
                 if (Set.of("abhor", "fear", "disgust", "forbidden", "taboo").contains(attitude)) compliant = false;
                 else if (Set.of("accept", "enjoy", "crave", "greedy", "neutral", "unrestricted").contains(attitude)) compliant = true;
             }

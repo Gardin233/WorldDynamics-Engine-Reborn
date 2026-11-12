@@ -57,6 +57,7 @@ import org.bukkit.Sound;
  * 构建玩家管理菜单并维护分页、输入和确认状态；菜单操作仍通过业务规则检查资格。
  */
 public class PlayerMenuManager implements Listener {
+    private static final String ARMOR_DOCTRINE_ID = "namespace:wder/armor_wearing";
     private final WorldDynamicsEngine plugin;
     private final BackgroundManager backgrounds;
     private final ReligionManager religions;
@@ -114,6 +115,10 @@ public class PlayerMenuManager implements Listener {
     private String text(String key, Object... args) {
         String value = messages.getString("ui." + key, key);
         return TextColors.translateAlternateColorCodes('&', args.length == 0 ? value : String.format(value, args));
+    }
+
+    private static String formatMoodDelta(int delta) {
+        return delta > 0 ? "+" + delta : Integer.toString(delta);
     }
 
     public void sendDoctrineViolation(Player player, String doctrineId) {
@@ -1857,6 +1862,19 @@ public class PlayerMenuManager implements Listener {
             IdeologyDoctrineAttitudeDefinition attitude = entries.get(i);
             boolean allowed = religions.canUseDoctrineAttitude(religion, doctrineId, attitude.getId());
             List<String> lore = new ArrayList<>(List.of(attitude.getLore(), text("readonly")));
+            if (ARMOR_DOCTRINE_ID.equals(doctrineId)) {
+                if (attitude.getId().endsWith("/unrestricted")) {
+                    lore.add(text("doctrine_mood_preview_none"));
+                } else {
+                    int weight = attitude.getMoodWeight();
+                    int compliant = (int) Math.min(100L, (long) weight
+                            * religions.getDoctrineMoodChangePerWeight(doctrineId, attitude.getId(), true, null));
+                    int violation = (int) Math.min(100L, (long) weight
+                            * religions.getDoctrineMoodChangePerWeight(doctrineId, attitude.getId(), false, null));
+                    lore.add(text("doctrine_mood_preview_permanent",
+                            formatMoodDelta(compliant), formatMoodDelta(-violation)));
+                }
+            }
             if (!allowed) lore.add(text("blocked"));
             if (attitude.getId().equals(religion.getDoctrineAttitude(doctrineId))) lore.add(text("selected"));
             String doctrineCooldown = religions.describeDoctrineModificationCooldown(plugin.userLang, religion, doctrineId);

@@ -368,6 +368,20 @@ public class WorldDynamicsEngine extends JavaPlugin {
         return mentalCollapseManager;
     }
 
+    public ArmorDoctrineListener getArmorDoctrineListener() {
+        return armorDoctrineListener;
+    }
+
+    public void refreshArmorDoctrineForPlayer(java.util.UUID residentUuid) {
+        if (armorDoctrineListener == null || residentUuid == null) return;
+        org.bukkit.entity.Player player = getServer().getPlayer(residentUuid);
+        if (player != null) armorDoctrineListener.refreshPlayer(player);
+    }
+
+    public void refreshArmorDoctrineForReligion(String religionName) {
+        if (armorDoctrineListener != null) armorDoctrineListener.refreshReligion(religionName);
+    }
+
     public WarScoreboardManager getWarScoreboardManager() {
         return warScoreboardManager;
     }
@@ -1709,6 +1723,19 @@ public class WorldDynamicsEngine extends JavaPlugin {
                 Map.entry("mood.collapse.effects.catatonicStupor.durationSeconds", 120),
                 Map.entry("mood.collapse.effects.faithCrisis.enabled", true),
                 Map.entry("mood.collapse.effects.faithCrisis.durationSeconds", 120),
+                Map.entry("mood.collapse.effects.humanityCollapse.enabled", true),
+                Map.entry("mood.collapse.effects.humanityCollapse.durationSeconds", 180),
+                Map.entry("mood.collapse.effects.humanityCollapse.titleFadeInTicks", 5),
+                Map.entry("mood.collapse.effects.humanityCollapse.titleStayTicks", 40),
+                Map.entry("mood.collapse.effects.humanityCollapse.titleFadeOutTicks", 10),
+                Map.entry("mood.collapse.effects.humanityCollapse.sequence", List.of(
+                        Map.of("delaySeconds", 2, "title", "&5人性崩溃",
+                                "subtitle", "&7你开始失去对自我的认同。", "chat", "&7你是谁，已经不再重要。"),
+                        Map.of("delaySeconds", 7, "title", "&d剥离旧我",
+                                "subtitle", "&7曾经定义你的规则正在消散。", "chat", "&d旧有的人性已经无法约束你。"),
+                        Map.of("delaySeconds", 13, "title", "&5非人化",
+                                "subtitle", "&7你终于超越了人类身份。", "chat", "&5从现在起，你不再属于人类。")
+                )),
                 Map.entry("mood.collapse.release.moodBonus", 40),
                 Map.entry("mood.collapse.release.durationMinutes", 30)
         );

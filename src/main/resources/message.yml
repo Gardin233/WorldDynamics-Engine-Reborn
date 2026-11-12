@@ -95,6 +95,8 @@ ui:
   manage: "&a管理我领导的信仰"
   readonly: "&7仅教主可以修改，全体信徒共享这些态度。"
   doctrine_current: "&7当前态度：%s"
+  doctrine_mood_preview_permanent: "&e长期心情变化：符合 %s / 违反 %s"
+  doctrine_mood_preview_none: "&7不产生心情变化"
   blocked: "&c当前模因不允许使用此态度。"
   doctrine_saved: "&a已更新戒律态度。"
   no_permission: "&c你已不是该信仰的教主，无法修改。"

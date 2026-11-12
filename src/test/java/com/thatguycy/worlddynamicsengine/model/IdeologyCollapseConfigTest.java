@@ -23,6 +23,9 @@ class IdeologyCollapseConfigTest {
             assertEquals(180, config.getInt("mood.collapse.effects.crazyTalk.durationSeconds"));
             assertEquals(120, config.getInt("mood.collapse.effects.catatonicStupor.durationSeconds"));
             assertEquals(120, config.getInt("mood.collapse.effects.faithCrisis.durationSeconds"));
+            assertTrue(config.getBoolean("mood.collapse.effects.humanityCollapse.enabled"));
+            assertEquals(180, config.getInt("mood.collapse.effects.humanityCollapse.durationSeconds"));
+            assertEquals(3, config.getMapList("mood.collapse.effects.humanityCollapse.sequence").size());
             assertTrue(config.getStringList("mood.collapse.effects.crazyTalk.messages").size() >= 2);
         }
     }

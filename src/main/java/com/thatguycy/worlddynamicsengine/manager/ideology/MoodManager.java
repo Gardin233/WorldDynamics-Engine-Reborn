@@ -48,7 +48,10 @@ public final class MoodManager {
     }
 
     public boolean isMoodExempt(Player player) {
-        return player != null && player.isOp();
+        if (player == null) return false;
+        if (player.isOp()) return true;
+        WDEresident resident = plugin.getResidentManager().getResident(player.getUniqueId());
+        return resident != null && resident.isDehumanized();
     }
 
     public int getExpectationModifier(Player player) {
@@ -152,6 +155,33 @@ public final class MoodManager {
         int violationDelta = compliant ? 0
                 : weight * religions.getDoctrineMoodChangePerWeight(doctrineId, attitudeId, false, null);
         return applyDoctrineMoodChanges(player, compliantDelta, violationDelta, source);
+    }
+
+    /** Replaces a doctrine's persistent state-based mood modifier, or clears it when state is null. */
+    public int setPersistentDoctrineOutcome(Player player, String doctrineId, String attitudeId,
+                                            Boolean compliant) {
+        if (player == null) return 50;
+        WDEresident resident = plugin.getResidentManager().getResident(player.getUniqueId());
+        if (resident == null) return getMood(player);
+
+        String sourcePrefix = "doctrine|" + doctrineId + "|";
+        String source = null;
+        int delta = 0;
+        if (compliant != null && plugin.religionEnabled && !isMoodExempt(player) && attitudeId != null) {
+            ReligionManager religions = plugin.getReligionManager();
+            int weight = religions.getDoctrineMoodWeight(doctrineId, attitudeId);
+            int perWeight = religions.getDoctrineMoodChangePerWeight(doctrineId, attitudeId, compliant, null);
+            long magnitude = (long) weight * Math.max(0, perWeight);
+            int boundedMagnitude = (int) Math.min(100L, magnitude);
+            delta = compliant ? boundedMagnitude : -boundedMagnitude;
+            source = new DoctrineMoodEntry(doctrineId, attitudeId, compliant, delta).source();
+        }
+
+        if (resident.replacePersistentMoodChanges(sourcePrefix, source, delta)) {
+            dirtyResidents.add(resident.getUserUUID());
+            flushDirtyResidents();
+        }
+        return getMood(player);
     }
 
     private void evaluateOnlinePlayers() {
