@@ -29,6 +29,7 @@ public final class TownyLifecycleListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onNewTown(NewTownEvent event) {
         towns.registerTown(event.getTown());
+        if (plugin.getTownHistoryManager() != null) plugin.getTownHistoryManager().created(event.getTown());
         towns.saveTowns();
         nations.refreshTownHierarchy();
     }

@@ -193,25 +193,25 @@ public class HelpCommand implements CommandExecutor {
             case "inn" -> add(lines, plugin, "/wde inn set <金额> [币种]", "help_cmd_inn_set");
             case "ideology" -> {
                 add(lines, plugin, "/wde ideology list", "help_cmd_religion_list");
-                add(lines, plugin, "/wde ideology info <意识形态>", "help_cmd_religion_info");
+                add(lines, plugin, "/wde ideology info <文化>", "help_cmd_religion_info");
                 add(lines, plugin, "/wde ideology create <名称>", "help_cmd_religion_create");
-                add(lines, plugin, "/wde ideology treasury <意识形态>", "help_cmd_religion_treasury");
-                add(lines, plugin, "/wde ideology donate <意识形态> <金额>", "help_cmd_religion_donate");
-                add(lines, plugin, "/wde ideology settithe <意识形态> <fixed|wealth_percentage> <金额>", "help_cmd_religion_settithe");
-                add(lines, plugin, "/wde ideology governance <意识形态> <lifetime|cardinal|synodal>", "help_cmd_religion_governance");
-                add(lines, plugin, "/wde ideology cardinal <意识形态> <appoint|revoke> <玩家>", "help_cmd_religion_cardinal");
-                add(lines, plugin, "/wde ideology vote <意识形态> <候选人|abstain>", "help_cmd_religion_vote");
+                add(lines, plugin, "/wde ideology treasury <文化>", "help_cmd_religion_treasury");
+                add(lines, plugin, "/wde ideology donate <文化> <金额>", "help_cmd_religion_donate");
+                add(lines, plugin, "/wde ideology settithe <文化> <fixed|wealth_percentage> <金额>", "help_cmd_religion_settithe");
+                add(lines, plugin, "/wde ideology governance <文化> <lifetime|cardinal|synodal>", "help_cmd_religion_governance");
+                add(lines, plugin, "/wde ideology cardinal <文化> <appoint|revoke> <玩家>", "help_cmd_religion_cardinal");
+                add(lines, plugin, "/wde ideology vote <文化> <候选人|abstain>", "help_cmd_religion_vote");
                 add(lines, plugin, "/wde ideology church <create|list|join|leave|abdicate|disband|treasury>", "help_cmd_religion_church");
                 add(lines, plugin, "/wde ideology council <propose|vote|list>", "help_cmd_religion_council");
                 add(lines, plugin, "/wde ideology ritual <list|register|start>", "help_cmd_religion_ritual");
-                add(lines, plugin, "/wde ideology split <源意识形态> <教会> <新意识形态>", "help_cmd_religion_split");
-                add(lines, plugin, "/wde ideology setplayer <意识形态|none>", "help_cmd_religion_setplayer");
-                add(lines, plugin, "/wde ideology setplayer <玩家> <意识形态|none>", "help_cmd_religion_forceplayer");
-                add(lines, plugin, "/wde ideology setnation <国家> <意识形态|none>", "help_cmd_religion_setnation");
-                add(lines, plugin, "/wde ideology settown <城镇> <意识形态|none>", "help_cmd_religion_settown");
-                add(lines, plugin, "/wde ideology setmemes <意识形态> <模因...>", "help_cmd_religion_setmemes");
-                add(lines, plugin, "/wde ideology abdicate <意识形态> <玩家>", "help_cmd_religion_abdicate");
-                add(lines, plugin, "/wde ideology excommunicate <意识形态> <player|town|nation> <目标>", "help_cmd_religion_excommunicate");
+                add(lines, plugin, "/wde ideology split <源文化> <教会> <新文化>", "help_cmd_religion_split");
+                add(lines, plugin, "/wde ideology setplayer <文化|none>", "help_cmd_religion_setplayer");
+                add(lines, plugin, "/wde ideology setplayer <玩家> <文化|none>", "help_cmd_religion_forceplayer");
+                add(lines, plugin, "/wde ideology setnation <国家> <文化|none>", "help_cmd_religion_setnation");
+                add(lines, plugin, "/wde ideology settown <城镇> <文化|none>", "help_cmd_religion_settown");
+                add(lines, plugin, "/wde ideology setmemes <文化> <模因...>", "help_cmd_religion_setmemes");
+                add(lines, plugin, "/wde ideology abdicate <文化> <玩家>", "help_cmd_religion_abdicate");
+                add(lines, plugin, "/wde ideology excommunicate <文化> <player|town|nation> <目标>", "help_cmd_religion_excommunicate");
             }
             case "war" -> {
                 add(lines, plugin, "/wde war [menu]", "help_cmd_war");
@@ -241,6 +241,18 @@ public class HelpCommand implements CommandExecutor {
                 add(lines, plugin, "/wde history read <国家史书ID> [页码]", "help_cmd_history_read");
                 add(lines, plugin, "/wde history txt <国家史书ID>", "help_cmd_history_txt");
                 add(lines, plugin, "/wde history book <国家史书ID> [卷号]", "help_cmd_history_book");
+                add(lines, plugin, "/wde history town list [页码]", "help_cmd_history_town_list");
+                add(lines, plugin, "/wde history town read <城镇名或史书UUID> [页码]", "help_cmd_history_town_read");
+                add(lines, plugin, "/wde history town txt <城镇名或史书UUID>", "help_cmd_history_town_txt");
+                add(lines, plugin, "/wde history town book <城镇名或史书UUID> [卷号]", "help_cmd_history_town_book");
+                add(lines, plugin, "/wde history ideology list [页码]", "help_cmd_history_ideology_list");
+                add(lines, plugin, "/wde history ideology read <文化名或史书UUID> [页码]", "help_cmd_history_ideology_read");
+                add(lines, plugin, "/wde history ideology txt <文化名或史书UUID>", "help_cmd_history_ideology_txt");
+                add(lines, plugin, "/wde history ideology book <文化名或史书UUID> [卷号]", "help_cmd_history_ideology_book");
+                add(lines, plugin, "/wde history church list [页码]", "help_cmd_history_church_list");
+                add(lines, plugin, "/wde history church read <教会名或史书UUID> [页码]", "help_cmd_history_church_read");
+                add(lines, plugin, "/wde history church txt <教会名或史书UUID>", "help_cmd_history_church_txt");
+                add(lines, plugin, "/wde history church book <教会名或史书UUID> [卷号]", "help_cmd_history_church_book");
             }
             case "rally" -> {
                 add(lines, plugin, "/wde rally nation", "help_cmd_rally");
@@ -286,6 +298,8 @@ public class HelpCommand implements CommandExecutor {
         lines.add(TextColors.YELLOW + "/wde background status" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_background_status"));
         lines.add(TextColors.YELLOW + "/wde mood" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_mood_details"));
         lines.add(TextColors.YELLOW + "/wde rally <nation|town>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_rally"));
+        lines.add(TextColors.YELLOW + "/wde gift <player> <amount> [currency]" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_gift"));
+        lines.add(TextColors.YELLOW + "/wde alms <player|accept|reject> ..." + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_alms"));
         lines.add(TextColors.YELLOW + "/wde war declare <nation|town> <target> <reason>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_war"));
         lines.add(TextColors.YELLOW + "/wde background list <childhood|adulthood>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_background_list"));
         lines.add(TextColors.YELLOW + "/wde background info <childhood|adulthood> <id>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_background_info"));

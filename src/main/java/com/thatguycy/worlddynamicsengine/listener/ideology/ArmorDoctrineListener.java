@@ -90,7 +90,7 @@ public final class ArmorDoctrineListener implements Listener {
         if (!player.isOnline() || player.isDead()) {
             return;
         }
-        if (!plugin.religionEnabled || moods.isMoodExempt(player)) {
+        if (!plugin.religionEnabled || !moods.shouldProcessMoodAction(player)) {
             moods.setPersistentDoctrineOutcome(player, DOCTRINE_ID, null, null);
             return;
         }

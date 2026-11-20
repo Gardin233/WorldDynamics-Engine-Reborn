@@ -390,7 +390,9 @@ public final class IdeologyRitualManager {
     }
 
     private void applyRitualRewards(ActiveRitual session, RitualResult result, List<Player> participants) {
-        // 预留奖励接入点：后续可按 result 给主持人、决斗者和观众分发效果或资源。
+        if (plugin.getRitualMoodDoctrineManager() != null) {
+            plugin.getRitualMoodDoctrineManager().onRitualCompleted(participants);
+        }
     }
 
     private void validateDuelist(WDEreligion ideology, Player host, Player duelist, Set<UUID> uniqueDuelists) {

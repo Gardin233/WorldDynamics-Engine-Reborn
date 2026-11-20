@@ -40,6 +40,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class ReligionManager {
     private static final String STORAGE_CATEGORY = "religions";
     private static final long DAY_MILLIS = TimeUnit.DAYS.toMillis(1);
+    private static final String PROSELYTIZING_DOCTRINE = "namespace:wder/proselytizing";
     private static final String DOCTRINE_ID_PATTERN = "^[a-z0-9_.-]+:(?:wde|wder)/[a-z0-9_.-]+$";
     private static final String ATTITUDE_ID_PATTERN = "^[a-z0-9_.-]+:(?:wde|wder)/[a-z0-9_.-]+/[a-z0-9_.-]+$";
     private static final String LOCAL_ATTITUDE_ID_PATTERN = "^[a-z0-9_.-]+$";
@@ -88,6 +89,8 @@ public class ReligionManager {
             reconcileDoctrineAttitudes(religion);
         }
         dataStorageManager.saveStringKeyed(STORAGE_CATEGORY, religions);
+        var history = ((WorldDynamicsEngine) plugin).getIdeologyHistoryManager();
+        if (history != null) history.observeIdeologies(religions.values());
     }
 
     public boolean religionExists(String religionName) {
@@ -99,6 +102,10 @@ public class ReligionManager {
             return null;
         }
         return religions.get(religionName.toLowerCase());
+    }
+
+    public synchronized List<WDEreligion> getAllReligions() {
+        return List.copyOf(religions.values());
     }
 
     public synchronized void addReligion(WDEreligion religion) {
@@ -428,6 +435,8 @@ public class ReligionManager {
         String previousIdeology = resident == null
                 ? observedResidentReligions.remove(residentUuid)
                 : observedResidentReligions.put(residentUuid, currentIdeology);
+        var history = engine.getIdeologyHistoryManager();
+        if (history != null) history.refreshAffiliations();
         if (previousIdeology != null && currentIdeology != null
                 && !previousIdeology.equalsIgnoreCase(currentIdeology)) {
             WDEreligion previousReligion = getReligion(previousIdeology);
@@ -467,6 +476,32 @@ public class ReligionManager {
                         "MEMBERSHIP_CHANGED");
                 persistGovernanceUpdate(updated);
             }
+        }
+    }
+
+    public void awardProselytizingMoodForJoin(String ideologyName) {
+        WorldDynamicsEngine engine = (WorldDynamicsEngine) plugin;
+        if (!engine.religionEnabled) return;
+        var config = engine.getIdeologyConfig();
+        if (config != null && !config.getBoolean("mood.doctrineActions.proselytizing.enabled", true)) return;
+        WDEreligion religion = getReligion(ideologyName);
+        if (religion == null) return;
+
+        List<WDEresident> followers = eligibleFollowers(religion);
+        String attitude = religion.getDoctrineAttitude(PROSELYTIZING_DOCTRINE);
+        if (getDoctrine(PROSELYTIZING_DOCTRINE) == null || attitude == null || attitude.isBlank()) return;
+        int weight = getDoctrineMoodWeight(PROSELYTIZING_DOCTRINE, attitude);
+        int compliantChange = getDoctrineMoodChangePerWeight(
+                PROSELYTIZING_DOCTRINE, attitude, true, null);
+        int bonus = ProselytizingDoctrineCalculator.calculateJoinBonus(
+                weight, compliantChange, followers.size());
+        if (bonus <= 0) return;
+
+        String source = new DoctrineMoodEntry(
+                PROSELYTIZING_DOCTRINE, attitude, true, bonus).source();
+        for (WDEresident follower : followers) {
+            engine.getMoodManager().applyTemporaryMoodChange(
+                    follower.getUserUUID(), source, bonus);
         }
     }
 
@@ -531,6 +566,8 @@ public class ReligionManager {
         String key = updated.getReligionName().toLowerCase();
         dataStorageManager.saveEntity(STORAGE_CATEGORY, key, updated);
         religions.put(key, updated);
+        var history = ((WorldDynamicsEngine) plugin).getIdeologyHistoryManager();
+        if (history != null) history.observeIdeology(updated);
     }
 
     private Map<String, Object> createCooldownEntry(String path) {
@@ -1230,6 +1267,8 @@ public class ReligionManager {
         String key = updated.getReligionName().toLowerCase(Locale.ROOT);
         dataStorageManager.saveEntity(STORAGE_CATEGORY, key, updated);
         religions.put(key, updated);
+        var history = ((WorldDynamicsEngine) plugin).getIdeologyHistoryManager();
+        if (history != null) history.observeIdeology(updated);
     }
 
     private double clampRatio(double value) {

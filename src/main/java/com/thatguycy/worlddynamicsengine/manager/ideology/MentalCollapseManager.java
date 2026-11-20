@@ -29,6 +29,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -166,6 +167,30 @@ public final class MentalCollapseManager implements Listener {
         return isActive(player.getUniqueId(), effect);
     }
 
+    /** Cancels a player's active collapse without completing its reward or terminal effects. */
+    public boolean cancelCollapse(Player player) {
+        if (player == null) return false;
+        UUID uuid = player.getUniqueId();
+        WDEresident resident = plugin.getResidentManager().getResident(uuid);
+        CollapseEffect effect = active.get(uuid);
+        if (resident != null && !resident.getActiveCollapseId().isBlank()) {
+            effect = CollapseEffect.fromId(resident.getActiveCollapseId());
+        }
+        boolean hadState = effect != null || resident != null
+                && (!resident.getActiveCollapseId().isBlank() || resident.hasFlag(MANUAL_COLLAPSE_FLAG));
+        if (!hadState) return false;
+
+        cancelRuntimeTasks(uuid);
+        active.remove(uuid);
+        if (hasBlindnessEffect(effect)) player.removePotionEffect(PotionEffectType.BLINDNESS);
+        if (resident != null) {
+            resident.clearActiveCollapse();
+            resident.removeFlag(MANUAL_COLLAPSE_FLAG);
+            plugin.getResidentManager().saveResident(resident);
+        }
+        return true;
+    }
+
     public List<String> getEnabledManualEffectIds() {
         List<String> ids = new ArrayList<>();
         for (CollapseEffect effect : CollapseEffect.values()) {
@@ -182,6 +207,11 @@ public final class MentalCollapseManager implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
         plugin.getServer().getScheduler().runTask(plugin, () -> resumeCollapse(event.getPlayer()));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        cancelCollapse(event.getEntity());
     }
 
     @EventHandler

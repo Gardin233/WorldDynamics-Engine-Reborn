@@ -59,6 +59,7 @@ public final class AdminTabCompleter {
                 plugin.getResidentManager().getAllResidents().forEach(r -> values.add(r.getUsername()));
                 com.palmergames.bukkit.towny.TownyUniverse.getInstance().getResidents().forEach(r -> values.add(r.getName()));
             }
+            case "onlinePlayer" -> org.bukkit.Bukkit.getOnlinePlayers().forEach(player -> values.add(player.getName()));
             case "target" -> {
                 if (a[1].equalsIgnoreCase("ideology") && a.length > 4) {
                     addParameter(values, a[3], a);

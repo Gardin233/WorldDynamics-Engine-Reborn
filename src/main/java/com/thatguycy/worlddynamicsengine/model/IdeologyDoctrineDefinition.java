@@ -64,7 +64,27 @@ public class IdeologyDoctrineDefinition {
             }
         }
         this.source = source == null || source.isBlank() ? "unknown" : source.trim();
-        this.defaultAttitudeId = this.attitudes.isEmpty() ? "" : this.attitudes.values().iterator().next().getId();
+        this.defaultAttitudeId = preferredDefaultAttitudeId(this.id, this.attitudes.keySet());
+    }
+
+    /** Uses an existing neutral attitude, or the mildest available opposition for extreme doctrines. */
+    public static String preferredDefaultAttitudeId(String doctrineId, Collection<String> attitudeIds) {
+        if (attitudeIds == null || attitudeIds.isEmpty()) return "";
+        String normalizedDoctrineId = normalizeId(doctrineId);
+        for (String localId : List.of("neutral", "unrestricted", "none")) {
+            String candidate = normalizedDoctrineId + "/" + localId;
+            if (attitudeIds.contains(candidate)) return candidate;
+        }
+        String doctrine = normalizedDoctrineId.substring(normalizedDoctrineId.lastIndexOf('/') + 1);
+        String opposite = switch (doctrine) {
+            case "cannibalism", "blood_feeding", "display_of_heads", "mining", "rituals" -> "disgust";
+            case "meat_eating" -> "disgust_meat";
+            case "potions" -> "forbidden";
+            default -> "";
+        };
+        String candidate = normalizedDoctrineId + "/" + opposite;
+        return !opposite.isEmpty() && attitudeIds.contains(candidate)
+                ? candidate : attitudeIds.iterator().next();
     }
 
     public static String normalizeId(String id) {

@@ -70,6 +70,7 @@ public final class AdminCommand implements CommandExecutor {
             new Entry("war", "truce", "<nation> <opponent> <hours|0>"),
             new Entry("war", "reviewtreaty", "<org> <receiverNation> <opponent> <accept|reject> confirm"),
             new Entry("ideology", "collapse", "<player> <effect>"),
+            new Entry("ideology", "moodclear", "<onlinePlayer> <all|mood|collapse|dehumanized|inspiration>"),
             new Entry("ideology", "create", "<name> <founderPlayer>"),
             new Entry("ideology", "delete", "<ideology> confirm"),
             new Entry("ideology", "leader", "<ideology> <player>"),
@@ -82,6 +83,121 @@ public final class AdminCommand implements CommandExecutor {
             new Entry("background", "reset", "<player> <childhood|adulthood|all> confirm"),
             new Entry("economy", "orgbalance", "<org> <amount>")
     );
+
+    private static final Map<String, String> CHINESE_HELP_PARAMETERS = Map.ofEntries(
+            Map.entry("<nation>", "<国家>"),
+            Map.entry("<player>", "<玩家>"),
+            Map.entry("<onlinePlayer>", "<在线玩家>"),
+            Map.entry("<org>", "<集团>"),
+            Map.entry("<town>", "<城镇>"),
+            Map.entry("<target>", "<目标>"),
+            Map.entry("<name>", "<名称>"),
+            Map.entry("<founderPlayer>", "<创始玩家>"),
+            Map.entry("<chairmanNation>", "<主席国>"),
+            Map.entry("<attackerNation>", "<进攻国家>"),
+            Map.entry("<defenderNation>", "<防守国家>"),
+            Map.entry("<attackerScore>", "<进攻方分数>"),
+            Map.entry("<defenderScore>", "<防守方分数>"),
+            Map.entry("<empireScore>", "<帝国方分数>"),
+            Map.entry("<rebelScore>", "<起义方分数>"),
+            Map.entry("<opponent>", "<对方国家>"),
+            Map.entry("<receiverNation>", "<接收国家>"),
+            Map.entry("<subject>", "<附庸国>"),
+            Map.entry("<amount>", "<金额>"),
+            Map.entry("<days>", "<天数>"),
+            Map.entry("<hours|0>", "<时长小时数|0>"),
+            Map.entry("<id>", "<背景ID>"),
+            Map.entry("<ideology>", "<文化>"),
+            Map.entry("<doctrine>", "<戒律ID>"),
+            Map.entry("<attitude>", "<态度ID>"),
+            Map.entry("<effect>", "<崩溃效果ID>"),
+            Map.entry("<reason>", "<战争理由>"),
+            Map.entry("<meme1>", "<模因1>"),
+            Map.entry("<meme2>", "<模因2>"),
+            Map.entry("<meme3>", "<模因3>"),
+            Map.entry("<meme4>", "<模因4>"),
+            Map.entry("[candidate]", "[候选人]"),
+            Map.entry("[meme2]", "[模因2]"),
+            Map.entry("[meme3]", "[模因3]"),
+            Map.entry("[meme4]", "[模因4]"),
+            Map.entry("<type>", "<集团类型>"),
+            Map.entry("<value>", "<数值>"),
+            Map.entry("<player|none>", "<玩家|none>"),
+            Map.entry("<ideology|none>", "<文化|none>"),
+            Map.entry("<player|town|nation>", "<目标类型: player|town|nation>"),
+            Map.entry("<all|mood|collapse|dehumanized|inspiration>",
+                    "<清理范围: all|mood|collapse|dehumanized|inspiration>"),
+            Map.entry("<childhood|adulthood|all>", "<阶段: childhood|adulthood|all>"),
+            Map.entry("<childhood|adulthood>", "<阶段: childhood|adulthood>"),
+            Map.entry("<DICTATORSHIP|DEMOCRACY|NOBLE_COUNCIL>",
+                    "<政体: DICTATORSHIP|DEMOCRACY|NOBLE_COUNCIL>"),
+            Map.entry("<DICTATORSHIP|REPUBLIC>", "<政体: DICTATORSHIP|REPUBLIC>"),
+            Map.entry("<enabled|disabled>", "<状态: enabled|disabled>"),
+            Map.entry("<add|remove>", "<操作: add|remove>"),
+            Map.entry("<fixed|wealth_percentage>", "<税制: fixed|wealth_percentage>"),
+            Map.entry("<friendly|neutral|unfriendly>", "<关系: friendly|neutral|unfriendly>"),
+            Map.entry("<accept|reject>", "<审核结果: accept|reject>"),
+            Map.entry("<start|cancel|cancelarmy>", "<操作: start|cancel|cancelarmy>"),
+            Map.entry("<start|cancel>", "<操作: start|cancel>"),
+            Map.entry("<SUCCESS|FAILURE|STALEMATE>", "<结果: SUCCESS|FAILURE|STALEMATE>"),
+            Map.entry("<tier|suppression|garrison|duty>", "<字段: tier|suppression|garrison|duty>"),
+            Map.entry("<gov|org|army|ideology|background|drops|inn>",
+                    "<模块: gov|org|army|ideology|background|drops|inn>"));
+
+    private static final Map<String, String> CHINESE_HELP_DESCRIPTIONS = Map.ofEntries(
+            Map.entry("system.save", "保存插件数据"),
+            Map.entry("system.reload", "重载配置与运行状态"),
+            Map.entry("system.sync", "同步 Towny 数据"),
+            Map.entry("system.module", "启用或停用指定模块"),
+            Map.entry("nation.info", "查看国家状态"),
+            Map.entry("nation.setgov", "设置国家政体"),
+            Map.entry("nation.setleader", "设置国家领袖"),
+            Map.entry("nation.setcommander", "设置国家军队统帅"),
+            Map.entry("nation.govmember", "增删国家治理成员"),
+            Map.entry("nation.armymember", "增删国家军队成员"),
+            Map.entry("nation.diplomat", "设置外交官权限"),
+            Map.entry("nation.election", "管理国家选举"),
+            Map.entry("nation.relation", "调整国家关系"),
+            Map.entry("nation.trading", "设置国家间贸易"),
+            Map.entry("town.info", "查看城镇状态"),
+            Map.entry("town.setgov", "设置城镇政体"),
+            Map.entry("town.setleader", "设置城镇领袖"),
+            Map.entry("town.conscript", "设置玩家征召状态"),
+            Map.entry("town.taxfree", "设置玩家免税状态"),
+            Map.entry("town.tax", "设置城镇税率"),
+            Map.entry("town.election", "管理城镇选举"),
+            Map.entry("town.electiondays", "设置选举周期"),
+            Map.entry("town.transfer", "转移城镇所属国家"),
+            Map.entry("org.info", "查看集团状态"),
+            Map.entry("org.create", "创建国家集团"),
+            Map.entry("org.dissolve", "解散国家集团"),
+            Map.entry("org.addnation", "将国家加入集团"),
+            Map.entry("org.removenation", "将国家移出集团"),
+            Map.entry("org.chairman", "设置集团主席国"),
+            Map.entry("org.sanction", "设置集团制裁状态"),
+            Map.entry("org.subject", "设置附庸国等级与义务"),
+            Map.entry("org.independence", "授予附庸国独立"),
+            Map.entry("war.start", "创建战争"),
+            Map.entry("war.end", "结束战争"),
+            Map.entry("war.score", "设置战争分数"),
+            Map.entry("war.independencestart", "创建独立战争"),
+            Map.entry("war.independenceend", "结算独立战争"),
+            Map.entry("war.independencescore", "设置独立战争分数"),
+            Map.entry("war.truce", "设置停战时长"),
+            Map.entry("war.reviewtreaty", "审核和平条约"),
+            Map.entry("ideology.collapse", "对玩家触发精神崩溃"),
+            Map.entry("ideology.moodclear", "清理玩家心情或崩溃状态"),
+            Map.entry("ideology.create", "创建文化"),
+            Map.entry("ideology.delete", "删除文化"),
+            Map.entry("ideology.leader", "设置文化领袖"),
+            Map.entry("ideology.assign", "分配玩家、城镇或国家的信仰"),
+            Map.entry("ideology.firstfree", "设置首次免费改信"),
+            Map.entry("ideology.memes", "修改文化模因"),
+            Map.entry("ideology.doctrine", "设置戒律态度"),
+            Map.entry("background.info", "查看玩家背景"),
+            Map.entry("background.set", "设置玩家背景"),
+            Map.entry("background.reset", "重置玩家背景"),
+            Map.entry("economy.orgbalance", "设置集团余额"));
 
     private final WorldDynamicsEngine plugin;
     private final AdminAuditLogger audit;
@@ -152,8 +268,30 @@ public final class AdminCommand implements CommandExecutor {
         int pages = Math.max(1, (visible.size() + 7) / 8);
         require(page >= 1 && page <= pages, "admin_invalid_argument");
         send(sender, "admin_help_header", page, pages);
-        visible.stream().skip((page - 1L) * 8).limit(8).forEach(e -> sender.sendMessage(TextColors.YELLOW + e.usage()));
+        visible.stream().skip((page - 1L) * 8).limit(8)
+                .forEach(entry -> {
+                    String description = helpDescription(entry);
+                    String suffix = description == null ? ""
+                            : TextColors.WHITE + " - " + description;
+                    sender.sendMessage(TextColors.YELLOW + helpUsage(entry) + suffix);
+                });
         if (page < pages) sender.sendMessage(TextColors.AQUA + "/wde admin help " + (page + 1));
+    }
+
+    private String helpDescription(Entry entry) {
+        if (plugin.userLang == null || !plugin.userLang.toLowerCase(Locale.ROOT).startsWith("zh")) return null;
+        return CHINESE_HELP_DESCRIPTIONS.get(entry.module() + "." + entry.action());
+    }
+
+    private String helpUsage(Entry entry) {
+        String usage = entry.usage();
+        if (plugin.userLang == null || !plugin.userLang.toLowerCase(Locale.ROOT).startsWith("zh")) {
+            return usage;
+        }
+        for (var parameter : CHINESE_HELP_PARAMETERS.entrySet()) {
+            usage = usage.replace(parameter.getKey(), parameter.getValue());
+        }
+        return usage;
     }
 
     private void system(String action, String[] a) {
@@ -467,6 +605,33 @@ public final class AdminCommand implements CommandExecutor {
                 require(plugin.getMentalCollapseManager() != null
                         && plugin.getMentalCollapseManager().triggerManualCollapse(target, a[4]),
                         "admin_operation_blocked");
+            }
+            case "moodclear" -> {
+                size(a, 5);
+                var target = org.bukkit.Bukkit.getPlayerExact(a[3]);
+                require(target != null, "admin_not_found");
+                WDEresident resident = plugin.getResidentManager().getResident(target.getUniqueId());
+                require(resident != null, "admin_not_found");
+                switch (a[4].toLowerCase(Locale.ROOT)) {
+                    case "all" -> {
+                        if (plugin.getMentalCollapseManager() != null) {
+                            plugin.getMentalCollapseManager().cancelCollapse(target);
+                        }
+                        resident.setDehumanized(false);
+                        resident.clearMoodChanges();
+                        resident.clearInspirationCharges();
+                    }
+                    case "mood" -> resident.clearMoodChanges();
+                    case "collapse" -> {
+                        if (plugin.getMentalCollapseManager() != null) {
+                            plugin.getMentalCollapseManager().cancelCollapse(target);
+                        }
+                    }
+                    case "dehumanized" -> resident.setDehumanized(false);
+                    case "inspiration" -> resident.clearInspirationCharges();
+                    default -> throw new AdminFailure("admin_invalid_argument");
+                }
+                plugin.getResidentManager().saveResident(resident);
             }
             case "create" -> {
                 size(a, 5); validName(a[3]); Resident founder = resident(a[4]);

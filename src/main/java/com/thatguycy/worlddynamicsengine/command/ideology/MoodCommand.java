@@ -1,6 +1,7 @@
 package com.thatguycy.worlddynamicsengine.command.ideology;
 
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
+import com.thatguycy.worlddynamicsengine.manager.ideology.InspirationManager;
 import com.thatguycy.worlddynamicsengine.manager.ideology.MoodManager;
 import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.util.TextColors;
@@ -37,26 +38,34 @@ public final class MoodCommand implements CommandExecutor {
         }
         send(sender, "mood_details_header", moods.getMood(player));
         WDEresident resident = plugin.getResidentManager().getResident(player.getUniqueId());
+        sendInspirationStatus(sender, resident);
+        long now = System.currentTimeMillis();
+        moods.pruneExemptMoodPreviews();
+        int expectation = moods.getExpectationModifier(player);
         if (moods.isMoodExempt(player)) {
-            send(sender, resident != null && resident.isDehumanized()
-                    ? "mood_details_dehumanized" : "mood_details_op_exempt");
+            sendExpectation(sender, expectation);
+            String exemptionMessage = resident != null && resident.isDehumanized()
+                    ? "mood_details_dehumanized"
+                    : player.isOp() ? "mood_details_op_exempt" : "mood_details_creative_exempt";
+            send(sender, exemptionMessage);
+            sendMoodEntries(sender, moods.getExemptMoodPreviews(player, now), now);
             return true;
         }
 
-        long now = System.currentTimeMillis();
         int recordedMood = resident == null ? 50 : resident.getMoodAt(now);
-        int expectation = moods.getExpectationModifier(player);
         send(sender, "mood_details_recorded", recordedMood);
-        String expectationColor = expectation > 0 ? TextColors.GREEN
-                : expectation < 0 ? TextColors.RED : TextColors.GRAY;
-        String expectationValue = expectation > 0 ? "+" + expectation : Integer.toString(expectation);
-        send(sender, "mood_details_expectation", expectationColor, expectationValue);
+        sendExpectation(sender, expectation);
 
         List<WDEresident.MoodChangeEntry> changes = resident == null
                 ? List.of() : resident.getActiveMoodChanges(now);
+        sendMoodEntries(sender, changes, now);
+        return true;
+    }
+
+    private void sendMoodEntries(CommandSender sender, List<WDEresident.MoodChangeEntry> changes, long now) {
         if (changes.isEmpty()) {
             send(sender, "mood_details_empty");
-            return true;
+            return;
         }
         for (WDEresident.MoodChangeEntry change : changes) {
             String color = change.delta() > 0 ? TextColors.GREEN
@@ -69,11 +78,29 @@ public final class MoodCommand implements CommandExecutor {
                         formatRemaining(change.expiresAt() - now));
             }
         }
-        return true;
+    }
+
+    private void sendInspirationStatus(CommandSender sender, WDEresident resident) {
+        if (resident == null) return;
+        int arrows = resident.getInspirationCharges(InspirationManager.ARROW_ARMOR_PIERCING);
+        int melee = resident.getInspirationCharges(InspirationManager.MELEE_ARMOR_PIERCING);
+        if (arrows > 0 || melee > 0) {
+            send(sender, "mood_details_inspiration_pending", arrows, melee);
+        }
+    }
+
+    private void sendExpectation(CommandSender sender, int expectation) {
+        String color = expectation > 0 ? TextColors.GREEN
+                : expectation < 0 ? TextColors.RED : TextColors.GRAY;
+        String value = expectation > 0 ? "+" + expectation : Integer.toString(expectation);
+        send(sender, "mood_details_expectation", color, value);
     }
 
     private String sourceName(String source) {
         if (source == null || source.isBlank()) return message("mood_details_source_unknown", "unknown");
+        if (source.startsWith("ritual_absence|")) {
+            return message("mood_details_source_ritual_absence");
+        }
         String[] doctrineParts = parseDoctrineSource(source);
         if (doctrineParts != null) {
             String doctrineId = doctrineParts[0];
@@ -93,12 +120,33 @@ public final class MoodCommand implements CommandExecutor {
             };
             return message(key, source);
         }
+        if (source.startsWith("pain:ideal:sweet_pain:")) {
+            String threshold = source.substring("pain:ideal:sweet_pain:".length());
+            if (threshold.matches("\\d{1,3}")) {
+                return message("mood_details_source_pain_sweet", threshold);
+            }
+        }
+        if (source.startsWith("pain:none:under_")) {
+            String threshold = source.substring("pain:none:under_".length());
+            if (threshold.matches("\\d{1,3}")) {
+                return message("mood_details_source_pain_none", threshold);
+            }
+        }
         String key = switch (source) {
+            case "ritual_satisfaction" -> "mood_details_source_ritual_satisfaction";
             case "animalKilling" -> "mood_details_source_animal";
             case "humanMeat" -> "mood_details_source_food_human_meat";
             case "relief" -> "mood_details_source_relief";
+            case "potion:inebriation" -> "mood_details_source_potion_inebriation";
             case "manual" -> "mood_details_source_manual";
             case "doctrine" -> "mood_details_source_doctrine";
+            case "rebirth" -> "mood_details_source_rebirth";
+            case "townDeath" -> "mood_details_source_town_death";
+            case "betrayal" -> "mood_details_source_betrayal";
+            case "betrayalHunt" -> "mood_details_source_betrayer_hunt";
+            case "bonding:pets" -> "mood_details_source_bonding_pets";
+            case "bondingPetDeath" -> "mood_details_source_bonding_pet_death";
+            case "pain:ideal:unease" -> "mood_details_source_pain_unease";
             case "temporary" -> "mood_details_source_temporary";
             default -> "mood_details_source_unknown";
         };

@@ -773,7 +773,7 @@ public class OrgCommand implements CommandExecutor {
             case "贸易联盟" -> "TRADE_ALLIANCE";
             case "军事同盟" -> "MILITARY_ALLIANCE";
             case "主权帝国" -> "SOVEREIGN_EMPIRE";
-            case "意识形态联盟" -> "IDEOLOGICAL_ALLIANCE";
+            case "文化联盟" -> "IDEOLOGICAL_ALLIANCE";
             default -> normalized;
         };
     }

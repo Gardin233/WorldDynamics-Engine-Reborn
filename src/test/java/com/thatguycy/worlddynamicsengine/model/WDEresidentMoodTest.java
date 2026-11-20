@@ -23,6 +23,34 @@ class WDEresidentMoodTest {
     }
 
     @Test
+    void betrayedFaithPersistsAcrossResidentSerialization() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        resident.setBetrayedReligionName("Old Faith");
+
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+
+        assertEquals("Old Faith", restored.getBetrayedReligionName());
+        restored.setBetrayedReligionName("");
+        assertEquals("", WDEresident.deserialize(restored.serialize()).getBetrayedReligionName());
+    }
+
+    @Test
+    void bondedAnimalsPersistAndCanBeRemovedByUuid() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        UUID firstAnimal = UUID.randomUUID();
+        UUID secondAnimal = UUID.randomUUID();
+
+        assertTrue(resident.addBondedAnimalUuid(firstAnimal));
+        assertTrue(resident.addBondedAnimalUuid(secondAnimal));
+        assertFalse(resident.addBondedAnimalUuid(firstAnimal));
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+        assertEquals(2, restored.getBondedAnimalUuids().size());
+        assertTrue(restored.removeBondedAnimalUuid(firstAnimal));
+        assertFalse(restored.removeBondedAnimalUuid(firstAnimal));
+        assertEquals(List.of(secondAnimal.toString()), List.copyOf(restored.getBondedAnimalUuids()));
+    }
+
+    @Test
     void moodIsBoundedBetweenZeroAndOneHundred() {
         WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
 
@@ -84,10 +112,12 @@ class WDEresidentMoodTest {
         long now = System.currentTimeMillis();
         resident.addMoodChange("relief", 40, now + 60_000L);
         resident.replacePersistentMoodChanges("doctrine|armor|", "doctrine|armor|attitude|compliant", 10);
+        resident.addInspirationCharge("arrow_armor_piercing");
 
         resident.setDehumanized(true);
         assertEquals(50, resident.getMoodAt(now));
         assertTrue(resident.getActiveMoodChanges(now).isEmpty());
+        assertEquals(0, resident.getInspirationCharges("arrow_armor_piercing"));
         assertEquals(50, resident.addMoodChange("manual", -25, now + 60_000L));
 
         WDEresident restored = WDEresident.deserialize(resident.serialize());
@@ -97,6 +127,47 @@ class WDEresidentMoodTest {
         assertFalse(restored.replacePersistentMoodChanges("doctrine|armor|",
                 "doctrine|armor|attitude|violation", -20));
         assertEquals(50, restored.getMood());
+        restored.setDehumanized(false);
+        assertFalse(restored.isDehumanized());
+        assertEquals(60, restored.addMoodChange("manual", 10, now + 60_000L));
+    }
+
+    @Test
+    void inspirationIntervalAndChargesSurviveSerializationAndConsumeIndividually() {
+        long start = System.currentTimeMillis();
+        long interval = 2L * 60L * 1000L;
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+
+        assertFalse(resident.advanceInspirationCheckIfDue(start + interval - 1L, interval));
+        assertTrue(resident.advanceInspirationCheckIfDue(start + interval + 10L, interval));
+        assertTrue(resident.addInspirationCharge("arrow_armor_piercing"));
+        assertTrue(resident.addInspirationCharge("arrow_armor_piercing"));
+
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+        assertEquals(2, restored.getInspirationCharges("arrow_armor_piercing"));
+        assertFalse(restored.advanceInspirationCheckIfDue(start + interval * 2L + 9L, interval));
+        assertTrue(restored.advanceInspirationCheckIfDue(start + interval * 2L + 10L, interval));
+        assertTrue(restored.consumeInspirationCharge("arrow_armor_piercing"));
+        assertEquals(1, restored.getInspirationCharges("arrow_armor_piercing"));
+        assertTrue(restored.consumeInspirationCharge("arrow_armor_piercing"));
+        assertEquals(0, restored.getInspirationCharges("arrow_armor_piercing"));
+        assertFalse(restored.consumeInspirationCharge("arrow_armor_piercing"));
+    }
+
+    @Test
+    void clearingMoodChangesRemovesTimedAndPersistentModifiersOnly() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        long now = System.currentTimeMillis();
+        resident.addMoodChange("relief", 20, now + 60_000L);
+        resident.replacePersistentMoodChanges("doctrine|armor|", "doctrine|armor|naked|compliant", 8);
+        resident.addFlag("wde:manual_collapse");
+
+        resident.clearMoodChanges();
+
+        assertEquals(50, resident.getMood());
+        assertTrue(resident.getActiveMoodChanges(now).isEmpty());
+        assertTrue(resident.hasFlag("wde:manual_collapse"));
+        assertFalse(resident.isDehumanized());
     }
 
     @Test
@@ -211,5 +282,23 @@ class WDEresidentMoodTest {
         List<WDEresident.MoodChangeEntry> remaining = resident.getActiveMoodChanges(firstExpiry + 1L);
         assertEquals(1, remaining.size());
         assertEquals("food:human_meat", remaining.getFirst().source());
+    }
+
+    @Test
+    void comfortSleepTrackingSurvivesSerializationAndCanBeReset() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        resident.startComfortSleepTracking(72_000L);
+
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+        assertTrue(restored.isComfortSleepTracking());
+        assertEquals(72_000L, restored.getLastComfortSleepPlayedTicks());
+
+        restored.recordComfortSleep(80_000L);
+        assertEquals(80_000L, WDEresident.deserialize(restored.serialize())
+                .getLastComfortSleepPlayedTicks());
+
+        restored.stopComfortSleepTracking();
+        assertFalse(restored.isComfortSleepTracking());
+        assertEquals(-1L, restored.getLastComfortSleepPlayedTicks());
     }
 }

@@ -147,6 +147,8 @@ public class OrgManager {
                     attackerSide, defenderSide, legacy.getDefenderScore(), legacy.getAttackerScore(),
                     legacy.getStartedAt());
             migrated.reason = WarReason.INDEPENDENCE;
+            migrated.attackerEconomicTermsDemanded = legacy.defenderEconomicTermsDemanded;
+            migrated.defenderEconomicTermsDemanded = legacy.attackerEconomicTermsDemanded;
             migrated.attackerOccupation.putAll(legacy.getDefenderOccupation());
             migrated.defenderOccupation.putAll(legacy.getAttackerOccupation());
             migrated.attackerKills.putAll(legacy.getDefenderKills());
@@ -1410,6 +1412,15 @@ public class OrgManager {
         proposals.put(context.getWarKey(), proposal);
         writePeaceTreatyProposals(org, proposals);
         saveOrganizations();
+        if (proposalType == PeaceTreatyProposalState.ProposalType.DEMAND
+                && hasQualifyingRaidingEconomicClause(clauses)) {
+            MilitaryWarState updatedWar = recordEconomicTermsDemand(context.getWarKey(), actorNationName);
+            if (updatedWar != null) {
+                var warMood = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin)
+                        .getWarMoodDoctrineManager();
+                if (warMood != null) warMood.recordEconomicWarDemand(updatedWar, actorNationName);
+            }
+        }
         if (submittedClauseCount == 1) {
             processWarGoalProgress(buildOccupationCensus());
             context = resolveWarContext(org, actorNationName, targetNationName);
@@ -1424,6 +1435,28 @@ public class OrgManager {
             }
         }
         return PeaceTreatyProposalResult.proposed(proposal, scoreDifference);
+    }
+
+    private boolean hasQualifyingRaidingEconomicClause(List<PeaceTreatyClauseState> clauses) {
+        if (clauses == null) return false;
+        return clauses.stream().anyMatch(clause ->
+                com.thatguycy.worlddynamicsengine.manager.ideology.RaidingDoctrineCalculator
+                        .hasQualifyingEconomicTerms(
+                                clause.getType() == PeaceTreatyClauseState.ClauseType.TRIBUTE,
+                                clause.getType() == PeaceTreatyClauseState.ClauseType.REPARATIONS
+                                        ? clause.getInt("percent") : 0));
+    }
+
+    private MilitaryWarState recordEconomicTermsDemand(String warKey, String beneficiaryNationName) {
+        Map<String, MilitaryWarState> wars = readActiveMilitaryWars(null);
+        MilitaryWarState war = wars.get(warKey);
+        if (war == null || !war.markEconomicTermsDemanded(beneficiaryNationName)) {
+            return null;
+        }
+        wars.put(warKey, war);
+        writeActiveMilitaryWars(null, wars);
+        saveOrganizations();
+        return war;
     }
 
     private boolean isReadyWarGoalDemand(WarContext context, PeaceTreatyProposalState proposal,
@@ -3039,6 +3072,9 @@ public class OrgManager {
         saveOrganizations();
         var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
         if (history != null) history.warStarted(warState);
+        var warMood = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin)
+                .getWarMoodDoctrineManager();
+        if (warMood != null) warMood.refreshWarParticipants(warState);
     }
 
     private Map<String, MilitaryWarState> readActiveMilitaryWars(WDEorg org) {
@@ -3649,11 +3685,16 @@ public class OrgManager {
             var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
             if (history != null) history.warEnded(endedWar);
             broadcastMilitaryWarEnded(endedWar);
+            var warMood = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin)
+                    .getWarMoodDoctrineManager();
+            if (warMood != null) warMood.recordEconomicWarEnded(endedWar);
         }
     }
 
     private void removeNationFromMilitaryWar(String warKey, String exitingNationName) {
         boolean warStillActive = false;
+        boolean exitingSideHadEconomicTerms = false;
+        MilitaryWarState warBeforeRemoval = null;
         for (WDEorg existing : warContexts()) {
             Map<String, MilitaryWarState> wars = readActiveMilitaryWars(existing);
             MilitaryWarState state = wars.get(warKey);
@@ -3661,7 +3702,13 @@ public class OrgManager {
                 continue;
             }
 
+            boolean exitingAttacker = state.isAttackerNation(exitingNationName);
+            boolean exitingDefender = state.isDefenderNation(exitingNationName);
+            MilitaryWarState snapshot = MilitaryWarState.fromMap(state.getWarKey(), state.toMap());
             if (state.removeParticipant(exitingNationName)) {
+                if (warBeforeRemoval == null) warBeforeRemoval = snapshot;
+                exitingSideHadEconomicTerms |= exitingAttacker && snapshot.hasAttackerEconomicTermsDemanded()
+                        || exitingDefender && snapshot.hasDefenderEconomicTermsDemanded();
                 if (state.hasMinimumParticipants()) {
                     wars.put(warKey, state);
                     warStillActive = true;
@@ -3674,6 +3721,16 @@ public class OrgManager {
 
         if (!warStillActive) {
             clearMilitaryWarAcrossOrganizations(warKey);
+        }
+        var warMood = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin)
+                .getWarMoodDoctrineManager();
+        if (warMood != null) {
+            if (!warStillActive && warBeforeRemoval != null) {
+                warMood.recordEconomicWarEnded(warBeforeRemoval);
+            } else if (warStillActive && exitingSideHadEconomicTerms) {
+                warMood.recordEconomicWarEndedForParticipant(exitingNationName, true);
+            }
+            warMood.refreshAllTowns();
         }
     }
 
@@ -5216,6 +5273,8 @@ public class OrgManager {
         private final Set<String> defenderNationNames;
         private double attackerScore;
         private double defenderScore;
+        private boolean attackerEconomicTermsDemanded;
+        private boolean defenderEconomicTermsDemanded;
         private final long startedAt;
 
         public MilitaryWarState(String attackerLeaderNationName,
@@ -5263,6 +5322,8 @@ public class OrgManager {
                     attackerScore,
                     defenderScore,
                     startedAt);
+            state.attackerEconomicTermsDemanded = Boolean.TRUE.equals(map.get("attackerEconomicTermsDemanded"));
+            state.defenderEconomicTermsDemanded = Boolean.TRUE.equals(map.get("defenderEconomicTermsDemanded"));
             WarReason reason = WarReason.parse(String.valueOf(map.get("reason")));
             if (reason != null) state.reason = reason;
             state.warGoal = WarGoalState.fromMap(map.get("warGoal"));
@@ -5281,6 +5342,8 @@ public class OrgManager {
             map.put("defenderNationNames", new ArrayList<>(defenderNationNames));
             map.put("attackerScore", attackerScore);
             map.put("defenderScore", defenderScore);
+            map.put("attackerEconomicTermsDemanded", attackerEconomicTermsDemanded);
+            map.put("defenderEconomicTermsDemanded", defenderEconomicTermsDemanded);
             map.put("startedAt", startedAt);
             map.put("reason", reason.name());
             map.put("warGoal", warGoal.toMap());
@@ -5350,6 +5413,26 @@ public class OrgManager {
 
         public double getDefenderScore() {
             return defenderScore;
+        }
+
+        public boolean hasAttackerEconomicTermsDemanded() {
+            return attackerEconomicTermsDemanded;
+        }
+
+        public boolean hasDefenderEconomicTermsDemanded() {
+            return defenderEconomicTermsDemanded;
+        }
+
+        public boolean markEconomicTermsDemanded(String beneficiaryNationName) {
+            if (isAttackerNation(beneficiaryNationName)) {
+                attackerEconomicTermsDemanded = true;
+                return true;
+            }
+            if (isDefenderNation(beneficiaryNationName)) {
+                defenderEconomicTermsDemanded = true;
+                return true;
+            }
+            return false;
         }
 
         public Map<String, Double> getAttackerOccupation() {

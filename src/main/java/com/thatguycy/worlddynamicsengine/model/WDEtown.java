@@ -17,6 +17,8 @@ import org.jetbrains.annotations.NotNull;
 public class WDEtown implements ConfigurationSerializable {
     private String townName;
     private String nationName;
+    private long warPeaceSince;
+    private long lastEconomicWarAt;
     private String religionName;
     private boolean religionChosen;
     private String governmentType;
@@ -38,6 +40,8 @@ public class WDEtown implements ConfigurationSerializable {
     public WDEtown(String townName, String nationName) {
         this.townName = townName;
         this.nationName = nationName;
+        this.warPeaceSince = System.currentTimeMillis();
+        this.lastEconomicWarAt = this.warPeaceSince;
         this.religionName = "None";
         this.religionChosen = false;
         this.governmentType = "DICTATORSHIP";
@@ -62,6 +66,12 @@ public class WDEtown implements ConfigurationSerializable {
         }
         this.townName = String.valueOf(map.getOrDefault("townName", "Unknown"));
         this.nationName = String.valueOf(map.getOrDefault("nationName", "None"));
+        Object rawWarPeaceSince = map.get("warPeaceSince");
+        this.warPeaceSince = rawWarPeaceSince instanceof Number number
+                ? Math.max(0L, number.longValue()) : System.currentTimeMillis();
+        Object rawLastEconomicWarAt = map.get("lastEconomicWarAt");
+        this.lastEconomicWarAt = rawLastEconomicWarAt instanceof Number number && number.longValue() > 0L
+                ? number.longValue() : System.currentTimeMillis();
         this.religionName = String.valueOf(map.getOrDefault("religionName", "None"));
         Object rawReligionChosen = map.get("religionChosen");
         this.religionChosen = rawReligionChosen instanceof Boolean
@@ -93,6 +103,8 @@ public class WDEtown implements ConfigurationSerializable {
         Map<String, Object> map = new HashMap<>();
         map.put("townName", townName);
         map.put("nationName", nationName);
+        map.put("warPeaceSince", warPeaceSince);
+        map.put("lastEconomicWarAt", lastEconomicWarAt);
         map.put("religionName", religionName);
         map.put("religionChosen", religionChosen);
         map.put("governmentType", governmentType);
@@ -135,6 +147,22 @@ public class WDEtown implements ConfigurationSerializable {
 
     public void setNationName(String nationName) {
         this.nationName = nationName;
+    }
+
+    public long getWarPeaceSince() {
+        return warPeaceSince;
+    }
+
+    public void setWarPeaceSince(long warPeaceSince) {
+        this.warPeaceSince = Math.max(0L, warPeaceSince);
+    }
+
+    public long getLastEconomicWarAt() {
+        return lastEconomicWarAt;
+    }
+
+    public void setLastEconomicWarAt(long lastEconomicWarAt) {
+        this.lastEconomicWarAt = Math.max(0L, lastEconomicWarAt);
     }
 
     public String getReligionName() {

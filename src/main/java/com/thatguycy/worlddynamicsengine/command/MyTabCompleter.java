@@ -61,13 +61,80 @@ public class MyTabCompleter implements TabCompleter {
                 completions.add("town");
                 completions.add("nation");
                 completions.add("diplomacy");
+                completions.add("gift");
+                completions.add("alms");
+                completions.add("contract");
                 completions.add("org"); // Added 'org'
                 completions.add("ideology");
                 completions.add("mood");
                 // Add more first-level options as needed
+            } else if (rootArg.equals("gift")) {
+                if (args.length == 2) completions.addAll(onlinePlayerNames);
+                else if (args.length == 4 && WorldDynamicsEngine.getInstance().getEconomyBridge() != null) {
+                    completions.addAll(WorldDynamicsEngine.getInstance().getEconomyBridge().currencies());
+                }
+            } else if (rootArg.equals("alms")) {
+                if (args.length == 2) {
+                    completions.addAll(onlinePlayerNames);
+                    completions.addAll(Arrays.asList("accept", "reject"));
+                } else if (args.length == 3 && args[1].equalsIgnoreCase("accept")
+                        && sender instanceof Player player
+                        && WorldDynamicsEngine.getInstance().getPlayerGiftManager() != null) {
+                    completions.addAll(WorldDynamicsEngine.getInstance()
+                            .getPlayerGiftManager().getPendingRequesters(player));
+                } else if (args.length == 3 && args[1].equalsIgnoreCase("reject")
+                        && sender instanceof Player player
+                        && WorldDynamicsEngine.getInstance().getPlayerGiftManager() != null) {
+                    completions.addAll(WorldDynamicsEngine.getInstance()
+                            .getPlayerGiftManager().getPendingRequesters(player));
+                } else if (args.length == 5 && args[1].equalsIgnoreCase("accept")
+                        && WorldDynamicsEngine.getInstance().getEconomyBridge() != null) {
+                    completions.addAll(WorldDynamicsEngine.getInstance().getEconomyBridge().currencies());
+                }
             } else if (rootArg.equals("history")) {
                 var history = WorldDynamicsEngine.getInstance().getNationHistoryManager();
-                if (args.length == 2) completions.addAll(Arrays.asList("help", "list", "read", "txt", "book"));
+                if (args.length == 2) completions.addAll(Arrays.asList(
+                        "help", "list", "read", "txt", "book", "town", "ideology", "church"));
+                else if (args.length >= 3 && args[1].equalsIgnoreCase("town")) {
+                    var townHistory = WorldDynamicsEngine.getInstance().getTownHistoryManager();
+                    if (args.length == 3) completions.addAll(Arrays.asList("list", "read", "txt", "book"));
+                    else if (args.length == 4 && args[2].equalsIgnoreCase("list") && townHistory != null) {
+                        int pages = Math.max(1, (townHistory.list().size() + 7) / 8);
+                        for (int page = 1; page <= pages; page++) completions.add(String.valueOf(page));
+                    } else if (args.length == 4
+                            && List.of("read", "txt", "book").contains(args[2].toLowerCase(java.util.Locale.ROOT))
+                            && townHistory != null) {
+                        townHistory.list().forEach(book -> {
+                            completions.add(book.id);
+                            completions.add(townHistory.displayName(book));
+                        });
+                    }
+                }
+                else if (args.length >= 3
+                        && (args[1].equalsIgnoreCase("ideology") || args[1].equalsIgnoreCase("church"))) {
+                    boolean church = args[1].equalsIgnoreCase("church");
+                    var ideologyHistory = WorldDynamicsEngine.getInstance().getIdeologyHistoryManager();
+                    if (args.length == 3) completions.addAll(Arrays.asList("list", "read", "txt", "book"));
+                    else if (args.length == 4 && args[2].equalsIgnoreCase("list") && ideologyHistory != null) {
+                        int count = church ? ideologyHistory.churches().size() : ideologyHistory.ideologies().size();
+                        int pages = Math.max(1, (count + 7) / 8);
+                        for (int page = 1; page <= pages; page++) completions.add(String.valueOf(page));
+                    } else if (args.length == 4
+                            && List.of("read", "txt", "book").contains(args[2].toLowerCase(java.util.Locale.ROOT))
+                            && ideologyHistory != null) {
+                        if (church) {
+                            ideologyHistory.churches().forEach(book -> {
+                                completions.add(book.id);
+                                completions.add(ideologyHistory.churchDisplayName(book));
+                            });
+                        } else {
+                            ideologyHistory.ideologies().forEach(book -> {
+                                completions.add(book.id);
+                                completions.add(ideologyHistory.ideologyDisplayName(book));
+                            });
+                        }
+                    }
+                }
                 else if (args.length == 3 && !args[1].equalsIgnoreCase("list")) {
                     history.list().forEach(book -> {
                         completions.add(book.id);
@@ -129,6 +196,34 @@ public class MyTabCompleter implements TabCompleter {
             } else if (rootArg.equals("help") && args.length == 2) {
                 for (int page = 1; page <= HelpCommand.getPageCount(WorldDynamicsEngine.getInstance(), sender); page++) {
                     completions.add(String.valueOf(page));
+                }
+            } else if (rootArg.equals("contract")) {
+                if (args.length == 2) {
+                    completions.addAll(Arrays.asList("create", "inbox", "list", "view", "accept", "reject"));
+                } else if (args.length == 3 && args[1].equalsIgnoreCase("create")) {
+                    completions.addAll(Arrays.asList("player", "town", "nation"));
+                } else if (args.length == 4 && args[1].equalsIgnoreCase("create")) {
+                    switch (args[2].toLowerCase(java.util.Locale.ROOT)) {
+                        case "player" -> completions.addAll(Arrays.asList("player", "town", "nation"));
+                        case "town" -> completions.addAll(Arrays.asList("town", "nation"));
+                        case "nation" -> completions.add("nation");
+                    }
+                } else if (args.length >= 3 && List.of("view", "accept", "reject").contains(args[1].toLowerCase(java.util.Locale.ROOT))) {
+                    var manager = WorldDynamicsEngine.getInstance().getContractManager();
+                    if (manager != null && sender instanceof Player player) manager.visibleTo(player)
+                            .stream().map(contract -> contract.id).forEach(completions::add);
+                } else if (args.length == 5 && args[1].equalsIgnoreCase("create")) {
+                    String targetType = args[3].toLowerCase(java.util.Locale.ROOT);
+                    if ("player".equals(targetType)) {
+                        completions.addAll(TownyUniverse.getInstance().getResidents().stream()
+                                .map(com.palmergames.bukkit.towny.object.Resident::getName).toList());
+                    } else if ("town".equals(targetType)) {
+                        completions.addAll(WorldDynamicsEngine.getInstance().getTownManager().getAllTowns().stream()
+                                .map(com.thatguycy.worlddynamicsengine.model.WDEtown::getTownName).toList());
+                    } else if ("nation".equals(targetType)) {
+                        completions.addAll(WorldDynamicsEngine.getInstance().getNationManager().getAllNations().stream()
+                                .map(com.thatguycy.worlddynamicsengine.model.WDEnation::getNationName).toList());
+                    }
                 }
             } else if (rootArg.equals("inn") && args.length == 2) {
                 completions.addAll(Arrays.asList("help", "set"));
@@ -413,7 +508,7 @@ public class MyTabCompleter implements TabCompleter {
                 switch (args[1].toLowerCase()) {
                     case "create":
                         completions.addAll(WorldDynamicsEngine.getInstance().getValidOrganizationTypes());
-                        completions.addAll(Arrays.asList("贸易联盟", "军事同盟", "主权帝国", "意识形态联盟"));
+                        completions.addAll(Arrays.asList("贸易联盟", "军事同盟", "主权帝国", "文化联盟"));
                         break;
                     case "votejoin":
                     case "reviewjoin":

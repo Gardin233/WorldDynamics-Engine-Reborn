@@ -1,5 +1,13 @@
 # 城镇模块配置。
 
+# 城镇史书开关。新安装默认开启；旧配置缺少此项时升级补全为关闭。
+# 关闭期间不采集普通事件；重新开启时从当前快照继续，不补造停用期间历史。
+history:
+  enabled: true
+  # REAL_TIME 为现实日期；REALISTIC_SEASONS 为季节日历日期，日历不可用时回退现实日期。
+  clock: REAL_TIME
+  world: world
+
 # 插件内允许设置的城镇政体列表。
 validTownGovernmentTypes:
   - DICTATORSHIP

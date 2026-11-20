@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-/** Fired once per minute with meme-provided effects and any mood outcome roll. */
+/** Fired for periodic mood checks and for a selected inspiration or collapse outcome. */
 public final class PlayerMoodEvent extends Event {
     public enum Outcome {
         MOOD_CHECK,

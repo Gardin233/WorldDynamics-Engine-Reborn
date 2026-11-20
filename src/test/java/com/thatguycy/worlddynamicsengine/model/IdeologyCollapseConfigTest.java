@@ -18,6 +18,9 @@ class IdeologyCollapseConfigTest {
 
             assertEquals(34, config.getInt("mood.collapse.severity.mildMinimumMood"));
             assertEquals(17, config.getInt("mood.collapse.severity.moderateMinimumMood"));
+            assertEquals(2, config.getInt("mood.inspiration.intervalMinutes"));
+            assertTrue(config.getBoolean("mood.inspiration.effects.arrowArmorPiercing.enabled"));
+            assertTrue(config.getBoolean("mood.inspiration.effects.meleeArmorPiercing.enabled"));
             assertEquals(300, config.getInt("mood.collapse.effects.sadWander.durationSeconds"));
             assertEquals(180, config.getInt("mood.collapse.effects.darkVision.durationSeconds"));
             assertEquals(180, config.getInt("mood.collapse.effects.crazyTalk.durationSeconds"));

@@ -23,6 +23,7 @@ public class WDEresident implements ConfigurationSerializable {
     private UUID userUUID;
     private String username;
     private String religionName;
+    private String betrayedReligionName;
     private UUID churchUuid;
     private long churchChangedAt;
     private boolean religionChosen;
@@ -30,11 +31,17 @@ public class WDEresident implements ConfigurationSerializable {
     private String adulthoodBackgroundId;
     private String focusedWarKey;
     private int mood;
+    private long lastInspirationCheckAt;
+    private long lastComfortSleepPlayedTicks;
+    private boolean comfortSleepTracking;
+    private long lastRitualParticipationAt;
     private final List<MoodChange> moodChanges = new ArrayList<>();
     private final Map<String, Integer> persistentMoodChanges = new LinkedHashMap<>();
+    private final Map<String, Integer> inspirationCharges = new LinkedHashMap<>();
     private String activeCollapseId;
     private long activeCollapseExpiresAt;
     private Set<String> appliedBackgroundBonusIds;
+    private Set<String> bondedAnimalUuids;
     private Set<String> flags;
 
     private record MoodChange(String source, int delta, long expiresAt) {}
@@ -49,6 +56,7 @@ public class WDEresident implements ConfigurationSerializable {
         this.userUUID = userUUID;
         this.username = username;
         this.religionName = "None";
+        this.betrayedReligionName = "";
         this.churchUuid = null;
         this.churchChangedAt = 0L;
         this.religionChosen = false;
@@ -56,9 +64,14 @@ public class WDEresident implements ConfigurationSerializable {
         this.adulthoodBackgroundId = "";
         this.focusedWarKey = "";
         this.mood = 50;
+        this.lastInspirationCheckAt = System.currentTimeMillis();
+        this.lastComfortSleepPlayedTicks = -1L;
+        this.comfortSleepTracking = false;
+        this.lastRitualParticipationAt = System.currentTimeMillis();
         this.activeCollapseId = "";
         this.activeCollapseExpiresAt = 0L;
         this.appliedBackgroundBonusIds = new HashSet<>();
+        this.bondedAnimalUuids = new HashSet<>();
         this.flags = new HashSet<>();
     }
 
@@ -67,7 +80,9 @@ public class WDEresident implements ConfigurationSerializable {
         this.userUUID = UUID.fromString(String.valueOf(map.get("userUUID")));
         this.username = String.valueOf(map.getOrDefault("username", "Unknown"));
         this.religionName = String.valueOf(map.getOrDefault("religionName", "None"));
+        this.betrayedReligionName = normalizeStringValue(map.get("betrayedReligionName"));
         this.flags = readStringSet(map.get("flags"));
+        this.bondedAnimalUuids = readStringSet(map.get("bondedAnimalUuids"));
         String churchUuidValue = normalizeStringValue(map.get("churchUuid"));
         this.churchUuid = churchUuidValue.isBlank() ? null : UUID.fromString(churchUuidValue);
         Object rawChurchChangedAt = map.get("churchChangedAt");
@@ -79,6 +94,18 @@ public class WDEresident implements ConfigurationSerializable {
         this.childhoodBackgroundId = normalizeStringValue(map.get("childhoodBackgroundId"));
         this.adulthoodBackgroundId = normalizeStringValue(map.get("adulthoodBackgroundId"));
         this.focusedWarKey = normalizeStringValue(map.get("focusedWarKey"));
+        Object rawLastInspirationCheckAt = map.get("lastInspirationCheckAt");
+        this.lastInspirationCheckAt = rawLastInspirationCheckAt instanceof Number number
+                && number.longValue() > 0L ? number.longValue() : System.currentTimeMillis();
+        Object rawLastComfortSleepPlayedTicks = map.get("lastComfortSleepPlayedTicks");
+        this.lastComfortSleepPlayedTicks = rawLastComfortSleepPlayedTicks instanceof Number number
+                ? number.longValue() : -1L;
+        Object rawComfortSleepTracking = map.get("comfortSleepTracking");
+        this.comfortSleepTracking = rawComfortSleepTracking instanceof Boolean
+                && (Boolean) rawComfortSleepTracking;
+        Object rawLastRitualParticipationAt = map.get("lastRitualParticipationAt");
+        this.lastRitualParticipationAt = rawLastRitualParticipationAt instanceof Number number
+                && number.longValue() > 0L ? number.longValue() : System.currentTimeMillis();
         Object rawMood = map.get("mood");
         this.mood = clampMood(rawMood instanceof Number number ? number.intValue() : 50);
         Object rawMoodChanges = map.get("moodChanges");
@@ -108,9 +135,20 @@ public class WDEresident implements ConfigurationSerializable {
                 persistentMoodChanges.put(source, clampMoodDelta(delta.intValue()));
             }
         }
+        Object rawInspirationCharges = map.get("inspirationCharges");
+        if (rawInspirationCharges instanceof Map<?, ?> charges) {
+            for (Map.Entry<?, ?> entry : charges.entrySet()) {
+                String effectId = normalizeStringValue(entry.getKey()).toLowerCase(java.util.Locale.ROOT);
+                if (!(entry.getValue() instanceof Number count) || effectId.isBlank() || count.intValue() <= 0) {
+                    continue;
+                }
+                inspirationCharges.put(effectId, Math.min(99, count.intValue()));
+            }
+        }
         if (isDehumanized()) {
             moodChanges.clear();
             persistentMoodChanges.clear();
+            inspirationCharges.clear();
             mood = 50;
         }
         refreshMood(System.currentTimeMillis());
@@ -131,6 +169,7 @@ public class WDEresident implements ConfigurationSerializable {
         map.put("userUUID", userUUID.toString());
         map.put("username", username);
         map.put("religionName", religionName);
+        map.put("betrayedReligionName", betrayedReligionName);
         map.put("churchUuid", churchUuid == null ? "" : churchUuid.toString());
         map.put("churchChangedAt", churchChangedAt);
         map.put("religionChosen", religionChosen);
@@ -138,6 +177,10 @@ public class WDEresident implements ConfigurationSerializable {
         map.put("adulthoodBackgroundId", adulthoodBackgroundId);
         map.put("focusedWarKey", focusedWarKey);
         map.put("mood", mood);
+        map.put("lastInspirationCheckAt", lastInspirationCheckAt);
+        map.put("lastComfortSleepPlayedTicks", lastComfortSleepPlayedTicks);
+        map.put("comfortSleepTracking", comfortSleepTracking);
+        map.put("lastRitualParticipationAt", lastRitualParticipationAt);
         List<Map<String, Object>> serializedMoodChanges = new ArrayList<>();
         for (MoodChange change : moodChanges) {
             serializedMoodChanges.add(Map.of("source", change.source(), "delta", change.delta(),
@@ -145,9 +188,11 @@ public class WDEresident implements ConfigurationSerializable {
         }
         map.put("moodChanges", serializedMoodChanges);
         map.put("persistentMoodChanges", new LinkedHashMap<>(persistentMoodChanges));
+        map.put("inspirationCharges", new LinkedHashMap<>(inspirationCharges));
         map.put("activeCollapseId", activeCollapseId);
         map.put("activeCollapseExpiresAt", activeCollapseExpiresAt);
         map.put("appliedBackgroundBonusIds", appliedBackgroundBonusIds);
+        map.put("bondedAnimalUuids", bondedAnimalUuids);
         map.put("flags", flags);
         return map;
     }
@@ -182,12 +227,52 @@ public class WDEresident implements ConfigurationSerializable {
         return religionName;
     }
 
+    public String getBetrayedReligionName() {
+        return betrayedReligionName;
+    }
+
+    public void setBetrayedReligionName(String betrayedReligionName) {
+        this.betrayedReligionName = normalizeStringValue(betrayedReligionName);
+    }
+
     public void setReligionName(String religionName) {
         if (this.religionName == null || religionName == null
                 || !this.religionName.equalsIgnoreCase(religionName)) {
             churchUuid = null;
+            lastRitualParticipationAt = System.currentTimeMillis();
         }
         this.religionName = religionName;
+    }
+
+    public long getLastRitualParticipationAt() {
+        return lastRitualParticipationAt;
+    }
+
+    public void setLastRitualParticipationAt(long lastRitualParticipationAt) {
+        this.lastRitualParticipationAt = Math.max(1L, lastRitualParticipationAt);
+    }
+
+    public long getLastComfortSleepPlayedTicks() {
+        return lastComfortSleepPlayedTicks;
+    }
+
+    public boolean isComfortSleepTracking() {
+        return comfortSleepTracking;
+    }
+
+    public void startComfortSleepTracking(long playedTicks) {
+        lastComfortSleepPlayedTicks = Math.max(0L, playedTicks);
+        comfortSleepTracking = true;
+    }
+
+    public void recordComfortSleep(long playedTicks) {
+        lastComfortSleepPlayedTicks = Math.max(0L, playedTicks);
+        comfortSleepTracking = true;
+    }
+
+    public void stopComfortSleepTracking() {
+        lastComfortSleepPlayedTicks = -1L;
+        comfortSleepTracking = false;
     }
 
     public UUID getChurchUuid() {
@@ -237,6 +322,18 @@ public class WDEresident implements ConfigurationSerializable {
                 : new HashSet<>(appliedBackgroundBonusIds);
     }
 
+    public Set<String> getBondedAnimalUuids() {
+        return Set.copyOf(bondedAnimalUuids);
+    }
+
+    public boolean addBondedAnimalUuid(UUID animalUuid) {
+        return animalUuid != null && bondedAnimalUuids.add(animalUuid.toString());
+    }
+
+    public boolean removeBondedAnimalUuid(UUID animalUuid) {
+        return animalUuid != null && bondedAnimalUuids.remove(animalUuid.toString());
+    }
+
     public String getFocusedWarKey() {
         return focusedWarKey;
     }
@@ -253,6 +350,7 @@ public class WDEresident implements ConfigurationSerializable {
         if (isDehumanized()) {
             moodChanges.clear();
             persistentMoodChanges.clear();
+            inspirationCharges.clear();
             this.mood = 50;
             return;
         }
@@ -263,6 +361,57 @@ public class WDEresident implements ConfigurationSerializable {
             moodChanges.add(new MoodChange("manual", delta,
                     System.currentTimeMillis() + DEFAULT_MOOD_DURATION_MILLIS));
         }
+    }
+
+    /** Removes all timed and persistent mood modifiers while preserving other resident state. */
+    public void clearMoodChanges() {
+        moodChanges.clear();
+        persistentMoodChanges.clear();
+        mood = calculateMood(System.currentTimeMillis());
+    }
+
+    /** Advances the per-resident inspiration interval when it becomes due. */
+    public boolean advanceInspirationCheckIfDue(long now, long intervalMillis) {
+        if (isDehumanized()) return false;
+        if (lastInspirationCheckAt <= 0L) {
+            lastInspirationCheckAt = now;
+            return false;
+        }
+        if (now - lastInspirationCheckAt < Math.max(1L, intervalMillis)) return false;
+        lastInspirationCheckAt = now;
+        return true;
+    }
+
+    public boolean addInspirationCharge(String effectId) {
+        if (isDehumanized() || effectId == null || effectId.isBlank()) return false;
+        String normalizedId = effectId.trim().toLowerCase(java.util.Locale.ROOT);
+        int current = inspirationCharges.getOrDefault(normalizedId, 0);
+        if (current >= 99) return false;
+        inspirationCharges.put(normalizedId, current + 1);
+        return true;
+    }
+
+    public boolean consumeInspirationCharge(String effectId) {
+        if (effectId == null || effectId.isBlank()) return false;
+        String normalizedId = effectId.trim().toLowerCase(java.util.Locale.ROOT);
+        int current = inspirationCharges.getOrDefault(normalizedId, 0);
+        if (current <= 0) return false;
+        if (current == 1) inspirationCharges.remove(normalizedId);
+        else inspirationCharges.put(normalizedId, current - 1);
+        return true;
+    }
+
+    public int getInspirationCharges(String effectId) {
+        return effectId == null ? 0
+                : inspirationCharges.getOrDefault(effectId.trim().toLowerCase(java.util.Locale.ROOT), 0);
+    }
+
+    public void clearInspirationCharges() {
+        inspirationCharges.clear();
+    }
+
+    public void resetInspirationCheckTimer(long now) {
+        lastInspirationCheckAt = now;
     }
 
     /** Appends a temporary mood delta; equal-source changes stack and expire independently. */
@@ -323,6 +472,7 @@ public class WDEresident implements ConfigurationSerializable {
             boolean changed = !moodChanges.isEmpty() || !persistentMoodChanges.isEmpty() || mood != 50;
             moodChanges.clear();
             persistentMoodChanges.clear();
+            inspirationCharges.clear();
             mood = 50;
             return changed;
         }
@@ -422,10 +572,14 @@ public class WDEresident implements ConfigurationSerializable {
             flags.add(DEHUMANIZED_FLAG);
             moodChanges.clear();
             persistentMoodChanges.clear();
+            inspirationCharges.clear();
+            stopComfortSleepTracking();
             mood = 50;
+            lastInspirationCheckAt = System.currentTimeMillis();
         } else {
             flags.remove(DEHUMANIZED_FLAG);
             mood = calculateMood(System.currentTimeMillis());
+            lastInspirationCheckAt = System.currentTimeMillis();
         }
     }
 

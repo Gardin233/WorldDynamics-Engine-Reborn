@@ -9,20 +9,23 @@ import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.Resident;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 
-/** Persists doctrine mood changes and evaluates meme effects once per minute. */
+/** Persists doctrine mood changes and evaluates timed mood outcomes for online players. */
 public final class MoodManager {
     private final WorldDynamicsEngine plugin;
     private final Set<UUID> dirtyResidents = new HashSet<>();
+    private final Map<UUID, List<WDEresident.MoodChangeEntry>> exemptMoodPreviews = new HashMap<>();
 
     public MoodManager(WorldDynamicsEngine plugin) {
         this.plugin = plugin;
@@ -49,9 +52,69 @@ public final class MoodManager {
 
     public boolean isMoodExempt(Player player) {
         if (player == null) return false;
-        if (player.isOp()) return true;
+        if (player.isOp() || player.getGameMode() == GameMode.CREATIVE) return true;
         WDEresident resident = plugin.getResidentManager().getResident(player.getUniqueId());
         return resident != null && resident.isDehumanized();
+    }
+
+    private boolean shouldRecordExemptMoodPreview(Player player) {
+        if (player == null || (!player.isOp() && player.getGameMode() != GameMode.CREATIVE)) return false;
+        WDEresident resident = plugin.getResidentManager().getResident(player.getUniqueId());
+        return resident == null || !resident.isDehumanized();
+    }
+
+    /** Allows exempt test modes to calculate display-only outcomes but keeps dehumanized players excluded. */
+    public boolean shouldProcessMoodAction(Player player) {
+        return player != null && (!isMoodExempt(player) || shouldRecordExemptMoodPreview(player));
+    }
+
+    /** Returns transient debug entries for exempt players without reading them into mood calculations. */
+    public List<WDEresident.MoodChangeEntry> getExemptMoodPreviews(Player player, long now) {
+        if (!shouldRecordExemptMoodPreview(player)) return List.of();
+        pruneExemptMoodPreviews(now);
+        return List.copyOf(exemptMoodPreviews.getOrDefault(player.getUniqueId(), List.of()));
+    }
+
+    public void pruneExemptMoodPreviews() {
+        pruneExemptMoodPreviews(System.currentTimeMillis());
+    }
+
+    private void addExemptMoodPreview(Player player, String source, int delta, long expiresAt) {
+        if (!shouldRecordExemptMoodPreview(player) || source == null || source.isBlank() || delta == 0) return;
+        pruneExemptMoodPreviews(System.currentTimeMillis());
+        exemptMoodPreviews.computeIfAbsent(player.getUniqueId(), ignored -> new ArrayList<>())
+                .add(new WDEresident.MoodChangeEntry(source, delta, expiresAt, false));
+    }
+
+    private void replaceExemptPersistentPreview(UUID residentUuid, String sourcePrefix,
+                                                String source, int delta) {
+        List<WDEresident.MoodChangeEntry> entries =
+                exemptMoodPreviews.computeIfAbsent(residentUuid, ignored -> new ArrayList<>());
+        entries.removeIf(entry -> entry.permanent() && entry.source().startsWith(sourcePrefix));
+        if (source != null && !source.isBlank() && delta != 0) {
+            entries.add(new WDEresident.MoodChangeEntry(source, delta, Long.MAX_VALUE, true));
+        }
+        if (entries.isEmpty()) exemptMoodPreviews.remove(residentUuid);
+    }
+
+    private void clearExemptPersistentPreview(UUID residentUuid, String sourcePrefix) {
+        List<WDEresident.MoodChangeEntry> entries = exemptMoodPreviews.get(residentUuid);
+        if (entries == null) return;
+        entries.removeIf(entry -> entry.permanent() && entry.source().startsWith(sourcePrefix));
+        if (entries.isEmpty()) exemptMoodPreviews.remove(residentUuid);
+    }
+
+    private void pruneExemptMoodPreviews(long now) {
+        var iterator = exemptMoodPreviews.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            Player player = Bukkit.getPlayer(entry.getKey());
+            entry.getValue().removeIf(change -> !change.permanent() && change.expiresAt() <= now);
+            if (player == null || !player.isOnline() || !shouldRecordExemptMoodPreview(player)
+                    || entry.getValue().isEmpty()) {
+                iterator.remove();
+            }
+        }
     }
 
     public int getExpectationModifier(Player player) {
@@ -97,7 +160,7 @@ public final class MoodManager {
 
     public int applyDoctrineOutcomes(Player player, int compliantWeight, int violationWeight,
                                      String instantAction, String source) {
-        if (player == null || isMoodExempt(player) || !plugin.religionEnabled
+        if (player == null || !plugin.religionEnabled
                 || compliantWeight + violationWeight <= 0) {
             return getMood(player);
         }
@@ -118,6 +181,12 @@ public final class MoodManager {
         int durationMinutes = config == null ? 30
                 : Math.max(1, Math.min(1440, config.getInt("mood.decayMinutes", 30)));
         long now = System.currentTimeMillis();
+        if (isMoodExempt(player)) {
+            if (boundedDelta != 0) {
+                addExemptMoodPreview(player, source, boundedDelta, now + durationMinutes * 60_000L);
+            }
+            return getMood(player);
+        }
         int previous = resident.getMoodAt(now);
         resident.addMoodChange(source, boundedDelta, now + durationMinutes * 60_000L);
         if (resident.getMood() != previous) dirtyResidents.add(resident.getUserUUID());
@@ -126,7 +195,7 @@ public final class MoodManager {
 
     public int applyDoctrineMoodChanges(Player player, int compliantMoodChange, int violationMoodChange,
                                         String source) {
-        if (player == null || isMoodExempt(player) || !plugin.religionEnabled
+        if (player == null || !plugin.religionEnabled
                 || (compliantMoodChange <= 0 && violationMoodChange <= 0)) {
             return getMood(player);
         }
@@ -140,10 +209,70 @@ public final class MoodManager {
         int durationMinutes = config == null ? 30
                 : Math.max(1, Math.min(1440, config.getInt("mood.decayMinutes", 30)));
         long now = System.currentTimeMillis();
+        if (isMoodExempt(player)) {
+            addExemptMoodPreview(player, source, boundedDelta, now + durationMinutes * 60_000L);
+            return getMood(player);
+        }
         int previous = resident.getMoodAt(now);
         resident.addMoodChange(source, boundedDelta, now + durationMinutes * 60_000L);
         if (resident.getMood() != previous) dirtyResidents.add(resident.getUserUUID());
         return getMood(player);
+    }
+
+    /** Applies a temporary mood delta to an online or offline resident profile. */
+    public boolean applyTemporaryMoodChange(UUID residentUuid, String source, int delta) {
+        if (delta == 0) return false;
+        var config = plugin.getIdeologyConfig();
+        int durationMinutes = config == null ? 30
+                : Math.max(1, Math.min(1440, config.getInt("mood.decayMinutes", 30)));
+        return applyTemporaryMoodChange(residentUuid, source, delta, durationMinutes * 60_000L);
+    }
+
+    /** Applies a temporary mood delta with a caller-defined duration. */
+    public boolean applyTemporaryMoodChange(UUID residentUuid, String source, int delta, long durationMillis) {
+        if (residentUuid == null || delta == 0 || !plugin.religionEnabled) return false;
+        WDEresident resident = plugin.getResidentManager().getResident(residentUuid);
+        if (resident == null || resident.isDehumanized()) return false;
+        Player player = Bukkit.getPlayer(residentUuid);
+        if (player != null ? isMoodExempt(player) : Bukkit.getOfflinePlayer(residentUuid).isOp()) {
+            if (shouldRecordExemptMoodPreview(player)) {
+                long now = System.currentTimeMillis();
+                int boundedDelta = Math.max(-100, Math.min(100, delta));
+                addExemptMoodPreview(player, source, boundedDelta,
+                        now + Math.max(1L, Math.min(durationMillis, 3650L * 24 * 60 * 60 * 1000)));
+                return true;
+            }
+            return false;
+        }
+
+        long now = System.currentTimeMillis();
+        resident.addMoodChange(source, Math.max(-100, Math.min(100, delta)),
+                now + Math.max(1L, Math.min(durationMillis, 3650L * 24 * 60 * 60 * 1000)));
+        plugin.getResidentManager().saveResident(resident);
+        return true;
+    }
+
+    /** Replaces one persistent mood state on an online or offline resident. */
+    public boolean replacePersistentMoodModifier(UUID residentUuid, String sourcePrefix,
+                                                 String source, int delta) {
+        if (residentUuid == null) return false;
+        WDEresident resident = plugin.getResidentManager().getResident(residentUuid);
+        if (resident == null) return false;
+        Player player = Bukkit.getPlayer(residentUuid);
+        boolean exempt = player != null ? isMoodExempt(player) : Bukkit.getOfflinePlayer(residentUuid).isOp();
+        if (exempt && shouldRecordExemptMoodPreview(player)) {
+            replaceExemptPersistentPreview(residentUuid, sourcePrefix,
+                    plugin.religionEnabled && !resident.isDehumanized() ? source : null,
+                    plugin.religionEnabled && !resident.isDehumanized() ? delta : 0);
+        } else {
+            clearExemptPersistentPreview(residentUuid, sourcePrefix);
+        }
+        String appliedSource = plugin.religionEnabled && !exempt && !resident.isDehumanized()
+                ? source : null;
+        int appliedDelta = appliedSource == null ? 0 : delta;
+        if (!resident.replacePersistentMoodChanges(sourcePrefix, appliedSource, appliedDelta)) return false;
+        plugin.getResidentManager().saveResident(resident);
+        return true;
     }
 
     public int applyDoctrineOutcome(Player player, String doctrineId, String attitudeId, boolean compliant) {
@@ -167,7 +296,7 @@ public final class MoodManager {
         String sourcePrefix = "doctrine|" + doctrineId + "|";
         String source = null;
         int delta = 0;
-        if (compliant != null && plugin.religionEnabled && !isMoodExempt(player) && attitudeId != null) {
+        if (compliant != null && plugin.religionEnabled && attitudeId != null) {
             ReligionManager religions = plugin.getReligionManager();
             int weight = religions.getDoctrineMoodWeight(doctrineId, attitudeId);
             int perWeight = religions.getDoctrineMoodChangePerWeight(doctrineId, attitudeId, compliant, null);
@@ -175,6 +304,18 @@ public final class MoodManager {
             int boundedMagnitude = (int) Math.min(100L, magnitude);
             delta = compliant ? boundedMagnitude : -boundedMagnitude;
             source = new DoctrineMoodEntry(doctrineId, attitudeId, compliant, delta).source();
+        }
+
+        if (isMoodExempt(player)) {
+            if (shouldRecordExemptMoodPreview(player)) {
+                replaceExemptPersistentPreview(player.getUniqueId(), sourcePrefix, source, delta);
+            } else {
+                clearExemptPersistentPreview(player.getUniqueId(), sourcePrefix);
+            }
+            source = null;
+            delta = 0;
+        } else {
+            clearExemptPersistentPreview(player.getUniqueId(), sourcePrefix);
         }
 
         if (resident.replacePersistentMoodChanges(sourcePrefix, source, delta)) {
@@ -185,6 +326,7 @@ public final class MoodManager {
     }
 
     private void evaluateOnlinePlayers() {
+        pruneExemptMoodPreviews();
         if (!plugin.religionEnabled) return;
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (isMoodExempt(player)) continue;
@@ -193,7 +335,8 @@ public final class MoodManager {
                     ? null : plugin.getReligionManager().getReligion(resident.getReligionName());
             if (religion == null) continue;
 
-            if (resident.refreshMood(System.currentTimeMillis())) {
+            long now = System.currentTimeMillis();
+            if (resident.refreshMood(now)) {
                 dirtyResidents.add(resident.getUserUUID());
             }
             int mood = getMood(player);
@@ -208,17 +351,34 @@ public final class MoodManager {
                 }
             }
 
-            double chance = getOutcomeChancePercent(mood);
+            var config = plugin.getIdeologyConfig();
+            int inspirationIntervalMinutes = config == null ? 2
+                    : Math.max(1, Math.min(1440, config.getInt("mood.inspiration.intervalMinutes", 2)));
+            boolean inspirationDue = resident.advanceInspirationCheckIfDue(
+                    now, inspirationIntervalMinutes * 60_000L);
+            if (inspirationDue) dirtyResidents.add(resident.getUserUUID());
+
+            InspirationManager inspirations = plugin.getInspirationManager();
+            String inspirationEffect = mood > 50 && inspirationDue && inspirations != null
+                    ? inspirations.chooseRandomEffect() : null;
+            double chance = mood < 50 ? getOutcomeChancePercent(mood)
+                    : inspirationEffect == null ? 0.0 : 100.0;
             PlayerMoodEvent.Outcome outcome = mood < 50
-                    ? PlayerMoodEvent.Outcome.COLLAPSE
-                    : PlayerMoodEvent.Outcome.INSPIRATION;
+                    ? PlayerMoodEvent.Outcome.COLLAPSE : PlayerMoodEvent.Outcome.INSPIRATION;
             callMoodEvent(player, mood, PlayerMoodEvent.Outcome.MOOD_CHECK, chance, memes, moodEffects);
-            if (chance > 0.0 && ThreadLocalRandom.current().nextDouble(100.0) < chance) {
+            if (mood < 50 && chance > 0.0
+                    && java.util.concurrent.ThreadLocalRandom.current().nextDouble(100.0) < chance) {
                 Set<String> outcomeEffects = new LinkedHashSet<>(moodEffects);
-                String outcomeKey = outcome == PlayerMoodEvent.Outcome.COLLAPSE ? "collapse" : "inspiration";
                 for (IdeologyMemeDefinition meme : memes) {
-                    outcomeEffects.addAll(meme.getOutcomeEffects(outcomeKey));
+                    outcomeEffects.addAll(meme.getOutcomeEffects("collapse"));
                 }
+                callMoodEvent(player, mood, outcome, chance, memes, outcomeEffects);
+            } else if (inspirationEffect != null && inspirations.grant(player, inspirationEffect)) {
+                Set<String> outcomeEffects = new LinkedHashSet<>(moodEffects);
+                for (IdeologyMemeDefinition meme : memes) {
+                    outcomeEffects.addAll(meme.getOutcomeEffects("inspiration"));
+                }
+                outcomeEffects.add(inspirationEffect);
                 callMoodEvent(player, mood, outcome, chance, memes, outcomeEffects);
             }
         }
@@ -244,7 +404,7 @@ public final class MoodManager {
 
     public static double getOutcomeChancePercent(int mood) {
         int boundedMood = Math.max(0, Math.min(100, mood));
-        return Math.min(100.0, Math.abs(boundedMood - 50) * 2.0);
+        return boundedMood >= 50 ? 0.0 : Math.min(100.0, (50 - boundedMood) * 2.0);
     }
 
     private static int clampMood(int mood) {

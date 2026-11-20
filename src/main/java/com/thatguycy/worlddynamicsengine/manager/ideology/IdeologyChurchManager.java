@@ -111,6 +111,10 @@ public final class IdeologyChurchManager {
                 .toList();
     }
 
+    public synchronized List<WDEChurch> getAllChurches() {
+        return List.copyOf(churches.values());
+    }
+
     public synchronized List<IdeologyCouncilProposal> getProposals(String ideologyName, boolean pendingOnly) {
         WDEreligion ideology = religions.getReligion(ideologyName);
         if (ideology == null) return List.of();
@@ -120,6 +124,10 @@ public final class IdeologyChurchManager {
                         || proposal.getState() == IdeologyCouncilProposal.State.APPROVED)
                 .sorted(Comparator.comparingLong(IdeologyCouncilProposal::getCreatedAt).reversed())
                 .toList();
+    }
+
+    public synchronized List<IdeologyCouncilProposal> getAllProposals() {
+        return List.copyOf(proposals.values());
     }
 
     public synchronized WDEChurch getActiveChurchForResident(WDEresident resident, WDEreligion ideology) {
@@ -1137,6 +1145,8 @@ public final class IdeologyChurchManager {
     private void persistChurch(WDEChurch church) {
         storage.saveEntity(CHURCHES_CATEGORY, church.getChurchUuid().toString(), church);
         churches.put(church.getChurchUuid(), church);
+        var history = plugin.getIdeologyHistoryManager();
+        if (history != null) history.observeChurch(church);
     }
 
     private Map<String, WDEChurch> stringKeyedChurches() {
@@ -1174,6 +1184,12 @@ public final class IdeologyChurchManager {
         for (WDEChurch church : changedChurches) churches.put(church.getChurchUuid(), church);
         for (IdeologyCouncilProposal proposal : changedProposals) proposals.put(proposal.getProposalUuid(), proposal);
         residents.publishResidents(changedResidents);
+        var history = plugin.getIdeologyHistoryManager();
+        if (history != null) {
+            changedReligions.forEach(history::observeIdeology);
+            changedChurches.forEach(history::observeChurch);
+            changedProposals.forEach(history::observeProposal);
+        }
         if (reconcileResidentIdeologies) {
             for (WDEresident resident : changedResidents) {
                 religions.onResidentIdeologyChanged(resident.getUserUUID());

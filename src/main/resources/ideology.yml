@@ -1,7 +1,14 @@
-# 意识形态相关配置。
+# 文化相关配置。
 
-# 是否启用意识形态展示相关功能。
+# 是否启用文化展示相关功能。
 religionEnabled: true
+
+# 文化与教会史书；新安装默认开启，旧配置缺少此项时补全为关闭。
+# REAL_TIME 使用现实日期；REALISTIC_SEASONS 使用下方 world 对应的季节日历。
+history:
+  enabled: true
+  clock: REAL_TIME
+  world: world
 
 # 模因与戒律修改冷却。
 # mode: REAL_TIME 使用现实天；REALISTIC_SEASONS 使用 RealisticSeasons 日历天。
@@ -14,8 +21,8 @@ cooldowns:
   doctrines:
     days: 7
 
-# 意识形态治理模式与枢机选举。
-# 模式状态保存在每个意识形态数据中；此默认值只用于新建组织和旧版配置补齐。
+# 文化治理模式与枢机选举。
+# 模式状态保存在每个文化数据中；此默认值只用于新建组织和旧版配置补齐。
 governance:
   defaultMode: LIFETIME
 
@@ -25,8 +32,8 @@ cardinals:
   followersPerAdditionalSeat: 25
   maximumSeats: 9
 
-# 枢机选举。选民为投票开始和计票时仍是该意识形态追随者的现任枢机。
-# 候选人为未被制裁的现任追随者，个人选票只保存在意识形态数据中，不公开展示。
+# 枢机选举。选民为投票开始和计票时仍是该文化追随者的现任枢机。
+# 候选人为未被制裁的现任追随者，个人选票只保存在文化数据中，不公开展示。
 elections:
   intervalDays: 90
   votingDays: 7
@@ -50,7 +57,7 @@ elections:
   noWinnerPolicy: RETRY_AFTER_DAYS
   noWinnerRetryDays: 30
 
-# 共议制教会规则。居民同时只能加入同一源意识形态下的一座活跃教会。
+# 共议制教会规则。居民同时只能加入同一源文化下的一座活跃教会。
 churches:
   maximumPerIdeology: 32
   membershipCooldownHours: 24
@@ -67,8 +74,8 @@ council:
   approvalRatio: 0.5
   sanctionMaximumDays: 90
 
-# 意识形态仪式系统。
-# 仪式定义由意识形态最高统治机构创建；终身制/枢机制扣教廷金库，共议制按活跃教会金库占比分摊。
+# 文化仪式系统。
+# 仪式定义由文化最高统治机构创建；终身制/枢机制扣教廷金库，共议制按活跃教会金库占比分摊。
 rituals:
   creationCost: "10000.00"
   durationSeconds: 900
@@ -83,6 +90,12 @@ rituals:
 # 护甲戒律是长期状态修正，无限时；只在装备、信仰或态度相关事件时重新计算。
 mood:
   decayMinutes: 30
+  # 玩家死亡获得的重获新生加成，以及同镇成员死亡、改信背叛和击杀叛徒的临时心情变化。
+  events:
+    deathRebirthBonus: 10
+    townDeathPenalty: -4
+    betrayalPenalty: -4
+    betrayerHuntBonus: 10
   # 新玩家按累计在线时长逐档减少心情期望加成；每档默认 2 小时。
   expectations:
     newPlayer:
@@ -92,6 +105,14 @@ mood:
     roles:
       townMayor: -8
       nationKing: -12
+  # 心情高于 50 时，每到间隔便随机获得一个已启用的下一击灵感。
+  inspiration:
+    intervalMinutes: 2
+    effects:
+      arrowArmorPiercing:
+        enabled: true
+      meleeArmorPiercing:
+        enabled: true
   changes:
     # attitude 未设置 moodChange 时使用此遵守增益/违背扣减基数。
     compliant: 1
@@ -107,6 +128,171 @@ mood:
   doctrineActions:
     animalKilling:
       enabled: true
+    animalResonance:
+      enabled: true
+    rituals:
+      enabled: true
+      satisfactionDurationMinutes: 30
+      # “推崇”态度连续这么多现实日未参与仪式后，维护长期心情扣减。
+      longAbsenceDays: 30
+    war:
+      enabled: true
+      # 持续和平达到该现实天数后，按战争戒律态度维护和平心情修正。
+      longPeaceDays: 30
+    raiding:
+      enabled: true
+      # 距离上次有效经济战争达到该现实天数后，掠袭态度产生和平期心情修正。
+      longPeaceDays: 30
+    bonding:
+      enabled: true
+      moodPerTamedAnimal: 2
+      petDeathPenalty: 4
+      petDeathDurationDays: 7
+    comfort:
+      enabled: true
+      # 连续累计在线游戏时间达到该 Minecraft 天数未睡时，获得态度符合加成。
+      noSleepThresholdDays: 3
+    roughingIt:
+      enabled: true
+    pain:
+      enabled: true
+      checkIntervalTicks: 20
+      # 低于对应血量比例时采用最深一档，不叠加多个档位。
+      healthThresholds: [0.75, 0.50, 0.25, 0.10]
+      ideal:
+        highHealthPenalty: 2
+        lowHealthBonuses: [2, 4, 6, 10]
+      none:
+        lowHealthPenalties: [2, 4, 6, 10]
+    lighting:
+      enabled: true
+      checkIntervalTicks: 20
+      # 白天取 block/sky 光照较大值；夜晚只用 block 光照。固定判定阈值为 7。
+    indoors:
+      enabled: true
+      checkIntervalTicks: 20
+      # 脚下方块天空光小于 10 判定为室内；10 及以上判定为室外。
+    mining:
+      enabled: true
+      # 破坏下列原版矿石或石头方块时触发采矿戒律。
+      ores:
+        vanilla:
+          - STONE
+          - COAL_ORE
+          - DEEPSLATE_COAL_ORE
+          - IRON_ORE
+          - DEEPSLATE_IRON_ORE
+          - COPPER_ORE
+          - DEEPSLATE_COPPER_ORE
+          - GOLD_ORE
+          - DEEPSLATE_GOLD_ORE
+          - NETHER_GOLD_ORE
+          - REDSTONE_ORE
+          - DEEPSLATE_REDSTONE_ORE
+          - LAPIS_ORE
+          - DEEPSLATE_LAPIS_ORE
+          - DIAMOND_ORE
+          - DEEPSLATE_DIAMOND_ORE
+          - EMERALD_ORE
+          - DEEPSLATE_EMERALD_ORE
+          - NETHER_QUARTZ_ORE
+          - ANCIENT_DEBRIS
+        # 填写 CraftEngine 自定义方块的完整 ID，例如 "ores:ruby_ore"。
+        craftengine: []
+    logging:
+      enabled: true
+      # 仅统计原木/树干方块，不包含木板及完整木方块。
+      wood:
+        vanilla:
+          - OAK_LOG
+          - STRIPPED_OAK_LOG
+          - SPRUCE_LOG
+          - STRIPPED_SPRUCE_LOG
+          - BIRCH_LOG
+          - STRIPPED_BIRCH_LOG
+          - JUNGLE_LOG
+          - STRIPPED_JUNGLE_LOG
+          - ACACIA_LOG
+          - STRIPPED_ACACIA_LOG
+          - DARK_OAK_LOG
+          - STRIPPED_DARK_OAK_LOG
+          - MANGROVE_LOG
+          - STRIPPED_MANGROVE_LOG
+          - CHERRY_LOG
+          - STRIPPED_CHERRY_LOG
+          - PALE_OAK_LOG
+          - STRIPPED_PALE_OAK_LOG
+          - CRIMSON_STEM
+          - STRIPPED_CRIMSON_STEM
+          - WARPED_STEM
+          - STRIPPED_WARPED_STEM
+        # 填写 CraftEngine 自定义木头方块的完整 ID，例如 "woods:ancient_log"。
+        craftengine: []
+    trees:
+      enabled: true
+      # 玩家成功放置下列树苗时按“树”戒律结算。
+      saplings:
+        vanilla:
+          - OAK_SAPLING
+          - SPRUCE_SAPLING
+          - BIRCH_SAPLING
+          - JUNGLE_SAPLING
+          - ACACIA_SAPLING
+          - DARK_OAK_SAPLING
+          - MANGROVE_PROPAGULE
+          - CHERRY_SAPLING
+          - PALE_OAK_SAPLING
+          - AZALEA
+          - FLOWERING_AZALEA
+        # 填写 CraftEngine 树苗物品 ID 或放置后方块 ID，例如 "trees:ancient_sapling"。
+        craftengine: []
+    potions:
+      enabled: true
+      # 在指定药水物品列表中命中时，为“医疗或社交”和“必须”态度添加额外奖励。
+      inebriationMoodBonus: 10
+      # 此列表只声明哪些 CE 物品按药水戒律处理，不代表负面效果，例如 "alchemy:healing_tonic"。
+      craftenginePotionItems: []
+      # “醉生梦死”药水名单：原版使用 PotionType 名称，CE 使用物品完整 ID。
+      inebriationPotions:
+        vanilla:
+          - POISON
+          - LONG_POISON
+          - STRONG_POISON
+          - HARMING
+          - STRONG_HARMING
+          - WEAKNESS
+          - LONG_WEAKNESS
+          - SLOWNESS
+          - LONG_SLOWNESS
+          - STRONG_SLOWNESS
+          - TURTLE_MASTER
+          - LONG_TURTLE_MASTER
+          - STRONG_TURTLE_MASTER
+          - INFESTED
+          - OOZING
+          - WEAVING
+          - WIND_CHARGED
+        craftengine: []
+    displayOfHeads:
+      enabled: true
+      checkIntervalTicks: 40
+      radiusBlocks: 8
+    fieldBattle:
+      enabled: true
+      combatTimeoutSeconds: 30
+    proselytizing:
+      enabled: true
+    kindness:
+      enabled: true
+      # 同一赠与者向同一受赠者重复赠与时，仁善加成的最短间隔。
+      giftMoodCooldownMinutes: 30
+      # 同一对玩家拒绝施舍后，仁善违背扣减的冷却时长。
+      refusalMoodCooldownHours: 24
+    ranching:
+      enabled: true
+    multiculturalism:
+      enabled: true
+      checkIntervalTicks: 100
   collapse:
     # 剩余心情 34～49 为轻度，17～33 为中度，0～16 为重度。
     severity:
@@ -201,20 +387,20 @@ economy:
       amount: "5000.00"
       currency: USD
   charges:
-    # 创建意识形态时的费用。
+    # 创建文化时的费用。
     religionCreation:
       amount: "5000.00"
       currency: USD
-    # 玩家首次选择意识形态免费；若之后再次选择其他意识形态，则按此费用扣除玩家个人资金。
+    # 玩家首次选择文化免费；若之后再次选择其他文化，则按此费用扣除玩家个人资金。
     religionPlayerConversion:
       amount: "3000.00"
       currency: USD
-    # 城镇首次选择意识形态免费；若之后再次选择其他意识形态，则按此费用从城镇金库扣除。
+    # 城镇首次选择文化免费；若之后再次选择其他文化，则按此费用从城镇金库扣除。
     # 注意：Towny 金库本质上仍使用默认货币。若这里填写了非默认货币，程序会先按汇率换算为默认货币后再扣除。
     religionTownConversion:
       amount: "2000.00"
       currency: USD
-    # 国家首次选择意识形态免费；若之后再次选择其他意识形态，则按此费用从国家国库扣除。
+    # 国家首次选择文化免费；若之后再次选择其他文化，则按此费用从国家国库扣除。
     # 注意：Towny 国库本质上仍使用默认货币。若这里填写了非默认货币，程序会先按汇率换算为默认货币后再扣除。
     religionNationConversion:
       amount: "3000.00"
@@ -230,13 +416,13 @@ economy:
 
 # 模因注册表。
 # 用途：
-# 1. 这里只负责注册“可识别的模因定义”，用于意识形态模因系统。
-# 2. 模因可定义心情区间效果，以及灵感/崩溃结果效果；当前默认均为空。
+# 1. 这里只负责注册“可识别的模因定义”，用于文化模因系统。
+# 2. 模因可定义心情区间及灵感/崩溃结果效果 ID；默认模因效果列表为空，内置灵感由 mood.inspiration 配置。
 # 3. 每条模因至少需要 id、title 和 description。
 # 4. 可选字段 icon 使用原版物品名称或 CraftEngine 物品 ID，直接定义该模因在 GUI 中的图标。
 # 5. 可选字段 exclusive_with 用于声明互斥模因；只需一侧声明即可双向生效。
 # 6. 其他插件可监听 WDER 提供的模因注册事件，在运行时追加新的模因定义。
-# 7. 后续为某个意识形态分配模因时，建议直接保存 meme id，而不是标题文本。
+# 7. 后续为某个文化分配模因时，建议直接保存 meme id，而不是标题文本。
 # 8. 删除某个定义会停用对应选项；重载时不会自动补回，玩家已保存的选择会保留但不生效。
 # 9. 每个模因可选配置 moodEffects.ranges、moodEffects.collapse 和 moodEffects.inspiration。
 #    collapse 可填 sad_wander、dark_vision、crazy_talk、catatonic_stupor、faith_crisis 限制崩溃效果池；
@@ -321,6 +507,8 @@ memes:
       title: "人类至上"
       color: "&6"
       description: "人类是宇宙的道德中心。"
+      exclusive_with:
+        - animal_personhood
 
 # 戒律注册表。
 # 说明：
@@ -328,13 +516,15 @@ memes:
 # 2. 新增默认戒律使用 namespace:wder/xxx
 # 3. 若 attitudes 中使用的是局部 id（如 neutral、hate、want），程序会自动拼接为完整 id
 # 4. 可选字段 icon 使用原版物品名称或 CraftEngine 物品 ID，直接定义该戒律在 GUI 中的图标
-# 5. 每条戒律的第一项 attitude 会作为新意识形态的默认态度
+# 5. 优先使用已有的中立态度；没有中立项的极端戒律优先采用已有的反对态度，不新增态度。
+#    第一项按此规则排列；旧配置即使保留原顺序，新建文化也使用同一默认选择规则。
 # 6. 某些模因可限制戒律不能切换到指定态度，并强制回到该模因对应的默认态度
 # 7. 戒律态度根据玩家行为调整心情，不直接赋予药水效果。
 # 8. 删除某个定义会停用对应选项；重载时不会自动补回，已保存的态度会保留但不生效。
 # 9. 可选 moodWeight 为 0～10；越极端的态度可设置越高，缺省为 1。
-# 10. 每个 attitude 可选设置 moodChange.compliant 和 moodChange.violation（0～100，均填非负数；违背值会作为扣减）；实际增减再乘以该态度的 moodWeight。
-#     未设置时继承 mood.changes；动物击杀与食用人肉未设置时继承各自的 mood.instantActions。
+# 10. 每个态度均显式设置 moodChange.compliant / violation（遵守加成 / 违背扣减）；
+#     中立、无态度、无、无规则为 0/0，其他态度为 1/1，最终数值再乘 moodWeight。
+#     只有已接入游戏行为的戒律才会实际结算；态度显式数值优先于 mood.changes 和 mood.instantActions。
 doctrines:
   registry:
     "namespace:wde/war":
@@ -353,156 +543,265 @@ doctrines:
             title: "中立"
             color: "&7"
             moodChange:
-              compliant: 1
-              violation: 1
+              compliant: 0
+              violation: 0
             lore: "战争作为政治上的最后手段，我们不会滥用也不会放弃"
         - hate:
             title: "厌恶"
             color: "&4"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "除了毫无意义的牺牲，战争还能带来什么?"
         - want:
             title: "渴望"
             color: "&c"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "只有鲜血才能实现生命的意义"
     "namespace:wder/armor_wearing":
       title: "穿着护甲"
       color: "&7"
       lore: "对于身体遮蔽与护甲穿着的态度"
       icon: IRON_CHESTPLATE
+      meme:
+        - nudist:
+            default:
+              - naked
+            cant_use:
+              - fully_covered
       attitudes:
+        - unrestricted:
+            title: "无规则"
+            color: "&7"
+            moodWeight: 1
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "穿不穿护甲都只是个人选择，无需上升为信条。"
         - naked:
             title: "全裸"
             color: "&e"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "身体不该被护甲束缚，赤裸才是最自然的状态。"
         - pants_only:
             title: "仅裤子"
             color: "&6"
             moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "最低限度的遮蔽已经足够，其余护甲都显得多余。"
-        - unrestricted:
-            title: "无规则"
-            color: "&7"
-            moodWeight: 1
-            lore: "穿不穿护甲都只是个人选择，无需上升为信条。"
         - fully_covered:
             title: "完全遮蔽"
             color: "&9"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "身体应被严密遮蔽，完整护甲象征体面与秩序。"
     "namespace:wder/cannibalism":
       title: "食人"
       color: "&4"
       lore: "对于食用同类尸体的态度"
+      meme:
+        - cannibal:
+            default:
+              - accept
+            cant_use:
+              - disgust
+              - abhor
+              - fear
       attitudes:
+        - disgust:
+            title: "反感"
+            color: "&e"
+            moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "这种行为令人不适，即便不是绝对禁忌也不应鼓励。"
         - abhor:
             title: "厌恶"
             color: "&4"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "食人是最污秽的禁忌，应被彻底排斥。"
         - fear:
             title: "畏惧"
             color: "&6"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "食人的想法令人本能恐惧，最好远远避开。"
-        - disgust:
-            title: "反感"
-            color: "&e"
-            moodWeight: 1
-            lore: "这种行为令人不适，即便不是绝对禁忌也不应鼓励。"
         - accept:
             title: "认可"
             color: "&a"
             moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "在特定处境下，食人可以被视为可接受的选择。"
         - enjoy:
             title: "喜好"
             color: "&b"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "食用同类被当作某种独特而强烈的偏好。"
         - crave:
             title: "渴望"
             color: "&d"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "对人肉有明显追求，它被看作特殊满足。"
         - greedy:
             title: "贪婪"
             color: "&5"
             moodWeight: 4
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "对血肉的占有欲永无止境，食人被视为应被放纵的欲望。"
     "namespace:wder/blood_feeding":
       title: "血食"
       color: "&c"
       lore: "对于饮用或食用血液的态度"
       icon: REDSTONE
+      meme:
+        - bloodfeeder:
+            default:
+              - enjoy
+            cant_use:
+              - disgust
+              - abhor
+              - fear
       attitudes:
+        - disgust:
+            title: "反感"
+            color: "&e"
+            moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "排斥食用血液。"
         - abhor:
             title: "厌恶"
             color: "&4"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "饮血是不可接受的禁忌。"
         - fear:
             title: "畏惧"
             color: "&6"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "血食令人不安，应当回避。"
-        - disgust:
-            title: "反感"
-            color: "&e"
-            moodWeight: 1
-            lore: "排斥食用血液。"
         - accept:
             title: "认可"
             color: "&a"
             moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "血食是可以接受的进食方式。"
         - enjoy:
             title: "喜好"
             color: "&b"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "血食带来满足。"
         - crave:
             title: "渴望"
             color: "&d"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "渴望饮血或食用血液。"
         - greedy:
             title: "贪婪"
             color: "&5"
             moodWeight: 4
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "对血食有强烈而持续的需求。"
     "namespace:wder/multiculturalism":
       title: "多元文化"
       color: "&b"
       lore: "对于外来文化与异质群体的态度"
+      meme:
+        - original_sin:
+            default:
+              - mild_prejudice
+            cant_use:
+              - noble
       attitudes:
+        - neutral:
+            title: "中立"
+            color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "文化差异只是事实本身，不特别赞扬也不特别排斥。"
         - strong_prejudice:
             title: "强烈的偏见"
             color: "&4"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "异文化被视为威胁，必须保持明确隔阂。"
         - measured_prejudice:
             title: "适当的偏见"
             color: "&6"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "可以接触外来者，但必须始终保留戒备与优先级差异。"
         - mild_prejudice:
             title: "温和的偏见"
             color: "&e"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "对外来文化不完全信任，但也不必彻底拒绝。"
-        - neutral:
-            title: "中立"
-            color: "&7"
-            lore: "文化差异只是事实本身，不特别赞扬也不特别排斥。"
         - approve:
             title: "认可"
             color: "&a"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "不同文化能共处并互补，多样性值得接纳。"
         - highly_approve:
             title: "高度认可"
             color: "&b"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "文化交融会让共同体更强大，应积极欢迎。"
         - noble:
             title: "高尚"
             color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "尊重多元并保护差异，本身就是一种高贵德性。"
     "namespace:wder/display_of_heads":
       title: "枭示"
@@ -512,88 +811,160 @@ doctrines:
         - disgust:
             title: "反感"
             color: "&e"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "以头颅示众过于残忍低劣，不应成为常态。"
         - crave:
             title: "渴望"
             color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "枭示能传递威慑与荣耀，值得主动追求。"
     "namespace:wder/slaughter_animals":
       title: "宰杀动物"
       color: "&6"
       lore: "对于主动宰杀动物的态度"
+      meme:
+        - animal_personhood:
+            default:
+              - oppose
+            cant_use:
+              - support
+              - love
       attitudes:
+        - neutral:
+            title: "无态度"
+            color: "&7"
+            moodWeight: 1
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "这只是日常生存行为，没有特别道德倾向。"
         - taboo:
             title: "禁忌"
             color: "&4"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "杀生本身就是禁忌，轻易动刀不可接受。"
         - fear:
             title: "恐惧"
             color: "&6"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "屠宰令人本能不安，应尽可能回避。"
         - oppose:
             title: "反对"
             color: "&e"
             moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "不赞同主动宰杀，但并未上升到绝对禁令。"
-        - neutral:
-            title: "无态度"
-            color: "&7"
-            moodWeight: 1
-            lore: "这只是日常生存行为，没有特别道德倾向。"
         - support:
             title: "支持"
             color: "&a"
             moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "宰杀动物是正当资源获取方式，应被允许。"
         - love:
             title: "喜爱"
             color: "&b"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "屠宰与分肉被当作令人满足的事务。"
     "namespace:wder/betrayal":
       title: "变节"
       color: "&8"
       lore: "对于背叛、倒戈与失节的态度"
+      meme:
+        - loyalty:
+            default:
+              - hostile
+            cant_use:
+              - neutral
       attitudes:
+        - neutral:
+            title: "无态度"
+            color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "立场转换只是现实选择，并不天然带有道德污点。"
         - hostile:
             title: "敌视"
             color: "&4"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "背叛者必须被视为永远的敌人。"
         - abhor:
             title: "厌恶"
             color: "&4"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "变节令人深恶痛绝，几乎不可原谅。"
         - disgust:
             title: "反感"
             color: "&e"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "虽不至于绝对敌对，但仍应受到明显贬斥。"
-        - neutral:
-            title: "无态度"
-            color: "&7"
-            lore: "立场转换只是现实选择，并不天然带有道德污点。"
     "namespace:wder/kindness":
       title: "仁善"
       color: "&a"
       lore: "对于仁慈、宽和与善行的态度"
+      meme:
+        - collectivist:
+            default:
+              - important
+            cant_use:
+              - neutral
+        - individualist:
+            default:
+              - joy
+            cant_use:
+              - required
       attitudes:
+        - neutral:
+            title: "无感"
+            color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "仁善并非核心价值，有没有都不是重点。"
         - required:
             title: "必须"
             color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "善良不是可选美德，而是每个人必须遵守的准则。"
         - important:
             title: "重点"
             color: "&b"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "仁善值得被重点强调，是理想共同体的重要基础。"
         - joy:
             title: "愉悦"
             color: "&a"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "施与善意能带来积极满足，应被鼓励。"
-        - neutral:
-            title: "无感"
-            color: "&7"
-            lore: "仁善并非核心价值，有没有都不是重点。"
     "namespace:wder/potions":
       title: "药水"
       color: "&d"
@@ -602,315 +973,520 @@ doctrines:
         - forbidden:
             title: "禁止"
             color: "&4"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "药水会破坏纯粹与秩序，应被严格禁用。"
         - medical_only:
             title: "仅医疗"
             color: "&6"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "药水只应用于治疗与救命，不应用于其他用途。"
         - medical_or_social:
             title: "医疗或社交"
             color: "&b"
-            lore: "治疗与社交仪式中的药水都可接受，但不应滥用。"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "治疗与社交仪式中的药水都可接受，但不应滥用；饮用负面效果药水会额外获得醉生梦死。"
         - required:
             title: "必须"
             color: "&d"
-            lore: "药水是文明生活的重要组成部分，应被主动使用。"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "药水是文明生活的重要组成部分，应被主动使用；饮用负面效果药水会额外获得醉生梦死。"
     "namespace:wder/killing_innocent_animals":
       title: "杀戮无辜动物"
       color: "&e"
       lore: "对于伤害无害动物的态度"
+      meme:
+        - human_primacy:
+            default:
+              - disgust
+            cant_use:
+              - abhor
       attitudes:
+        - neutral:
+            title: "无态度"
+            color: "&7"
+            moodWeight: 1
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "这不被视为特殊道德议题。"
         - abhor:
             title: "厌恶"
             color: "&4"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "无辜动物不该被屠害，这种行为令人厌恶。"
         - fear:
             title: "畏惧"
             color: "&6"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "这种伤害会引起本能恐惧，最好彻底避开。"
         - disgust:
             title: "反感"
             color: "&e"
             moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "并不认同这种行为，哪怕并非绝对禁令。"
-        - neutral:
-            title: "无态度"
-            color: "&7"
-            moodWeight: 1
-            lore: "这不被视为特殊道德议题。"
     "namespace:wder/lighting":
       title: "照明"
       color: "&e"
       lore: "对于光照环境的偏好"
+      meme:
+        - darkness:
+            default:
+              - dim
+            cant_use:
+              - crave
       attitudes:
-        - dim:
-            title: "微光"
-            color: "&6"
-            lore: "柔弱而克制的光线最适合生活，过亮会破坏氛围。"
         - neutral:
             title: "无态度"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "亮与暗都只是环境条件，没有特殊偏好。"
+        - dim:
+            title: "微光"
+            color: "&6"
+            moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "只喜爱低于7的光照；夜晚忽略天空光，只按方块光计算。"
+        - crave:
+            title: "渴求"
+            color: "&d"
+            moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "必须身处大于7的光照中；夜晚忽略天空光，只按方块光计算。"
     "namespace:wder/field_battle":
       title: "野战"
       color: "&6"
       lore: "对于开阔地正面作战的态度"
       attitudes:
-        - enjoy:
-            title: "喜好"
-            color: "&b"
-            lore: "在旷野正面交锋才能体现勇武与决断。"
         - neutral:
             title: "无态度"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "野战只是一种战斗方式，本身并无价值倾向。"
+        - enjoy:
+            title: "喜好"
+            color: "&b"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "在旷野正面交锋才能体现勇武与决断。"
     "namespace:wder/meat_eating":
       title: "肉食"
       color: "&c"
       lore: "对于食肉与素食倾向的态度"
       attitudes:
+        - disgust_meat:
+            title: "反感"
+            color: "&e"
+            moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "虽然并非绝对禁忌，但仍明显不喜欢肉食。"
         - abhor_meat:
             title: "厌恶"
             color: "&4"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "食肉令人排斥，克制肉欲才算纯净。"
         - fear_meat:
             title: "畏惧"
             color: "&6"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "肉食让人感到本能不安，应尽可能远离。"
-        - disgust_meat:
-            title: "反感"
-            color: "&e"
-            moodWeight: 1
-            lore: "虽然并非绝对禁忌，但仍明显不喜欢肉食。"
         - anti_vegetarian_disgust:
             title: "反感素食"
             color: "&e"
             moodWeight: 1
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "排斥长期素食，认为它违背正常生活。"
         - anti_vegetarian_hate:
             title: "憎恶素食"
             color: "&c"
             moodWeight: 2
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "将素食视为严重偏差，难以容忍。"
         - anti_vegetarian_abhor:
             title: "厌恶素食"
             color: "&4"
             moodWeight: 3
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "素食被看作令人厌恶的禁欲倾向，应明确抵制。"
     "namespace:wder/mining":
       title: "采矿"
       color: "&8"
       lore: "对于深入地下采掘资源的态度"
       attitudes:
+        - disgust:
+            title: "反感"
+            color: "&e"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "采矿并不受欢迎，最好只在不得已时进行。"
         - taboo:
             title: "禁忌"
             color: "&4"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "挖掘地下会惊扰不该触碰的东西，因此必须禁绝。"
         - fear:
             title: "畏惧"
             color: "&6"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "矿洞深处令人恐惧，不应轻率涉足。"
-        - disgust:
-            title: "反感"
-            color: "&e"
-            lore: "采矿并不受欢迎，最好只在不得已时进行。"
     "namespace:wder/raiding":
       title: "掠袭"
       color: "&c"
       lore: "对于掠夺式袭击的态度"
+      meme:
+        - raider:
+            default:
+              - required
+            cant_use:
+              - neutral
       attitudes:
+        - neutral:
+            title: "无态度"
+            color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "是否掠袭取决于现实局势，并非信条核心。"
         - valued:
             title: "重视"
             color: "&b"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "掠袭是展示力量与获取财富的重要方式。"
         - required:
             title: "必要"
             color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "若想生存和扩张，掠袭几乎不可避免。"
-        - neutral:
-            title: "无态度"
-            color: "&7"
-            lore: "是否掠袭取决于现实局势，并非信条核心。"
     "namespace:wder/logging":
       title: "伐木"
       color: "&2"
       lore: "对于砍伐树木的态度"
+      meme:
+        - nature_primacy:
+            default:
+              - taboo
+            cant_use:
+              - neutral
       attitudes:
+        - neutral:
+            title: "无态度"
+            color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "树木只是资源之一，取用与否无关信仰。"
         - taboo:
             title: "禁忌"
             color: "&4"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "伤害树木就是触犯禁忌，不能轻易进行。"
         - fear:
             title: "畏惧"
             color: "&6"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "砍树会带来不安和后果，应尽量避免。"
         - disgust:
             title: "反感"
             color: "&e"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "虽然并非绝对禁止，但仍不赞同滥伐。"
-        - neutral:
-            title: "无态度"
-            color: "&7"
-            lore: "树木只是资源之一，取用与否无关信仰。"
     "namespace:wder/trees":
       title: "树"
       color: "&2"
       lore: "对于树木与林地本身的态度"
       attitudes:
-        - crave:
-            title: "渴望"
-            color: "&d"
-            lore: "树木、林冠与绿意本身就是值得主动追求的存在。"
         - neutral:
             title: "无态度"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "树只是环境的一部分，没有特别倾向。"
+        - crave:
+            title: "渴望"
+            color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "树木、林冠与绿意本身就是值得主动追求的存在。"
     "namespace:wder/nonhumanization":
       title: "非人化"
       color: "&5"
       lore: "对于摆脱传统人类身份的态度"
+      meme:
+        - nonhuman_alienation:
+            default:
+              - required
+            cant_use:
+              - neutral
       attitudes:
-        - required:
-            title: "必需"
-            color: "&d"
-            lore: "超越人类本身是进步与信条要求。"
         - neutral:
             title: "无态度"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "是否改变自身并不是价值核心。"
+        - required:
+            title: "必需"
+            color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "超越人类本身是进步与信条要求。"
     "namespace:wder/rituals":
       title: "仪式"
       color: "&d"
       lore: "对于仪式与典礼行为的态度"
+      meme:
+        - ritualist:
+            default:
+              - promote
+            cant_use:
+              - disgust
+              - abhor
       attitudes:
-        - promote:
-            title: "推崇"
-            color: "&d"
-            lore: "仪式能塑造秩序、神圣感与共同体认同。"
         - disgust:
             title: "反感"
             color: "&e"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "繁复仪式令人厌烦，没有必要过度重视。"
+        - promote:
+            title: "推崇"
+            color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "仪式能塑造秩序、神圣感与共同体认同。"
         - abhor:
             title: "厌恶"
             color: "&4"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "仪式被视为虚饰与负担，应尽量摒弃。"
     "namespace:wder/animal_resonance":
       title: "动物共鸣"
       color: "&b"
       lore: "对于与动物建立精神共鸣的态度"
       attitudes:
-        - powerful:
-            title: "强力"
-            color: "&d"
-            lore: "与动物的共鸣被视为强大而珍贵的能力。"
         - none:
             title: "无"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "并不重视这种联系，也不赋予特殊意义。"
-    "namespace:wder/spiritual_vision":
-      title: "灵视"
-      color: "&d"
-      lore: "对于感知灵性与超常视界的态度"
-      attitudes:
         - powerful:
             title: "强力"
             color: "&d"
-            lore: "灵视意味着更高层次的洞察与力量。"
-        - none:
-            title: "无"
-            color: "&7"
-            lore: "灵视不被当作重要追求或价值。"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "与动物的共鸣被视为强大而珍贵的能力。"
     "namespace:wder/bonding":
       title: "牵绊"
       color: "&9"
       lore: "对于深层情感连结与羁绊的态度"
       attitudes:
-        - disgust:
-            title: "反感"
-            color: "&e"
-            lore: "过深牵绊会削弱意志，应避免沉溺其中。"
         - none:
             title: "无"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "是否建立羁绊都只是个人选择。"
+        - disgust:
+            title: "反感"
+            color: "&e"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "过深牵绊会削弱意志，应避免沉溺其中。"
     "namespace:wder/comfort":
       title: "舒适"
       color: "&b"
       lore: "对于安逸、享受与舒适环境的态度"
       attitudes:
-        - indifferent:
-            title: "漠视"
-            color: "&6"
-            lore: "舒适并不重要，过度追求只会腐化心志。"
         - none:
             title: "无"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "舒适与否都不是信条关注的重点。"
+        - indifferent:
+            title: "漠视"
+            color: "&6"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "舒适并不重要，过度追求只会腐化心志。"
     "namespace:wder/pain":
       title: "痛苦"
       color: "&5"
       lore: "对于痛苦与受难的态度"
+      meme:
+        - pain_is_virtue:
+            default:
+              - ideal
+            cant_use:
+              - none
       attitudes:
-        - ideal:
-            title: "理想"
-            color: "&d"
-            lore: "痛苦能提炼人格与意义，因此值得追求。"
         - none:
             title: "无"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "痛苦只是处境之一，并不带有特殊价值。"
+        - ideal:
+            title: "理想"
+            color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "痛苦能提炼人格与意义，因此值得追求。"
     "namespace:wder/proselytizing":
       title: "传教"
       color: "&6"
       lore: "对于对外传播信条的积极程度"
+      meme:
+        - proselytizer:
+            default:
+              - frequent
+            cant_use:
+              - neutral
       attitudes:
+        - neutral:
+            title: "无感"
+            color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
+            lore: "是否传教都无所谓，不是核心任务。"
         - occasional:
             title: "偶尔"
             color: "&a"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "有机会时可以传播，但不必过度强求。"
         - sometimes:
             title: "有时"
             color: "&b"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "在合适场合主动传教是可以接受的常规行为。"
         - frequent:
             title: "频繁"
             color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "持续而高频地扩张信仰，是应被鼓励的职责。"
-        - neutral:
-            title: "无感"
-            color: "&7"
-            lore: "是否传教都无所谓，不是核心任务。"
     "namespace:wder/ranching":
       title: "畜牧"
       color: "&2"
       lore: "对于驯养与规模化饲养动物的态度"
       attitudes:
-        - primary:
-            title: "主要"
-            color: "&d"
-            lore: "畜牧应成为生产与生活的主要支柱。"
         - none:
             title: "无"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "不特别强调畜牧，它只是众多手段之一。"
+        - primary:
+            title: "主要"
+            color: "&d"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "畜牧应成为生产与生活的主要支柱。"
+        - oppose:
+            title: "反对"
+            color: "&c"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "主动繁殖与扩大畜群违背信条，应当避免。"
     "namespace:wder/roughing_it":
       title: "餐风露宿"
       color: "&8"
       lore: "对于露天生存与艰苦环境的态度"
       attitudes:
-        - accept:
-            title: "接纳"
-            color: "&a"
-            lore: "风餐露宿是生活的一部分，应坦然接受。"
         - neutral:
             title: "无感"
             color: "&7"
+            moodChange:
+              compliant: 0
+              violation: 0
             lore: "露宿并无特殊意义，只是环境条件。"
+        - accept:
+            title: "接纳"
+            color: "&a"
+            moodChange:
+              compliant: 1
+              violation: 1
+            lore: "风餐露宿是生活的一部分，应坦然接受。"
     "namespace:wder/indoors":
       title: "室内"
       color: "&a"
@@ -919,4 +1495,7 @@ doctrines:
         - love:
             title: "喜爱"
             color: "&b"
+            moodChange:
+              compliant: 1
+              violation: 1
             lore: "有墙、有顶和封闭空间带来真正的安全与安宁。"

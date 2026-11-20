@@ -50,6 +50,9 @@ public class NationManager {
         dataStorageManager.saveStringKeyed(STORAGE_CATEGORY, nations);
         var history = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin).getNationHistoryManager();
         if (history != null) nations.values().forEach(history::observe);
+        var ideologyHistory = ((com.thatguycy.worlddynamicsengine.WorldDynamicsEngine) plugin)
+                .getIdeologyHistoryManager();
+        if (ideologyHistory != null) ideologyHistory.refreshAffiliations();
     }
 
     public void updateNation(WDEnation nation) {

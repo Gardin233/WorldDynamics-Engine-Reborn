@@ -2,9 +2,9 @@
 # 国家相关配置现已拆分至 nation.yml
 # 城镇相关配置现已拆分至 town.yml
 # 国家集团相关配置现已拆分至 organization.yml
-# 意识形态相关配置现已拆分至 ideology.yml
+# 文化相关配置现已拆分至 ideology.yml
 
-config-version: 7
+config-version: 9
 moduleConfigMigrated: true
 
 # 插件运行所使用的主框架，当前支持与 Towny 集成的 "towny"。
@@ -80,6 +80,12 @@ economy:
     enabled: true
     # 当居民总余额不足以缴清全额税款时，是否在控制台记录“部分收税”日志。
     logPartialCollection: true
+  playerGifts:
+    enabled: true
+    # 同一对玩家之间再次申请施舍的最短间隔。
+    requestCooldownMinutes: 10
+    # 施舍请求等待接受或拒绝的有效时长。
+    requestExpiryMinutes: 5
 
 # 语言代码。当前支持：en、es、zh_cn
 locale: zh_cn

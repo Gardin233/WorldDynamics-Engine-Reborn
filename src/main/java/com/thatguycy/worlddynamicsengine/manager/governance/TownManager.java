@@ -42,6 +42,10 @@ public class TownManager {
 
     public void saveTowns() {
         dataStorageManager.saveStringKeyed(STORAGE_CATEGORY, towns);
+        var history = plugin.getTownHistoryManager();
+        if (history != null) towns.values().forEach(history::observe);
+        var ideologyHistory = plugin.getIdeologyHistoryManager();
+        if (ideologyHistory != null) ideologyHistory.refreshAffiliations();
     }
 
     public void importExistingTownyTowns() {
@@ -68,6 +72,8 @@ public class TownManager {
     }
 
     public void removeTown(String name) {
+        var history = plugin.getTownHistoryManager();
+        if (history != null) history.archive(name);
         towns.remove(name);
         saveTowns();
     }

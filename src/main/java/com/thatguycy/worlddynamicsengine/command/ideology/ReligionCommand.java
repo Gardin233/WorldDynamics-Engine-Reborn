@@ -786,6 +786,7 @@ public class ReligionCommand implements CommandExecutor {
             }
             resident.setReligionName("None");
             resident.setReligionChosen(true);
+            plugin.getFaithConflictManager().onPersonalFaithChanged(resident, currentReligion);
             residentManager.saveResidents();
             religionManager.onResidentIdeologyChanged(player.getUniqueId());
             churchManager.onResidentIdeologyChanged(player.getUniqueId());
@@ -822,9 +823,11 @@ public class ReligionCommand implements CommandExecutor {
 
         resident.setReligionName(religion.getReligionName());
         resident.setReligionChosen(true);
+        plugin.getFaithConflictManager().onPersonalFaithChanged(resident, currentReligion);
         residentManager.saveResidents();
         religionManager.onResidentIdeologyChanged(player.getUniqueId());
         churchManager.onResidentIdeologyChanged(player.getUniqueId());
+        religionManager.awardProselytizingMoodForJoin(religion.getReligionName());
         sender.sendMessage(TextColors.GREEN + msg("religion_player_set", religion.getReligionName()));
         return true;
     }
@@ -893,6 +896,7 @@ public class ReligionCommand implements CommandExecutor {
 
             resident.setReligionName("None");
             resident.setReligionChosen(true);
+            plugin.getFaithConflictManager().onPersonalFaithChanged(resident, currentReligion);
             residentManager.saveResidents();
             religionManager.onResidentIdeologyChanged(targetResident.getUUID());
             churchManager.onResidentIdeologyChanged(targetResident.getUUID());
@@ -924,6 +928,7 @@ public class ReligionCommand implements CommandExecutor {
 
         resident.setReligionName(resolvedReligionName);
         resident.setReligionChosen(true);
+        plugin.getFaithConflictManager().onPersonalFaithChanged(resident, currentReligion);
         residentManager.saveResidents();
         religionManager.onResidentIdeologyChanged(targetResident.getUUID());
         churchManager.onResidentIdeologyChanged(targetResident.getUUID());
