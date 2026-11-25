@@ -175,7 +175,7 @@ public class HelpCommand implements CommandExecutor {
                 add(lines, plugin, "/wde nation <国家> dischargearmymember <玩家>", "help_cmd_dischargearmymember");
                 add(lines, plugin, "/wde nation <国家> tpconscript <玩家>", "help_cmd_tpconscript");
                 add(lines, plugin, "/wde nation <国家> tpchaircommander", "help_cmd_tpchaircommander");
-                add(lines, plugin, "/wde nation <国家> settowntax <城镇> <fixed|wealth_percentage> <金额>", "help_cmd_settowntax");
+                add(lines, plugin, "/wde nation <国家> settowntax <城镇> <fixed> <金额>", "help_cmd_settowntax");
                 add(lines, plugin, "/wde nation <国家> adddiplomat <玩家>", "help_cmd_adddiplomat");
                 add(lines, plugin, "/wde nation <国家> removediplomat <玩家>", "help_cmd_removediplomat");
             }
@@ -197,7 +197,7 @@ public class HelpCommand implements CommandExecutor {
                 add(lines, plugin, "/wde ideology create <名称>", "help_cmd_religion_create");
                 add(lines, plugin, "/wde ideology treasury <文化>", "help_cmd_religion_treasury");
                 add(lines, plugin, "/wde ideology donate <文化> <金额>", "help_cmd_religion_donate");
-                add(lines, plugin, "/wde ideology settithe <文化> <fixed|wealth_percentage> <金额>", "help_cmd_religion_settithe");
+                add(lines, plugin, "/wde ideology settithe <文化> <fixed> <金额>", "help_cmd_religion_settithe");
                 add(lines, plugin, "/wde ideology governance <文化> <lifetime|cardinal|synodal>", "help_cmd_religion_governance");
                 add(lines, plugin, "/wde ideology cardinal <文化> <appoint|revoke> <玩家>", "help_cmd_religion_cardinal");
                 add(lines, plugin, "/wde ideology vote <文化> <候选人|abstain>", "help_cmd_religion_vote");
@@ -280,6 +280,7 @@ public class HelpCommand implements CommandExecutor {
 
         lines.add(TextColors.AQUA + plugin.formatLocaleMessage("help_section_header", plugin.getLocaleMessage("help_general")));
         lines.add(TextColors.YELLOW + "/wde help [page]" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_help"));
+        add(lines, plugin, "/wde menu [@player] [page] [args]", "help_cmd_menu");
         lines.add(TextColors.YELLOW + "/wde <模块> help [页码]" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_module"));
         lines.add(TextColors.YELLOW + "/wde docs" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_docs"));
         if (plugin.getNationHistoryManager() != null) {
@@ -309,7 +310,7 @@ public class HelpCommand implements CommandExecutor {
         lines.add(TextColors.YELLOW + "/wde ideology create <ideology>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_create"));
         lines.add(TextColors.YELLOW + "/wde ideology treasury <ideology>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_treasury"));
         lines.add(TextColors.YELLOW + "/wde ideology donate <ideology> <amount>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_donate"));
-        lines.add(TextColors.YELLOW + "/wde ideology settithe <ideology> <fixed|wealth_percentage> <amount>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_settithe"));
+        lines.add(TextColors.YELLOW + "/wde ideology settithe <ideology> fixed <amount>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_settithe"));
         lines.add(TextColors.YELLOW + "/wde ideology governance <ideology> <lifetime|cardinal|synodal>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_governance"));
         lines.add(TextColors.YELLOW + "/wde ideology cardinal <ideology> <appoint|revoke> <player>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_cardinal"));
         lines.add(TextColors.YELLOW + "/wde ideology vote <ideology> <candidate|abstain>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_religion_vote"));
@@ -348,7 +349,7 @@ public class HelpCommand implements CommandExecutor {
         lines.add(TextColors.YELLOW + "/wde nation <nation> dischargearmymember <username>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_dischargearmymember"));
         lines.add(TextColors.YELLOW + "/wde nation <nation> tpconscript <username>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_tpconscript"));
         lines.add(TextColors.YELLOW + "/wde nation <nation> tpchaircommander" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_tpchaircommander"));
-        lines.add(TextColors.YELLOW + "/wde nation <nation> settowntax <town> <fixed|wealth_percentage> <amount>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_settowntax"));
+        lines.add(TextColors.YELLOW + "/wde nation <nation> settowntax <town> fixed <amount>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_settowntax"));
         lines.add(TextColors.YELLOW + "/wde nation <nation> adddiplomat <username>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_adddiplomat"));
         lines.add(TextColors.YELLOW + "/wde nation <nation> removediplomat <username>" + TextColors.WHITE + " - " + plugin.getLocaleMessage("help_cmd_removediplomat"));
 

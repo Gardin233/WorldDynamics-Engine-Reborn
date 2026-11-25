@@ -986,15 +986,11 @@ public class NationCommand implements CommandExecutor {
         String normalized = rawValue.trim().toUpperCase();
         return switch (normalized) {
             case "FIXED", "定额", "定额税" -> "FIXED";
-            case "WEALTH_PERCENTAGE", "PERCENTAGE", "总财产比例", "比例", "比例税" -> "WEALTH_PERCENTAGE";
             default -> null;
         };
     }
 
     private String formatTownTaxAmount(String taxType, double amount) {
-        if ("WEALTH_PERCENTAGE".equalsIgnoreCase(taxType)) {
-            return String.format(java.util.Locale.US, "%.4f%%", amount);
-        }
         return String.format(java.util.Locale.US, "%.2f", amount);
     }
 

@@ -65,6 +65,7 @@ public final class FaithConflictManager implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player victim = event.getEntity();
+        plugin.getMoodManager().clearTemporaryMoodChanges(victim.getUniqueId());
         plugin.getMoodManager().applyTemporaryMoodChange(victim.getUniqueId(), DEATH_REBIRTH_SOURCE,
                 configuredDelta("deathRebirthBonus", 10));
         applyTownBereavement(victim);

@@ -1,5 +1,6 @@
 package com.thatguycy.worlddynamicsengine.command.organization;
 
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager;
 import com.palmergames.bukkit.towny.object.Government;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
@@ -260,10 +261,10 @@ public class OrgCommand implements CommandExecutor {
             sender.sendMessage(TextColors.YELLOW + msg("org_info_pending_nation_applications") + TextColors.WHITE + String.join(", ", pendingInfo));
         }
 
-        List<OrgManager.MilitaryWarProposalState> warProposals = orgManager.getActiveMilitaryWarProposals(org);
+        List<WarManager.MilitaryWarProposalState> warProposals = orgManager.getWarManager().getActiveMilitaryWarProposals(org);
         if (!warProposals.isEmpty()) {
             List<String> warProposalLines = new ArrayList<>();
-            for (OrgManager.MilitaryWarProposalState proposal : warProposals) {
+            for (WarManager.MilitaryWarProposalState proposal : warProposals) {
                 warProposalLines.add(msg("org_info_pending_war_entry",
                         proposal.getTargetNationName(),
                         proposal.getProposerNationName(),
@@ -279,10 +280,10 @@ public class OrgCommand implements CommandExecutor {
             }
         }
 
-        List<OrgManager.MilitaryWarState> activeWars = orgManager.getActiveMilitaryWars(org);
+        List<WarManager.MilitaryWarState> activeWars = orgManager.getWarManager().getActiveMilitaryWars(org);
         if (!activeWars.isEmpty()) {
             List<String> warLines = new ArrayList<>();
-            for (OrgManager.MilitaryWarState state : activeWars) {
+            for (WarManager.MilitaryWarState state : activeWars) {
                 warLines.add(state.getAttackerNationName() + " / " + state.getDefenderNationName()
                         + " [" + msg(state.getReason().messageKey()) + "] "
                         + formatWarScore(state.getAttackerScore()) + " / " + formatWarScore(state.getDefenderScore()));
@@ -427,7 +428,7 @@ public class OrgCommand implements CommandExecutor {
             return true;
         }
 
-        String conflictingNation = orgManager.findMilitaryJoinConflict(org, applicantNation, nationManager);
+        String conflictingNation = orgManager.getWarManager().findMilitaryJoinConflict(org, applicantNation, nationManager);
         if (conflictingNation != null) {
             sender.sendMessage(TextColors.RED + msg("org_military_join_conflict", conflictingNation));
             return true;
@@ -479,7 +480,7 @@ public class OrgCommand implements CommandExecutor {
             return true;
         }
 
-        String conflictingNation = orgManager.findMilitaryJoinConflict(org, applicantNation, nationManager);
+        String conflictingNation = orgManager.getWarManager().findMilitaryJoinConflict(org, applicantNation, nationManager);
         if (conflictingNation != null) {
             orgManager.rejectNationApplication(org, applicantNation);
             sender.sendMessage(TextColors.RED + msg("org_military_join_conflict", conflictingNation));
@@ -528,7 +529,7 @@ public class OrgCommand implements CommandExecutor {
             orgManager.rejectNationApplication(org, applicantNation);
             return true;
         }
-        String conflictingNation = orgManager.findMilitaryJoinConflict(org, applicantNation, nationManager);
+        String conflictingNation = orgManager.getWarManager().findMilitaryJoinConflict(org, applicantNation, nationManager);
         if ("accept".equalsIgnoreCase(args[4]) && conflictingNation != null) {
             orgManager.rejectNationApplication(org, applicantNation);
             sender.sendMessage(TextColors.RED + msg("org_military_join_conflict", conflictingNation));
@@ -599,7 +600,7 @@ public class OrgCommand implements CommandExecutor {
                 return true;
             }
 
-            if (orgManager.hasActiveIndependenceWar(org, actorNation)) {
+            if (orgManager.getWarManager().hasActiveIndependenceWar(org, actorNation)) {
                 sender.sendMessage(TextColors.RED + msg("org_independence_war_already_active", actorNation));
                 return true;
             }
@@ -924,7 +925,7 @@ public class OrgCommand implements CommandExecutor {
         }
 
         String rebelNation = args[3];
-        OrgManager.IndependenceWarResolutionResult result = orgManager.surrenderIndependenceWar(org, rebelNation);
+        WarManager.IndependenceWarResolutionResult result = orgManager.getWarManager().surrenderIndependenceWar(org, rebelNation);
         if (result == null) {
             sender.sendMessage(TextColors.RED + msg("org_independence_war_not_found", rebelNation));
             return true;
@@ -974,12 +975,12 @@ public class OrgCommand implements CommandExecutor {
             sender.sendMessage(TextColors.RED + msg("war_reason_required"));
             return true;
         }
-        String reasonError = orgManager.warReasonFailure(reason, actorNation, targetNation);
+        String reasonError = orgManager.getWarManager().warReasonFailure(reason, actorNation, targetNation);
         if (reasonError != null) {
             sender.sendMessage(TextColors.RED + msg(reasonError));
             return true;
         }
-        String goalError = orgManager.validateWarGoalSelection(reason, actorNation, targetNation,
+        String goalError = orgManager.getWarManager().validateWarGoalSelection(reason, actorNation, targetNation,
                 goalTownName, goalOrganizationName);
         if (goalError != null) {
             sender.sendMessage(TextColors.RED + msg(goalError));
@@ -999,7 +1000,7 @@ public class OrgCommand implements CommandExecutor {
             return true;
         }
 
-        OrgManager.MilitaryWarVoteResult result = orgManager.startMilitaryWarVote(org, actorNation, targetNation,
+        WarManager.MilitaryWarVoteResult result = orgManager.getWarManager().startMilitaryWarVote(org, actorNation, targetNation,
                 nationManager, reason, goalTownName, goalOrganizationName);
         return handleMilitaryWarVoteResult(sender, org, targetNation, result, true);
     }
@@ -1032,11 +1033,11 @@ public class OrgCommand implements CommandExecutor {
             return true;
         }
 
-        OrgManager.MilitaryWarVoteResult result = orgManager.castMilitaryWarVote(org, args[3], actorNation, vote, nationManager);
+        WarManager.MilitaryWarVoteResult result = orgManager.getWarManager().castMilitaryWarVote(org, args[3], actorNation, vote, nationManager);
         return handleMilitaryWarVoteResult(sender, org, args[3], result, false);
     }
 
-    private boolean handleMilitaryWarVoteResult(CommandSender sender, WDEorg org, String targetNation, OrgManager.MilitaryWarVoteResult result, boolean startedByProposal) {
+    private boolean handleMilitaryWarVoteResult(CommandSender sender, WDEorg org, String targetNation, WarManager.MilitaryWarVoteResult result, boolean startedByProposal) {
         if (result == null) {
             sender.sendMessage(TextColors.RED + msg("org_war_vote_not_found", targetNation));
             return true;

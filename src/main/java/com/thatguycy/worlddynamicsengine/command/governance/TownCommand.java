@@ -512,9 +512,6 @@ public class TownCommand implements CommandExecutor {
     }
 
     private String formatTaxAmount(WDEtown town) {
-        if ("WEALTH_PERCENTAGE".equalsIgnoreCase(town.getResidentTaxType())) {
-            return String.format(java.util.Locale.US, "%.4f%%", town.getResidentTaxAmount());
-        }
         return String.format(java.util.Locale.US, "%.2f", town.getResidentTaxAmount());
     }
 

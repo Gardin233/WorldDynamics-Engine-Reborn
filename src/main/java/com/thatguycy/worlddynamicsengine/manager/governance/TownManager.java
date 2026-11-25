@@ -393,12 +393,13 @@ public class TownManager {
     }
 
     public boolean configureResidentTax(WDEtown town, String taxType, double amount, boolean managedByNation) {
-        if (town == null) {
+        if (town == null || taxType == null || !"FIXED".equalsIgnoreCase(taxType)
+                || !Double.isFinite(amount) || amount < 0D) {
             return false;
         }
 
         town.setResidentTaxManagedByNation(managedByNation);
-        town.setResidentTaxType(taxType);
+        town.setResidentTaxType("FIXED");
         town.setResidentTaxAmount(amount);
         boolean applied = applyStoredResidentTaxToTowny(town);
         saveTowns();
@@ -416,8 +417,7 @@ public class TownManager {
                 return false;
             }
 
-            boolean percentage = "WEALTH_PERCENTAGE".equalsIgnoreCase(town.getResidentTaxType());
-            townyTown.setTaxPercentage(percentage);
+            townyTown.setTaxPercentage(false);
             townyTown.setTaxes(Math.max(0D, town.getResidentTaxAmount()));
             townyTown.save();
             return true;
@@ -564,8 +564,20 @@ public class TownManager {
             return;
         }
 
-        town.setResidentTaxType(townyTown.isTaxPercentage() ? "WEALTH_PERCENTAGE" : "FIXED");
-        town.setResidentTaxAmount(Math.max(0D, townyTown.getTaxes()));
+        if (townyTown.isTaxPercentage()) {
+            townyTown.setTaxPercentage(false);
+            townyTown.setTaxes(0D);
+            try {
+                townyTown.save();
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to clear legacy proportional resident tax for "
+                        + town.getTownName() + ": " + e.getMessage());
+            }
+            town.setResidentTaxAmount(0D);
+        } else {
+            town.setResidentTaxAmount(Math.max(0D, townyTown.getTaxes()));
+        }
+        town.setResidentTaxType("FIXED");
     }
 
     private long getElectionDurationMillis() {

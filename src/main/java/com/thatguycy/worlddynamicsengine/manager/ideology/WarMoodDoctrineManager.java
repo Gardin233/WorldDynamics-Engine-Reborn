@@ -1,9 +1,9 @@
 package com.thatguycy.worlddynamicsengine.manager.ideology;
 
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager;
 import com.palmergames.bukkit.towny.TownyUniverse;
 import com.palmergames.bukkit.towny.object.Town;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
-import com.thatguycy.worlddynamicsengine.manager.organization.OrgManager;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEtown;
@@ -41,7 +41,7 @@ public final class WarMoodDoctrineManager {
         Bukkit.getScheduler().runTask(plugin, this::refreshAllTowns);
     }
 
-    public void refreshWarParticipants(OrgManager.MilitaryWarState war) {
+    public void refreshWarParticipants(WarManager.MilitaryWarState war) {
         if (war == null) return;
         Map<String, Town> towns = new LinkedHashMap<>();
         for (String participant : war.getAttackerNationNames()) {
@@ -53,7 +53,7 @@ public final class WarMoodDoctrineManager {
         refreshTowns(towns.values(), false);
     }
 
-    public void recordEconomicWarDemand(OrgManager.MilitaryWarState war, String beneficiaryNationName) {
+    public void recordEconomicWarDemand(WarManager.MilitaryWarState war, String beneficiaryNationName) {
         if (war == null || beneficiaryNationName == null) return;
         boolean attackerSide = war.isAttackerNation(beneficiaryNationName);
         boolean defenderSide = war.isDefenderNation(beneficiaryNationName);
@@ -65,7 +65,7 @@ public final class WarMoodDoctrineManager {
         refreshTowns(towns.values(), false);
     }
 
-    public void recordEconomicWarEnded(OrgManager.MilitaryWarState war) {
+    public void recordEconomicWarEnded(WarManager.MilitaryWarState war) {
         if (war == null) return;
         Map<String, Town> participants = new LinkedHashMap<>();
         Map<String, Town> economicParticipants = new LinkedHashMap<>();
@@ -116,7 +116,7 @@ public final class WarMoodDoctrineManager {
     private void refreshTowns(Collection<Town> towns, boolean clearResidentsOutsideTowns) {
         long now = System.currentTimeMillis();
         long longPeaceThresholdMillis = getLongPeaceThresholdMillis();
-        List<OrgManager.MilitaryWarState> activeWars = plugin.getOrgManager().getActiveMilitaryWars(null);
+        List<WarManager.MilitaryWarState> activeWars = plugin.getOrgManager().getWarManager().getActiveMilitaryWars(null);
         Set<UUID> residentsInTowns = new HashSet<>();
         boolean townRecordsChanged = false;
 
@@ -176,7 +176,7 @@ public final class WarMoodDoctrineManager {
         if (town != null) towns.putIfAbsent(town.getName().toLowerCase(java.util.Locale.ROOT), town);
     }
 
-    private boolean isTownInActiveWar(Town town, List<OrgManager.MilitaryWarState> activeWars) {
+    private boolean isTownInActiveWar(Town town, List<WarManager.MilitaryWarState> activeWars) {
         if (town.hasActiveWar()) return true;
         var nation = town.getNationOrNull();
         if (nation != null && nation.hasActiveWar()) return true;
@@ -187,13 +187,13 @@ public final class WarMoodDoctrineManager {
                         || war.isAttackerNation(nationName) || war.isDefenderNation(nationName));
     }
 
-    private boolean hasEconomicTermsInWar(Town town, List<OrgManager.MilitaryWarState> activeWars) {
+    private boolean hasEconomicTermsInWar(Town town, List<WarManager.MilitaryWarState> activeWars) {
         String townIdentity = "town:" + town.getName();
         var townNation = town.getNationOrNull();
         String nationName = townNation == null ? null : townNation.getName();
         boolean foundActiveWar = false;
 
-        for (OrgManager.MilitaryWarState war : activeWars) {
+        for (WarManager.MilitaryWarState war : activeWars) {
             boolean attacker = war.isAttackerNation(townIdentity) || war.isAttackerNation(nationName);
             boolean defender = war.isDefenderNation(townIdentity) || war.isDefenderNation(nationName);
             if (!attacker && !defender) continue;

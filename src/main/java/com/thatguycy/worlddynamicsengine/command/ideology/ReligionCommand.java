@@ -193,7 +193,7 @@ public class ReligionCommand implements CommandExecutor {
             }
             sender.sendMessage(TextColors.GREEN + msg("religion_tithe_updated", religion.getReligionName(),
                     msg("religion_tithe_type_" + type.name().toLowerCase(Locale.ROOT)),
-                    type == WDEreligion.TitheType.WEALTH_PERCENTAGE ? amount.toPlainString() + "%" : economyBridge.format(amount)));
+                    economyBridge.format(amount)));
         } catch (IllegalArgumentException ex) {
             sender.sendMessage(TextColors.RED + msg("religion_tithe_invalid"));
         } catch (IllegalStateException ex) {
@@ -708,8 +708,7 @@ public class ReligionCommand implements CommandExecutor {
         }
         sender.sendMessage(TextColors.YELLOW + msg("religion_info_tithe") + TextColors.WHITE
                 + msg("religion_tithe_type_" + religion.getTitheType().name().toLowerCase(Locale.ROOT)) + " "
-                + (religion.getTitheType() == WDEreligion.TitheType.WEALTH_PERCENTAGE
-                        ? religion.getTitheAmount().toPlainString() + "%" : economyBridge.format(religion.getTitheAmount())));
+                + economyBridge.format(religion.getTitheAmount()));
         sender.sendMessage(TextColors.YELLOW + msg("religion_info_created_at") + TextColors.WHITE + formatTime(religion.getCreatedAt()));
         List<String> configuredMemes = religionManager.getConfiguredMemes(religion.getMemes());
         Map<String, String> configuredDoctrineAttitudes = religionManager.getConfiguredDoctrineAttitudes(religion);

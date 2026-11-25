@@ -1,6 +1,7 @@
 package com.thatguycy.worlddynamicsengine.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -85,5 +86,23 @@ class WDEChurchGovernanceTest {
         assertEquals(5, restored.getTotalWeight());
         assertEquals(4, restored.getYesWeight());
         assertEquals("SOURCE_DEFINITION_UPDATED", restored.getOutcome());
+    }
+
+    @Test
+    void legacyPercentageTitheMigratesToStoppedFixedPolicy() {
+        WDEreligion religion = WDEreligion.deserialize(Map.of(
+                "religionName", "Legacy",
+                "titheType", "WEALTH_PERCENTAGE",
+                "titheAmount", "25"
+        ));
+
+        assertEquals(WDEreligion.TitheType.FIXED, religion.getTitheType());
+        assertEquals(BigDecimal.ZERO, religion.getTitheAmount());
+        assertTrue(religion.migrateLegacyPercentageTithe());
+
+        Map<String, Object> saved = religion.serialize();
+        assertEquals("FIXED", saved.get("titheType"));
+        assertEquals("0", saved.get("titheAmount"));
+        assertFalse(religion.migrateLegacyPercentageTithe());
     }
 }

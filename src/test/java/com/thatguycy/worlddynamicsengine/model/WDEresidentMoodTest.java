@@ -107,17 +107,39 @@ class WDEresidentMoodTest {
     }
 
     @Test
+    void clearingTemporaryMoodChangesKeepsPersistentDoctrineAndOneFreshRebirth() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        long now = System.currentTimeMillis();
+        resident.addMoodChange("rebirth", 10, now + 60_000L);
+        resident.addMoodChange("townDeath", -4, now + 60_000L);
+        resident.replacePersistentMoodChanges("doctrine|armor|",
+                "doctrine|armor|attitude|compliant", 8);
+
+        assertTrue(resident.clearTemporaryMoodChanges());
+        resident.addMoodChange("rebirth", 10, now + 120_000L);
+
+        List<WDEresident.MoodChangeEntry> active = resident.getActiveMoodChanges(now);
+        assertEquals(2, active.size());
+        assertEquals(1, active.stream().filter(change -> change.source().equals("rebirth")).count());
+        assertTrue(active.stream().anyMatch(change ->
+                change.permanent() && change.source().equals("doctrine|armor|attitude|compliant")));
+        assertEquals(68, resident.getMoodAt(now));
+    }
+
+    @Test
     void dehumanizedStatusLocksMoodAtFiftyAndBlocksAllChanges() {
         WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
         long now = System.currentTimeMillis();
         resident.addMoodChange("relief", 40, now + 60_000L);
         resident.replacePersistentMoodChanges("doctrine|armor|", "doctrine|armor|attitude|compliant", 10);
         resident.addInspirationCharge("arrow_armor_piercing");
+        resident.addInspirationCharge("animal_taming");
 
         resident.setDehumanized(true);
         assertEquals(50, resident.getMoodAt(now));
         assertTrue(resident.getActiveMoodChanges(now).isEmpty());
         assertEquals(0, resident.getInspirationCharges("arrow_armor_piercing"));
+        assertEquals(0, resident.getInspirationCharges("animal_taming"));
         assertEquals(50, resident.addMoodChange("manual", -25, now + 60_000L));
 
         WDEresident restored = WDEresident.deserialize(resident.serialize());
@@ -142,9 +164,11 @@ class WDEresidentMoodTest {
         assertTrue(resident.advanceInspirationCheckIfDue(start + interval + 10L, interval));
         assertTrue(resident.addInspirationCharge("arrow_armor_piercing"));
         assertTrue(resident.addInspirationCharge("arrow_armor_piercing"));
+        assertTrue(resident.addInspirationCharge("animal_taming"));
 
         WDEresident restored = WDEresident.deserialize(resident.serialize());
         assertEquals(2, restored.getInspirationCharges("arrow_armor_piercing"));
+        assertEquals(1, restored.getInspirationCharges("animal_taming"));
         assertFalse(restored.advanceInspirationCheckIfDue(start + interval * 2L + 9L, interval));
         assertTrue(restored.advanceInspirationCheckIfDue(start + interval * 2L + 10L, interval));
         assertTrue(restored.consumeInspirationCharge("arrow_armor_piercing"));
@@ -152,6 +176,37 @@ class WDEresidentMoodTest {
         assertTrue(restored.consumeInspirationCharge("arrow_armor_piercing"));
         assertEquals(0, restored.getInspirationCharges("arrow_armor_piercing"));
         assertFalse(restored.consumeInspirationCharge("arrow_armor_piercing"));
+        assertTrue(restored.consumeInspirationCharge("animal_taming"));
+        assertEquals(0, restored.getInspirationCharges("animal_taming"));
+    }
+
+    @Test
+    void stretchInspirationExpiryPersistsAndClearsWithInspirationState() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        long expiresAt = System.currentTimeMillis() + 15L * 60L * 1000L;
+        resident.setStretchInspirationExpiresAt(expiresAt);
+
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+
+        assertEquals(expiresAt, restored.getStretchInspirationExpiresAt());
+        restored.clearInspirationCharges();
+        assertEquals(0L, restored.getStretchInspirationExpiresAt());
+    }
+
+    @Test
+    void persistentHumanityShameIsNotStackedAndClearsOnDehumanization() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        String prefix = "nonhumanization_shame|";
+        String source = prefix + "permanent";
+
+        resident.replacePersistentMoodChanges(prefix, source, -15);
+        resident.replacePersistentMoodChanges(prefix, source, -15);
+        assertEquals(35, resident.getMood());
+        assertEquals(1, resident.getActiveMoodChanges(System.currentTimeMillis()).size());
+
+        resident.setDehumanized(true);
+        assertEquals(50, resident.getMood());
+        assertTrue(resident.getActiveMoodChanges(System.currentTimeMillis()).isEmpty());
     }
 
     @Test

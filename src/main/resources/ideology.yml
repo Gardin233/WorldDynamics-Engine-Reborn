@@ -97,15 +97,16 @@ mood:
     betrayalPenalty: -4
     betrayerHuntBonus: 10
   # 新玩家按累计在线时长逐档减少心情期望加成；每档默认 2 小时。
+  # moodBonuses 顺序对应：极低期望、很低期望、低期望、合理期望、高期望、很高期望。
   expectations:
     newPlayer:
       stepHours: 2
       moodBonuses: [30, 24, 18, 12, 6, 0]
-    # 镇长与国王身份修正会叠加，并持续到 Towny 身份变化。
+    # 镇长与国王身份修正不叠加；同时具备时国王修正优先。/wde mood 会分项显示配置值及实际应用值。
     roles:
       townMayor: -8
       nationKing: -12
-  # 心情高于 50 时，每到间隔便随机获得一个已启用的下一击灵感。
+  # 心情高于 50 时，每到间隔从玩家当前可用的已启用灵感中随机选择。
   inspiration:
     intervalMinutes: 2
     effects:
@@ -113,6 +114,23 @@ mood:
         enabled: true
       meleeArmorPiercing:
         enabled: true
+      animalTaming:
+        enabled: true
+      nightingale:
+        enabled: true
+        durationMinutes: 15
+      consolation:
+        enabled: true
+        moodBonus: 10
+      actionIncentive:
+        enabled: true
+        durationMinutes: 15
+      miningIncentive:
+        enabled: true
+        durationMinutes: 15
+      stretch:
+        enabled: true
+        durationMinutes: 15
   changes:
     # attitude 未设置 moodChange 时使用此遵守增益/违背扣减基数。
     compliant: 1
@@ -130,6 +148,14 @@ mood:
       enabled: true
     animalResonance:
       enabled: true
+    animalPersonhoodLeash:
+      enabled: true
+      # 仅动物平权模因持有者生效；每只动物进入观察范围时只扣减一次。
+      radiusBlocks: 8
+      checkIntervalTicks: 40
+      moodPenalty: 5
+      moodBonus: 5
+      moodDurationMinutes: 5
     rituals:
       enabled: true
       satisfactionDurationMinutes: 30
@@ -174,10 +200,9 @@ mood:
       # 脚下方块天空光小于 10 判定为室内；10 及以上判定为室外。
     mining:
       enabled: true
-      # 破坏下列原版矿石或石头方块时触发采矿戒律。
+      # 破坏下列原版矿石时触发采矿戒律。
       ores:
         vanilla:
-          - STONE
           - COAL_ORE
           - DEEPSLATE_COAL_ORE
           - IRON_ORE
@@ -308,6 +333,10 @@ mood:
       darkVision:
         enabled: true
         durationSeconds: 180
+        # 失明期间循环播放恶魂环境音；音量范围 0～4，音高范围 0.5～2。
+        soundIntervalTicks: 80
+        soundVolume: 1.0
+        soundPitch: 0.8
       crazyTalk:
         enabled: true
         durationSeconds: 180
@@ -333,6 +362,14 @@ mood:
       faithCrisis:
         enabled: true
         durationSeconds: 120
+      selfHarm:
+        enabled: true
+        durationSeconds: 5
+      wildOutburst:
+        enabled: true
+        # 24 小时作为存档续期周期；背包未清空时效果会自动续期。
+        durationSeconds: 86400
+        dropIntervalTicks: 10
       humanityCollapse:
         # 个人“非人化”戒律选为 required 时自动崩溃固定触发此流程。
         enabled: true
@@ -365,17 +402,15 @@ economy:
   treasury:
     enabled: true
     # 每个 Towny 新日结算一次。终身制/枢机制面向该信仰全体个人追随者；共议制仅向当前教会成员征收。
-    # 定额税默认币优先、不足时折算其他已配置币种；比例税以全部已配置币种折算财富为基数。
+    # 定额什一税优先使用默认货币，不足时按汇率折算其他已配置货币。
     # 余额不足仅收现有资金，不记欠税；没有个人信仰或未加入共议教会的玩家不征收。
     titheEnabled: true
     # 所有什一税余额查询和扣款使用该世界；需填写已加载的世界，离线玩家也使用它。
     # 在按世界分账的经济插件中，仅计算此世界的余额，避免跨世界重复计入。
     taxWorld: world
-    # 仅用于之后新建的宗教；FIXED 为定额，WEALTH_PERCENTAGE 为财富百分比（10 表示 10%）。
     # 旧宗教升级后金库余额为 0、税额为 0，不会自动开启扣费，需由领袖设置。
-    # 每个宗教的领袖可自行修改，额度设为 0 时停止征收，比例上限 100%。
-    defaultTitheType: WEALTH_PERCENTAGE
-    defaultTitheAmount: "10"
+    # 每个宗教的领袖可设置每日固定金额，额度为 0 时停征。
+    defaultTitheAmount: "0"
     logPartialCollection: true
   # 枢机任免费用以教廷金库默认货币结算，只有成功写入任免状态后才扣款。
   # 金库仍无玩家提款入口；这些治理费用是唯一允许的内部支出。
@@ -417,7 +452,7 @@ economy:
 # 模因注册表。
 # 用途：
 # 1. 这里只负责注册“可识别的模因定义”，用于文化模因系统。
-# 2. 模因可定义心情区间及灵感/崩溃结果效果 ID；默认模因效果列表为空，内置灵感由 mood.inspiration 配置。
+# 2. 模因可定义心情区间及灵感/崩溃结果效果 ID；自然至上提供 animal_taming，黑暗亲和提供 nightingale，传教热忱提供 consolation，裸体主义提供 action_incentive，地底之心提供 mining_incentive，仪式热忱提供 dark_vision，苦痛美德提供 self_harm 和 stretch。
 # 3. 每条模因至少需要 id、title 和 description。
 # 4. 可选字段 icon 使用原版物品名称或 CraftEngine 物品 ID，直接定义该模因在 GUI 中的图标。
 # 5. 可选字段 exclusive_with 用于声明互斥模因；只需一侧声明即可双向生效。
@@ -425,7 +460,8 @@ economy:
 # 7. 后续为某个文化分配模因时，建议直接保存 meme id，而不是标题文本。
 # 8. 删除某个定义会停用对应选项；重载时不会自动补回，玩家已保存的选择会保留但不生效。
 # 9. 每个模因可选配置 moodEffects.ranges、moodEffects.collapse 和 moodEffects.inspiration。
-#    collapse 可填 sad_wander、dark_vision、crazy_talk、catatonic_stupor、faith_crisis 限制崩溃效果池；
+#    collapse 与 inspiration 均使用 YAML 列表，可在同一模因下配置多个 effect_id。
+#    collapse 可填 sad_wander、dark_vision、crazy_talk、catatonic_stupor、faith_crisis、self_harm、wild_outburst 限制崩溃效果池；
 #    当前选择的模因都未填写时，从该崩溃等级的全部启用效果中随机。
 #    ranges 项格式为 {min: 0, max: 24, effects: [effect_id]}，心情上下限均包含。
 memes:
@@ -440,11 +476,17 @@ memes:
       color: "&2"
       description: "人类是完美大自然中的污点。"
       icon: OAK_SAPLING
+      moodEffects:
+        inspiration:
+          - animal_taming
     proselytizer:
       title: "传教热忱"
       color: "&6"
       description: "我们的使命是传播信仰。"
       icon: BELL
+      moodEffects:
+        inspiration:
+          - consolation
     loyalty:
       title: "赤胆忠心"
       color: "&9"
@@ -463,14 +505,23 @@ memes:
       title: "仪式热忱"
       color: "&d"
       description: "宇宙尚有广大潜能。借助仪式，我们方能对它有所了解，进而驾驭其中的力量。"
+      moodEffects:
+        collapse:
+          - dark_vision
     darkness:
       title: "黑暗亲和"
       color: "&8"
       description: "明亮的光线带来燃烧和毁灭！黑暗带来滋养和创造。人们应该生活在黑暗中。"
+      moodEffects:
+        inspiration:
+          - nightingale
     tunneler:
       title: "地底之心"
       color: "&2"
       description: "人类应该生活在地下，享受地下深处甜美多汁的果实。"
+      moodEffects:
+        inspiration:
+          - mining_incentive
     cannibal:
       title: "食人狂热"
       color: "&4"
@@ -483,10 +534,18 @@ memes:
       title: "苦痛美德"
       color: "&5"
       description: "美德是通过自己和他人的痛苦表现出来的。"
+      moodEffects:
+        collapse:
+          - self_harm
+        inspiration:
+          - stretch
     nudist:
       title: "裸体主义"
       color: "&e"
       description: "护甲束缚、控制着我们，这让我们感到窒息。我们应当自由地一丝不挂。"
+      moodEffects:
+        inspiration:
+          - action_incentive
     nonhuman_alienation:
       title: "非人异化"
       color: "&5"
@@ -503,6 +562,9 @@ memes:
       title: "动物平权"
       color: "&b"
       description: "动物应该拥有和人类一样的权利。"
+      moodEffects:
+        collapse:
+          - wild_outburst
     human_primacy:
       title: "人类至上"
       color: "&6"
@@ -518,7 +580,8 @@ memes:
 # 4. 可选字段 icon 使用原版物品名称或 CraftEngine 物品 ID，直接定义该戒律在 GUI 中的图标
 # 5. 优先使用已有的中立态度；没有中立项的极端戒律优先采用已有的反对态度，不新增态度。
 #    第一项按此规则排列；旧配置即使保留原顺序，新建文化也使用同一默认选择规则。
-# 6. 某些模因可限制戒律不能切换到指定态度，并强制回到该模因对应的默认态度
+# 6. meme.cant_use 会禁止选择指定态度；多个已选模因的禁用项会合并。
+#    default 只作为新建或当前态度失效时的优先回退态度，不会覆盖仍合法的旧选择。
 # 7. 戒律态度根据玩家行为调整心情，不直接赋予药水效果。
 # 8. 删除某个定义会停用对应选项；重载时不会自动补回，已保存的态度会保留但不生效。
 # 9. 可选 moodWeight 为 0～10；越极端的态度可设置越高，缺省为 1。
@@ -537,6 +600,7 @@ doctrines:
             default:
               - want
             cant_use:
+              - neutral
               - hate
       attitudes:
         - neutral:
@@ -570,6 +634,8 @@ doctrines:
             default:
               - naked
             cant_use:
+              - unrestricted
+              - pants_only
               - fully_covered
       attitudes:
         - unrestricted:
@@ -611,11 +677,12 @@ doctrines:
       meme:
         - cannibal:
             default:
-              - accept
+              - greedy
             cant_use:
               - disgust
               - abhor
               - fear
+              - accept
       attitudes:
         - disgust:
             title: "反感"
@@ -681,11 +748,12 @@ doctrines:
       meme:
         - bloodfeeder:
             default:
-              - enjoy
+              - greedy
             cant_use:
               - disgust
               - abhor
               - fear
+              - accept
       attitudes:
         - disgust:
             title: "反感"
@@ -750,8 +818,21 @@ doctrines:
       meme:
         - original_sin:
             default:
-              - mild_prejudice
+              - strong_prejudice
             cant_use:
+              - neutral
+              - mild_prejudice
+              - approve
+              - highly_approve
+              - noble
+        - supremacist:
+            default:
+              - strong_prejudice
+            cant_use:
+              - neutral
+              - mild_prejudice
+              - approve
+              - highly_approve
               - noble
       attitudes:
         - neutral:
@@ -829,8 +910,20 @@ doctrines:
       meme:
         - animal_personhood:
             default:
-              - oppose
+              - taboo
             cant_use:
+              - neutral
+              - fear
+              - oppose
+              - support
+              - love
+        - nature_primacy:
+            default:
+              - taboo
+            cant_use:
+              - neutral
+              - fear
+              - oppose
               - support
               - love
       attitudes:
@@ -892,6 +985,14 @@ doctrines:
               - hostile
             cant_use:
               - neutral
+              - disgust
+        - collectivist:
+            default:
+              - abhor
+            cant_use:
+              - neutral
+              - hostile
+              - disgust
       attitudes:
         - neutral:
             title: "无态度"
@@ -928,14 +1029,17 @@ doctrines:
       meme:
         - collectivist:
             default:
-              - important
+              - required
             cant_use:
               - neutral
+              - important
+              - joy
         - individualist:
             default:
               - joy
             cant_use:
               - required
+              - important
       attitudes:
         - neutral:
             title: "无感"
@@ -1008,6 +1112,14 @@ doctrines:
               - disgust
             cant_use:
               - abhor
+              - fear
+        - animal_personhood:
+            default:
+              - abhor
+            cant_use:
+              - neutral
+              - fear
+              - disgust
       attitudes:
         - neutral:
             title: "无态度"
@@ -1050,6 +1162,7 @@ doctrines:
             default:
               - dim
             cant_use:
+              - neutral
               - crave
       attitudes:
         - neutral:
@@ -1079,6 +1192,12 @@ doctrines:
       title: "野战"
       color: "&6"
       lore: "对于开阔地正面作战的态度"
+      meme:
+        - tunneler:
+            default:
+              - neutral
+            cant_use:
+              - enjoy
       attitudes:
         - neutral:
             title: "无态度"
@@ -1183,6 +1302,7 @@ doctrines:
               - required
             cant_use:
               - neutral
+              - valued
       attitudes:
         - neutral:
             title: "无态度"
@@ -1215,6 +1335,8 @@ doctrines:
               - taboo
             cant_use:
               - neutral
+              - fear
+              - disgust
       attitudes:
         - neutral:
             title: "无态度"
@@ -1248,6 +1370,12 @@ doctrines:
       title: "树"
       color: "&2"
       lore: "对于树木与林地本身的态度"
+      meme:
+        - nature_primacy:
+            default:
+              - crave
+            cant_use:
+              - neutral
       attitudes:
         - neutral:
             title: "无态度"
@@ -1263,6 +1391,7 @@ doctrines:
               compliant: 1
               violation: 1
             lore: "树木、林冠与绿意本身就是值得主动追求的存在。"
+    # `required` 仅在文化选有 nonhuman_alienation 模因时可用；其他文化只能保持中立。
     "namespace:wder/nonhumanization":
       title: "非人化"
       color: "&5"
@@ -1325,6 +1454,17 @@ doctrines:
       title: "动物共鸣"
       color: "&b"
       lore: "对于与动物建立精神共鸣的态度"
+      meme:
+        - animal_personhood:
+            default:
+              - powerful
+            cant_use:
+              - none
+        - nature_primacy:
+            default:
+              - powerful
+            cant_use:
+              - none
       attitudes:
         - none:
             title: "无"
@@ -1413,6 +1553,8 @@ doctrines:
               - frequent
             cant_use:
               - neutral
+              - occasional
+              - sometimes
       attitudes:
         - neutral:
             title: "无感"
@@ -1446,6 +1588,19 @@ doctrines:
       title: "畜牧"
       color: "&2"
       lore: "对于驯养与规模化饲养动物的态度"
+      meme:
+        - animal_personhood:
+            default:
+              - oppose
+            cant_use:
+              - none
+              - primary
+        - nature_primacy:
+            default:
+              - oppose
+            cant_use:
+              - none
+              - primary
       attitudes:
         - none:
             title: "无"
@@ -1472,6 +1627,12 @@ doctrines:
       title: "餐风露宿"
       color: "&8"
       lore: "对于露天生存与艰苦环境的态度"
+      meme:
+        - tunneler:
+            default:
+              - neutral
+            cant_use:
+              - accept
       attitudes:
         - neutral:
             title: "无感"

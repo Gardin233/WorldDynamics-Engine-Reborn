@@ -41,7 +41,7 @@ public final class MoodCommand implements CommandExecutor {
         sendInspirationStatus(sender, resident);
         long now = System.currentTimeMillis();
         moods.pruneExemptMoodPreviews();
-        int expectation = moods.getExpectationModifier(player);
+        MoodManager.ExpectationBreakdown expectation = moods.getExpectationBreakdown(player);
         if (moods.isMoodExempt(player)) {
             sendExpectation(sender, expectation);
             String exemptionMessage = resident != null && resident.isDehumanized()
@@ -84,22 +84,69 @@ public final class MoodCommand implements CommandExecutor {
         if (resident == null) return;
         int arrows = resident.getInspirationCharges(InspirationManager.ARROW_ARMOR_PIERCING);
         int melee = resident.getInspirationCharges(InspirationManager.MELEE_ARMOR_PIERCING);
-        if (arrows > 0 || melee > 0) {
-            send(sender, "mood_details_inspiration_pending", arrows, melee);
+        int taming = resident.getInspirationCharges(InspirationManager.ANIMAL_TAMING);
+        int consolation = resident.getInspirationCharges(InspirationManager.CONSOLATION);
+        if (arrows > 0 || melee > 0 || taming > 0 || consolation > 0) {
+            send(sender, "mood_details_inspiration_pending", arrows, melee, taming, consolation);
         }
     }
 
-    private void sendExpectation(CommandSender sender, int expectation) {
-        String color = expectation > 0 ? TextColors.GREEN
-                : expectation < 0 ? TextColors.RED : TextColors.GRAY;
-        String value = expectation > 0 ? "+" + expectation : Integer.toString(expectation);
+    private void sendExpectation(CommandSender sender, MoodManager.ExpectationBreakdown expectation) {
+        send(sender, "mood_details_expectation_new_player",
+                expectationTierName(expectation), formatSigned(expectation.newPlayerBonus()));
+        send(sender, "mood_details_expectation_town_mayor",
+                formatSigned(expectation.configuredTownMayorAdjustment()),
+                formatSigned(expectation.townMayorAdjustment()),
+                expectationRoleStatus(expectation, true));
+        send(sender, "mood_details_expectation_nation_king",
+                formatSigned(expectation.configuredNationKingAdjustment()),
+                formatSigned(expectation.nationKingAdjustment()),
+                expectationRoleStatus(expectation, false));
+        int total = expectation.totalAdjustment();
+        String color = total > 0 ? TextColors.GREEN
+                : total < 0 ? TextColors.RED : TextColors.GRAY;
+        String value = formatSigned(total);
         send(sender, "mood_details_expectation", color, value);
+    }
+
+    private String expectationTierName(MoodManager.ExpectationBreakdown expectation) {
+        if (expectation.exempt()) return message("mood_expectation_tier_exempt");
+        String key = switch (expectation.newPlayerTier()) {
+            case 0 -> "mood_expectation_tier_extremely_low";
+            case 1 -> "mood_expectation_tier_very_low";
+            case 2 -> "mood_expectation_tier_low";
+            case 3 -> "mood_expectation_tier_reasonable";
+            case 4 -> "mood_expectation_tier_high";
+            case 5 -> "mood_expectation_tier_very_high";
+            default -> "mood_expectation_tier_unconfigured";
+        };
+        return message(key);
+    }
+
+    private String expectationRoleStatus(MoodManager.ExpectationBreakdown expectation,
+                                         boolean mayorAdjustment) {
+        if (expectation.exempt()) return message("mood_details_expectation_exempt");
+        if (mayorAdjustment && expectation.nationKing() && expectation.townMayor()) {
+            return message("mood_details_expectation_role_superseded");
+        }
+        boolean active = mayorAdjustment
+                ? expectation.townMayorAdjustment() != 0 || expectation.townMayor()
+                : expectation.nationKingAdjustment() != 0 || expectation.nationKing();
+        return message(active ? "mood_details_expectation_role_applied"
+                : "mood_details_expectation_role_inactive");
+    }
+
+    private static String formatSigned(int value) {
+        return value > 0 ? "+" + value : Integer.toString(value);
     }
 
     private String sourceName(String source) {
         if (source == null || source.isBlank()) return message("mood_details_source_unknown", "unknown");
         if (source.startsWith("ritual_absence|")) {
             return message("mood_details_source_ritual_absence");
+        }
+        if (source.startsWith("nonhumanization_shame|")) {
+            return message("mood_details_source_humanity_shame");
         }
         String[] doctrineParts = parseDoctrineSource(source);
         if (doctrineParts != null) {
@@ -135,9 +182,12 @@ public final class MoodCommand implements CommandExecutor {
         String key = switch (source) {
             case "ritual_satisfaction" -> "mood_details_source_ritual_satisfaction";
             case "animalKilling" -> "mood_details_source_animal";
+            case "animal_personhood_leash_observed" -> "mood_details_source_animal_personhood_leash_observed";
+            case "animal_personhood_leash_released" -> "mood_details_source_animal_personhood_leash_released";
             case "humanMeat" -> "mood_details_source_food_human_meat";
             case "relief" -> "mood_details_source_relief";
             case "potion:inebriation" -> "mood_details_source_potion_inebriation";
+            case "consolation" -> "mood_details_source_consolation";
             case "manual" -> "mood_details_source_manual";
             case "doctrine" -> "mood_details_source_doctrine";
             case "rebirth" -> "mood_details_source_rebirth";

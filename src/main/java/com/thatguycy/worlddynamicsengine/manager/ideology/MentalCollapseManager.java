@@ -19,8 +19,10 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -34,6 +36,8 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
@@ -69,7 +73,7 @@ public final class MentalCollapseManager implements Listener {
             Material.SOUL_FIRE, Material.MAGMA_BLOCK, Material.SWEET_BERRY_BUSH,
             Material.POWDER_SNOW, Material.LAVA);
 
-    public enum Severity { MILD, MODERATE, SEVERE }
+    public enum Severity { MILD, MODERATE, SEVERE, ANY }
 
     private enum CollapseEffect {
         SAD_WANDER("sad_wander", "sadWander", Severity.MILD),
@@ -77,7 +81,9 @@ public final class MentalCollapseManager implements Listener {
         CRAZY_TALK("crazy_talk", "crazyTalk", Severity.MODERATE),
         HUMANITY_COLLAPSE("humanity_collapse", "humanityCollapse", Severity.SEVERE),
         CATATONIC_STUPOR("catatonic_stupor", "catatonicStupor", Severity.SEVERE),
-        FAITH_CRISIS("faith_crisis", "faithCrisis", Severity.SEVERE);
+        FAITH_CRISIS("faith_crisis", "faithCrisis", Severity.SEVERE),
+        SELF_HARM("self_harm", "selfHarm", Severity.SEVERE),
+        WILD_OUTBURST("wild_outburst", "wildOutburst", Severity.ANY);
 
         private final String id;
         private final String configKey;
@@ -234,7 +240,8 @@ public final class MentalCollapseManager implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onCommand(PlayerCommandPreprocessEvent event) {
         CollapseEffect effect = active.get(event.getPlayer().getUniqueId());
-        if (effect == CollapseEffect.SAD_WANDER || effect == CollapseEffect.CATATONIC_STUPOR) {
+        if (effect == CollapseEffect.SAD_WANDER || effect == CollapseEffect.CATATONIC_STUPOR
+                || effect == CollapseEffect.WILD_OUTBURST) {
             event.setCancelled(true);
         }
     }
@@ -253,22 +260,22 @@ public final class MentalCollapseManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(PlayerInteractEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteractEntity(PlayerInteractEntityEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onArmorStand(PlayerArmorStandManipulateEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onShear(PlayerShearEntityEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -278,7 +285,7 @@ public final class MentalCollapseManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -288,37 +295,37 @@ public final class MentalCollapseManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPickup(EntityPickupItemEvent event) {
-        if (event.getEntity() instanceof Player player && isCatatonic(player)) event.setCancelled(true);
+        if (event.getEntity() instanceof Player player && isInventoryLocked(player)) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getWhoClicked() instanceof Player player && isCatatonic(player)) event.setCancelled(true);
+        if (event.getWhoClicked() instanceof Player player && isInventoryLocked(player)) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (event.getWhoClicked() instanceof Player player && isCatatonic(player)) event.setCancelled(true);
+        if (event.getWhoClicked() instanceof Player player && isInventoryLocked(player)) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryOpen(InventoryOpenEvent event) {
-        if (event.getPlayer() instanceof Player player && isCatatonic(player)) event.setCancelled(true);
+        if (event.getPlayer() instanceof Player player && isInventoryLocked(player)) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onConsume(PlayerItemConsumeEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSwapHands(PlayerSwapHandItemsEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onItemHeld(PlayerItemHeldEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -338,12 +345,12 @@ public final class MentalCollapseManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBucketFill(PlayerBucketFillEvent event) {
-        if (isCatatonic(event.getPlayer())) event.setCancelled(true);
+        if (isInventoryLocked(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -359,7 +366,7 @@ public final class MentalCollapseManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onProjectileLaunch(ProjectileLaunchEvent event) {
-        if (event.getEntity().getShooter() instanceof Player player && isCatatonic(player)) {
+        if (event.getEntity().getShooter() instanceof Player player && isInventoryLocked(player)) {
             event.setCancelled(true);
         }
     }
@@ -383,7 +390,9 @@ public final class MentalCollapseManager implements Listener {
 
         for (CollapseEffect effect : CollapseEffect.values()) {
             if (!isEnabled(effect)) continue;
-            if (effect.severity != severity) continue;
+            if (effect.severity != Severity.ANY && effect.severity != severity) continue;
+            if (effect == CollapseEffect.SELF_HARM
+                    && !configuredMemeEffects.contains(effect.id)) continue;
             if (hasMemeEffectFilter && !configuredMemeEffects.contains(effect.id)) continue;
             candidates.add(effect);
         }
@@ -427,8 +436,10 @@ public final class MentalCollapseManager implements Listener {
         if (resident == null || !player.isOnline()) return;
         var config = plugin.getIdeologyConfig();
         String path = "mood.collapse.effects." + effect.configKey + ".";
-        int durationSeconds = config == null ? 180
-                : Math.max(1, Math.min(86_400, config.getInt(path + "durationSeconds", 180)));
+        int defaultDurationSeconds = effect == CollapseEffect.WILD_OUTBURST ? 86_400 : 180;
+        int durationSeconds = config == null ? defaultDurationSeconds
+                : Math.max(1, Math.min(86_400,
+                        config.getInt(path + "durationSeconds", defaultDurationSeconds)));
         long now = System.currentTimeMillis();
         long expiresAt = now + durationSeconds * 1000L;
         resident.setActiveCollapse(effect.id, expiresAt);
@@ -533,6 +544,12 @@ public final class MentalCollapseManager implements Listener {
             }
             case DARK_VISION -> {
                 applyBlindness(player, remainingTicks);
+                long interval = config == null ? 80L
+                        : Math.max(20L, Math.min(1200L,
+                                config.getLong(path + "soundIntervalTicks", 80L)));
+                playGhastSound(uuid);
+                trackTask(uuid, Bukkit.getScheduler().runTaskTimer(
+                        plugin, () -> playGhastSound(uuid), interval, interval));
             }
             case CRAZY_TALK -> {
                 long interval = config == null ? 20L * 15
@@ -548,6 +565,16 @@ public final class MentalCollapseManager implements Listener {
                 scheduleHumanityCollapseFlow(uuid, expiresAt);
             }
             case FAITH_CRISIS -> { if (newlyTriggered) randomizeFaith(player); }
+            case SELF_HARM -> {
+                int ticks = (int) Math.min(Integer.MAX_VALUE, Math.max(1L, remainingTicks));
+                player.addPotionEffect(
+                        new PotionEffect(PotionEffectType.WITHER, ticks, 0, true, false, true), true);
+            }
+            case WILD_OUTBURST -> {
+                long interval = getWildOutburstDropIntervalTicks();
+                trackTask(uuid, Bukkit.getScheduler().runTaskTimer(
+                        plugin, () -> dropWildOutburstItem(uuid), 1L, interval));
+            }
         }
     }
 
@@ -823,12 +850,32 @@ public final class MentalCollapseManager implements Listener {
     }
 
     private void endCollapse(UUID uuid) {
-        cancelRuntimeTasks(uuid);
-        active.remove(uuid);
         Player player = Bukkit.getPlayer(uuid);
         WDEresident resident = plugin.getResidentManager().getResident(uuid);
-        if (resident == null || resident.getActiveCollapseId().isBlank()) return;
+        if (resident == null || resident.getActiveCollapseId().isBlank()) {
+            cancelRuntimeTasks(uuid);
+            active.remove(uuid);
+            return;
+        }
         CollapseEffect effect = CollapseEffect.fromId(resident.getActiveCollapseId());
+        if (effect == CollapseEffect.WILD_OUTBURST
+                && (player == null || !isInventoryEmpty(player))) {
+            long expiresAt = System.currentTimeMillis()
+                    + getWildOutburstDurationSeconds() * 1000L;
+            resident.setActiveCollapse(effect.id, expiresAt);
+            plugin.getResidentManager().saveResident(resident);
+            if (player == null) {
+                cancelRuntimeTasks(uuid);
+                active.remove(uuid);
+            } else {
+                active.put(uuid, effect);
+                startRuntimeEffect(player, effect, expiresAt, false);
+            }
+            return;
+        }
+
+        cancelRuntimeTasks(uuid);
+        active.remove(uuid);
         if (hasBlindnessEffect(effect) && player != null) {
             player.removePotionEffect(PotionEffectType.BLINDNESS);
         }
@@ -836,7 +883,12 @@ public final class MentalCollapseManager implements Listener {
         resident.clearActiveCollapse();
         resident.removeFlag(MANUAL_COLLAPSE_FLAG);
         boolean dehumanizedByCollapse = effect == CollapseEffect.HUMANITY_COLLAPSE;
-        if (dehumanizedByCollapse) resident.setDehumanized(true);
+        if (dehumanizedByCollapse) {
+            resident.setDehumanized(true);
+            if (player != null && plugin.getInspirationManager() != null) {
+                plugin.getInspirationManager().clearStretchInspiration(player);
+            }
+        }
         var config = plugin.getIdeologyConfig();
         int releaseBonus = config == null ? 40
                 : Math.max(0, Math.min(100, config.getInt("mood.collapse.release.moodBonus", 40)));
@@ -850,15 +902,110 @@ public final class MentalCollapseManager implements Listener {
         plugin.getResidentManager().saveResident(resident);
     }
 
+    private void dropWildOutburstItem(UUID uuid) {
+        if (!isActive(uuid, CollapseEffect.WILD_OUTBURST)) return;
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null || !player.isOnline()) return;
+        if (!dropNextInventoryStack(player)) endCollapse(uuid);
+    }
+
+    private boolean dropNextInventoryStack(Player player) {
+        for (int slot = 0; slot < 42; slot++) {
+            ItemStack stack = getInventorySlot(player, slot);
+            if (stack == null || stack.getType().isAir() || stack.getAmount() <= 0) continue;
+
+            ItemStack original = stack.clone();
+            Item droppedItem = player.getWorld().dropItemNaturally(
+                    player.getLocation(), original.clone());
+            PlayerDropItemEvent event = new PlayerDropItemEvent(player, droppedItem);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled() || !droppedItem.isValid()
+                    || !original.equals(getInventorySlot(player, slot))) {
+                droppedItem.remove();
+                return true;
+            }
+            clearInventorySlot(player, slot);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isInventoryEmpty(Player player) {
+        for (int slot = 0; slot < 42; slot++) {
+            ItemStack stack = getInventorySlot(player, slot);
+            if (stack != null && !stack.getType().isAir() && stack.getAmount() > 0) return false;
+        }
+        return true;
+    }
+
+    private static ItemStack getInventorySlot(Player player, int slot) {
+        PlayerInventory inventory = player.getInventory();
+        if (slot < 36) return inventory.getItem(slot);
+        if (slot < 40) return inventory.getArmorContents()[slot - 36];
+        if (slot == 40) return inventory.getItemInOffHand();
+        return player.getOpenInventory().getCursor();
+    }
+
+    private static void clearInventorySlot(Player player, int slot) {
+        PlayerInventory inventory = player.getInventory();
+        if (slot < 36) {
+            inventory.setItem(slot, null);
+        } else if (slot < 40) {
+            ItemStack[] armor = inventory.getArmorContents();
+            armor[slot - 36] = null;
+            inventory.setArmorContents(armor);
+        } else if (slot == 40) {
+            inventory.setItemInOffHand(null);
+        } else {
+            player.getOpenInventory().setCursor(null);
+        }
+    }
+
+    private long getWildOutburstDurationSeconds() {
+        var config = plugin.getIdeologyConfig();
+        return config == null ? 86_400L
+                : Math.max(1L, Math.min(86_400L,
+                        config.getLong("mood.collapse.effects.wildOutburst.durationSeconds", 86_400L)));
+    }
+
+    private long getWildOutburstDropIntervalTicks() {
+        var config = plugin.getIdeologyConfig();
+        return config == null ? 10L
+                : Math.max(1L, Math.min(1200L,
+                        config.getLong("mood.collapse.effects.wildOutburst.dropIntervalTicks", 10L)));
+    }
+
+    private boolean isInventoryLocked(Player player) {
+        CollapseEffect effect = active.get(player.getUniqueId());
+        return effect == CollapseEffect.CATATONIC_STUPOR || effect == CollapseEffect.WILD_OUTBURST;
+    }
+
     private void trackTask(UUID uuid, BukkitTask task) {
         tasks.computeIfAbsent(uuid, ignored -> new ArrayList<>()).add(task);
     }
 
     private void cancelRuntimeTasks(UUID uuid) {
+        if (active.get(uuid) == CollapseEffect.DARK_VISION) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.stopSound(Sound.ENTITY_GHAST_AMBIENT);
+        }
         List<BukkitTask> playerTasks = tasks.remove(uuid);
         if (playerTasks != null) playerTasks.forEach(BukkitTask::cancel);
         scriptedCrazyTalk.remove(uuid);
         restoreWanderMovement(uuid, Bukkit.getPlayer(uuid));
+    }
+
+    private void playGhastSound(UUID uuid) {
+        if (!isActive(uuid, CollapseEffect.DARK_VISION)) return;
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null || !player.isOnline()) return;
+        var config = plugin.getIdeologyConfig();
+        String path = "mood.collapse.effects.darkVision.";
+        float volume = config == null ? 1.0F
+                : (float) Math.max(0.0, Math.min(4.0, config.getDouble(path + "soundVolume", 1.0)));
+        float pitch = config == null ? 0.8F
+                : (float) Math.max(0.5, Math.min(2.0, config.getDouble(path + "soundPitch", 0.8)));
+        player.playSound(player.getLocation(), Sound.ENTITY_GHAST_AMBIENT, volume, pitch);
     }
 
     private void restoreWanderMovement(UUID uuid, Player player) {

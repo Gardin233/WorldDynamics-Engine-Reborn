@@ -41,6 +41,7 @@ public class MyTabCompleter implements TabCompleter {
         if (cmd.getName().equalsIgnoreCase("wde")) {
             String rootArg = args.length > 0 ? args[0].toLowerCase() : "";
             if (args.length > 1 && !CommandPermissions.root(sender, rootArg)) return List.of();
+            if (rootArg.equals("menu") && args.length > 1) return MenuCommand.complete(sender, args, orgManager);
             if (rootArg.equals("admin") && args.length > 1) return AdminTabCompleter.complete(sender, args);
             if (args.length == 3 && HelpCommand.supportsModule(rootArg)
                     && args[1].equalsIgnoreCase("help")) {
@@ -177,7 +178,7 @@ public class MyTabCompleter implements TabCompleter {
                             .filter(r -> !("town".equalsIgnoreCase(args[2]) && targetTown == null)
                                     || r == com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE)
                             .filter(r -> !("town".equalsIgnoreCase(args[2]) && r == com.thatguycy.worlddynamicsengine.model.war.WarReason.DESTROY_THREAT))
-                            .filter(r -> orgManager.warReasonFailure(r,
+                            .filter(r -> orgManager.getWarManager().warReasonFailure(r,
                                     r == com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE
                                             && "town".equalsIgnoreCase(args[2]) && home != null ? "town:" + home.getName() : actorNation,
                                     r == com.thatguycy.worlddynamicsengine.model.war.WarReason.INDEPENDENCE
@@ -188,9 +189,9 @@ public class MyTabCompleter implements TabCompleter {
                     var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
                     if (reason != null && com.thatguycy.worlddynamicsengine.model.war.WarGoalType.forReason(reason)
                             == com.thatguycy.worlddynamicsengine.model.war.WarGoalType.CAPTURE_TOWN) {
-                        completions.addAll(orgManager.getWarGoalTownOptions(reason, actorNation, args[3]));
+                        completions.addAll(orgManager.getWarManager().getWarGoalTownOptions(reason, actorNation, args[3]));
                     } else if (reason == com.thatguycy.worlddynamicsengine.model.war.WarReason.DESTROY_THREAT) {
-                        completions.addAll(orgManager.getThreatOrganizationOptions(args[3]));
+                        completions.addAll(orgManager.getWarManager().getThreatOrganizationOptions(args[3]));
                     }
                 }
             } else if (rootArg.equals("help") && args.length == 2) {
@@ -307,7 +308,7 @@ public class MyTabCompleter implements TabCompleter {
                 } else if (args[1].equalsIgnoreCase("excommunicate")) {
                     completions.addAll(Arrays.asList("player", "town", "nation"));
                 } else if (args[1].equalsIgnoreCase("settithe")) {
-                    completions.addAll(Arrays.asList("fixed", "wealth_percentage"));
+                    completions.add("fixed");
                 } else if (args[1].equalsIgnoreCase("governance")) {
                     completions.addAll(Arrays.asList("lifetime", "cardinal", "synodal"));
                 } else if (args[1].equalsIgnoreCase("cardinal")) {
@@ -373,8 +374,7 @@ public class MyTabCompleter implements TabCompleter {
             } else if (rootArg.equals("ideology") && args.length == 5 && args[1].equalsIgnoreCase("cardinal")) {
                 TownyUniverse.getInstance().getResidents().forEach(resident -> completions.add(resident.getName()));
             } else if (rootArg.equals("ideology") && args.length == 5 && args[1].equalsIgnoreCase("settithe")) {
-                completions.addAll("wealth_percentage".equalsIgnoreCase(args[3])
-                        ? Arrays.asList("0", "5", "10", "100") : Arrays.asList("0", "100", "1000"));
+                completions.addAll(Arrays.asList("0", "100", "1000"));
             } else if (rootArg.equals("ideology") && args.length >= 5 && args.length <= 7 && args[1].equalsIgnoreCase("setmemes")) {
                 completions.addAll(religionManager.getValidMemes());
             } else if (rootArg.equals("ideology") && args.length == 5 && args[1].equalsIgnoreCase("excommunicate")) {
@@ -471,7 +471,7 @@ public class MyTabCompleter implements TabCompleter {
                         break;
                 }
             } else if (args[0].equalsIgnoreCase("nation") && args.length == 5 && args[2].equalsIgnoreCase("settowntax")) {
-                completions.addAll(Arrays.asList("fixed", "wealth_percentage", "定额", "总财产比例"));
+                completions.addAll(Arrays.asList("fixed", "定额"));
             } else if (args[0].equalsIgnoreCase("diplomacy") && args.length == 2) {
                 completions.addAll(Arrays.asList("help", "setrelation", "trading", "viewtrading", "relations", "visit", "letter", "letters", "readletter"));
             } else if (args[0].equalsIgnoreCase("diplomacy") && args.length == 3) {
@@ -530,7 +530,7 @@ public class MyTabCompleter implements TabCompleter {
                             orgManager.getAllOrganizations().stream()
                                     .filter(org -> org.getOrganizationName().equalsIgnoreCase(args[2]))
                                     .findFirst()
-                                    .ifPresent(org -> orgManager.getActiveIndependenceWars(org)
+                                    .ifPresent(org -> orgManager.getWarManager().getActiveIndependenceWars(org)
                                             .forEach(war -> completions.add(war.getRebelNationName())));
                         } catch (Exception ignored) {
                         }
@@ -558,7 +558,7 @@ public class MyTabCompleter implements TabCompleter {
             } else if (args.length == 5 && args[0].equalsIgnoreCase("org")) {
                 if (args[1].equalsIgnoreCase("declarewar")) {
                     Arrays.stream(com.thatguycy.worlddynamicsengine.model.war.WarReason.values())
-                            .filter(r -> orgManager.warReasonFailure(r, actorNation, args[3]) == null)
+                            .filter(r -> orgManager.getWarManager().warReasonFailure(r, actorNation, args[3]) == null)
                             .map(r -> r.name().toLowerCase(java.util.Locale.ROOT)).forEach(completions::add);
                 } else if (args[1].equalsIgnoreCase("votejoin")) {
                     completions.addAll(Arrays.asList("yes", "no"));
@@ -593,9 +593,9 @@ public class MyTabCompleter implements TabCompleter {
                 var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
                 if (reason != null && com.thatguycy.worlddynamicsengine.model.war.WarGoalType.forReason(reason)
                         == com.thatguycy.worlddynamicsengine.model.war.WarGoalType.CAPTURE_TOWN) {
-                    completions.addAll(orgManager.getWarGoalTownOptions(reason, actorNation, args[3]));
+                    completions.addAll(orgManager.getWarManager().getWarGoalTownOptions(reason, actorNation, args[3]));
                 } else if (reason == com.thatguycy.worlddynamicsengine.model.war.WarReason.DESTROY_THREAT) {
-                    completions.addAll(orgManager.getThreatOrganizationOptions(args[3]));
+                    completions.addAll(orgManager.getWarManager().getThreatOrganizationOptions(args[3]));
                 }
             }
         }

@@ -123,12 +123,12 @@ public class DiplomacyCommand implements CommandExecutor {
                 return true;
             }
             var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(args[4]);
-            String reasonError = orgManager.warReasonFailure(reason, senderNation.getName(), targetNationName);
+            String reasonError = orgManager.getWarManager().warReasonFailure(reason, senderNation.getName(), targetNationName);
             if (reasonError != null) {
                 sender.sendMessage(TextColors.RED + msg(reasonError));
                 return true;
             }
-            var warResult = orgManager.handleMilitaryAllianceWar(senderNation.getName(), targetNationName, nationManager, reason);
+            var warResult = orgManager.getWarManager().handleMilitaryAllianceWar(senderNation.getName(), targetNationName, nationManager, reason);
             if (!warResult.isSuccess()) {
                 sender.sendMessage(TextColors.RED + msg(warResult.getFailureMessageKey(), warResult.getFailureMessageArgs()));
                 return true;
@@ -136,7 +136,7 @@ public class DiplomacyCommand implements CommandExecutor {
         }
         if (!"unfriendly".equalsIgnoreCase(relation)
                 && orgManager != null
-                && orgManager.hasActiveWarBetween(senderNation.getName(), targetNationName)) {
+                && orgManager.getWarManager().hasActiveWarBetween(senderNation.getName(), targetNationName)) {
             sender.sendMessage(TextColors.RED + msg("diplomacy_relation_locked_by_war", targetNationName));
             return true;
         }
@@ -416,7 +416,7 @@ public class DiplomacyCommand implements CommandExecutor {
         if (diplomatNation == null || destinationNation == null) {
             return new VisitResult(false, zeroCharge, "diplomacy_visit_not_permitted");
         }
-        if (orgManager != null && orgManager.hasActiveWarBetween(diplomatNationName, destinationNationName)) {
+        if (orgManager != null && orgManager.getWarManager().hasActiveWarBetween(diplomatNationName, destinationNationName)) {
             return new VisitResult(false, zeroCharge, "diplomacy_visit_not_permitted");
         }
         if (orgManager != null && orgManager.isNationTradeSanctionedBy(diplomatNationName, destinationNationName)) {

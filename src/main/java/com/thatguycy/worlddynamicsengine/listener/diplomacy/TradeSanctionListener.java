@@ -76,7 +76,7 @@ public class TradeSanctionListener implements Listener {
             return false;
         }
 
-        return !orgManager.hasActiveWarBetween(playerNationName, ownerNationName);
+        return !orgManager.getWarManager().hasActiveWarBetween(playerNationName, ownerNationName);
     }
 
     private void notifyBlocked(Player player, String ownerNationName) {

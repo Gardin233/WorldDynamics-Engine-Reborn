@@ -92,9 +92,12 @@ public class WDEtown implements ConfigurationSerializable {
         this.organizationNames = readStringList(map.get("organizationNames"));
         Object rawResidentTaxManagedByNation = map.get("residentTaxManagedByNation");
         this.residentTaxManagedByNation = rawResidentTaxManagedByNation instanceof Boolean && (Boolean) rawResidentTaxManagedByNation;
-        this.residentTaxType = String.valueOf(map.getOrDefault("residentTaxType", "FIXED"));
+        String rawResidentTaxType = String.valueOf(map.getOrDefault("residentTaxType", "FIXED"));
         Object rawResidentTaxAmount = map.get("residentTaxAmount");
-        this.residentTaxAmount = rawResidentTaxAmount instanceof Number ? ((Number) rawResidentTaxAmount).doubleValue() : 0.0D;
+        boolean legacyPercentageTax = "WEALTH_PERCENTAGE".equalsIgnoreCase(rawResidentTaxType);
+        this.residentTaxType = "FIXED";
+        this.residentTaxAmount = legacyPercentageTax ? 0.0D
+                : rawResidentTaxAmount instanceof Number ? ((Number) rawResidentTaxAmount).doubleValue() : 0.0D;
         this.conscripts = readBooleanMap(map.get("conscripts"));
     }
 
@@ -290,7 +293,7 @@ public class WDEtown implements ConfigurationSerializable {
     }
 
     public void setResidentTaxType(String residentTaxType) {
-        this.residentTaxType = residentTaxType;
+        this.residentTaxType = "FIXED";
     }
 
     public double getResidentTaxAmount() {

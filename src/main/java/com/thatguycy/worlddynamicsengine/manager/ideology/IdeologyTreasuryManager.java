@@ -87,10 +87,7 @@ public final class IdeologyTreasuryManager {
                     continue;
                 }
                 try {
-                    BigDecimal wealth = religion.getTitheType() == WDEreligion.TitheType.WEALTH_PERCENTAGE
-                            ? economy.getTotalWealthAsDefault(resident.getUserUUID(), worldName,
-                                    plugin.getCurrencyExchangeRates().keySet()) : BigDecimal.ZERO;
-                    BigDecimal requested = religion.calculateTithe(wealth);
+                    BigDecimal requested = religion.calculateTithe();
                     var collection = economy.collectMaximumAsDefault(resident.getUserUUID(), worldName,
                             requested, plugin.getCurrencyExchangeRates().keySet());
                     if (!collection.collectedAnything()) continue;

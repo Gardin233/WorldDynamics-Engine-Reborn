@@ -52,10 +52,6 @@ peaceTreaty:
     # 强制让步国成为受益国所主持主权帝国的傀儡国。
     forceVassalizePoints: 70
     allowIndependencePoints: 40
-  tribute:
-    # 和平条约中的长期贡金，默认按税收额度的 5% 在 Towny 每日税收周期结算一次。
-    taxRatePercent: 5.0
-
 scoring:
   # 所有 WDER 战争统一周期，单位秒。每周期累加，不覆盖先前分数。
   cycleSeconds: 300

@@ -2,7 +2,7 @@ package com.thatguycy.worlddynamicsengine.manager.war;
 
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
-import com.thatguycy.worlddynamicsengine.manager.organization.OrgManager;
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager;
 import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -24,11 +24,17 @@ import org.bukkit.scheduler.BukkitTask;
 public final class WarScoreboardManager {
     private static final String OBJECTIVE_ID = "wde_war_focus";
     private final WorldDynamicsEngine plugin;
+    private final WarManager wars;
     private final Map<UUID, Scoreboard> scoreboards = new LinkedHashMap<>();
     private BukkitTask task;
 
     public WarScoreboardManager(WorldDynamicsEngine plugin) {
+        this(plugin, plugin.getOrgManager().getWarManager());
+    }
+
+    public WarScoreboardManager(WorldDynamicsEngine plugin, WarManager wars) {
         this.plugin = plugin;
+        this.wars = wars;
     }
 
     public void start() {
@@ -73,7 +79,7 @@ public final class WarScoreboardManager {
         if (context == null || focusKey == null || focusKey.isBlank()) {
             return false;
         }
-        for (OrgManager.WarFocusOption option : context.options()) {
+        for (WarManager.WarFocusOption option : context.options()) {
             if (option.focusKey().equalsIgnoreCase(focusKey)) {
                 WDEresident resident = context.resident();
                 resident.setFocusedWarKey(option.focusKey());
@@ -99,7 +105,7 @@ public final class WarScoreboardManager {
         refreshPlayer(player);
     }
 
-    public List<OrgManager.WarFocusOption> getAvailableWars(Player player) {
+    public List<WarManager.WarFocusOption> getAvailableWars(Player player) {
         FocusContext context = resolveContext(player, false);
         return context == null ? List.of() : context.options();
     }
@@ -120,7 +126,7 @@ public final class WarScoreboardManager {
         }
         String nation = town.getNationOrNull() == null ? "" : town.getNationOrNull().getName();
         String townName = town.getName();
-        List<OrgManager.WarFocusOption> options = plugin.getOrgManager().getWarFocusOptions(nation, townName);
+        List<WarManager.WarFocusOption> options = wars.getWarFocusOptions(nation, townName);
         WDEresident resident = plugin.getResidentManager().getOrCreateResident(player.getUniqueId(), player.getName());
         if (options.isEmpty()) {
             if (!resident.getFocusedWarKey().isBlank()) {
@@ -139,16 +145,16 @@ public final class WarScoreboardManager {
             resident.setFocusedWarKey(focused);
         }
 
-        OrgManager.WarFocusDetails details = plugin.getOrgManager().getWarFocusDetails(focused, nation, townName);
+        WarManager.WarFocusDetails details = wars.getWarFocusDetails(focused, nation, townName);
         if (details == null && allowAutoFocus) {
             focused = options.getFirst().focusKey();
             resident.setFocusedWarKey(focused);
-            details = plugin.getOrgManager().getWarFocusDetails(focused, nation, townName);
+            details = wars.getWarFocusDetails(focused, nation, townName);
         }
         return new FocusContext(resident, nation, townName, options, details);
     }
 
-    private void applySidebar(Player player, OrgManager.WarFocusDetails details) {
+    private void applySidebar(Player player, WarManager.WarFocusDetails details) {
         var manager = Bukkit.getScoreboardManager();
         if (manager == null) {
             return;
@@ -180,11 +186,11 @@ public final class WarScoreboardManager {
         }
     }
 
-    private List<String> buildLines(OrgManager.WarFocusDetails details) {
+    private List<String> buildLines(WarManager.WarFocusDetails details) {
         List<String> lines = new ArrayList<>();
         lines.add(TextColors.GOLD + shortTitle(details.title()));
         lines.add(TextColors.GRAY + "理由 " + plugin.getLocaleMessage(details.reason().messageKey()));
-        OrgManager.WarGoalDisplay goal = plugin.getOrgManager().getWarGoalDisplay(details.focusKey());
+        WarManager.WarGoalDisplay goal = wars.getWarGoalDisplay(details.focusKey());
         if (goal != null) {
             String goalTypeKey = switch (goal.type()) {
                 case CAPTURE_TOWN -> "war_goal_type_capture_town";
@@ -212,7 +218,7 @@ public final class WarScoreboardManager {
                         "war_goal_progress_hold", Math.max(1L, (goal.holdRemainingMillis() + 59_999L) / 60_000L)));
             }
             if (details.defenderPerspective()
-                    && plugin.getOrgManager().canDefenderForceIndependence(details.focusKey())) {
+                    && wars.canDefenderForceIndependence(details.focusKey())) {
                 lines.add(TextColors.GREEN + plugin.getLocaleMessage("war_goal_defender_independence_ready"));
             }
         }
@@ -312,6 +318,6 @@ public final class WarScoreboardManager {
     }
 
     private record FocusContext(WDEresident resident, String nation, String town,
-                                List<OrgManager.WarFocusOption> options,
-                                OrgManager.WarFocusDetails details) {}
+                                List<WarManager.WarFocusOption> options,
+                                WarManager.WarFocusDetails details) {}
 }

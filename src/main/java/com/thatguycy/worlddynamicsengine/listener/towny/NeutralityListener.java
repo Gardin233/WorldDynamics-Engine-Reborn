@@ -26,7 +26,7 @@ public final class NeutralityListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onAddEnemy(NationPreAddEnemyEvent event) {
         if (!event.getNation().isNeutral() && !event.getEnemy().isNeutral()) return;
-        if (plugin.getOrgManager().hasActiveIndependenceWarBetween(event.getNationName(), event.getEnemyName())) return;
+        if (plugin.getOrgManager().getWarManager().hasActiveIndependenceWarBetween(event.getNationName(), event.getEnemyName())) return;
         event.setCancelled(true);
     }
 
@@ -42,8 +42,8 @@ public final class NeutralityListener implements Listener {
         var victimNation = api.getNation(victim);
         if (attackerNation == null || victimNation == null) return;
         var orgs = plugin.getOrgManager();
-        if (!orgs.hasActiveWarBetween(attackerNation.getName(), victimNation.getName())
-                || orgs.hasActiveIndependenceWarBetween(attackerNation.getName(), victimNation.getName())) return;
+        if (!orgs.getWarManager().hasActiveWarBetween(attackerNation.getName(), victimNation.getName())
+                || orgs.getWarManager().hasActiveIndependenceWarBetween(attackerNation.getName(), victimNation.getName())) return;
         if (isNeutral(api.getTown(attacker)) || isNeutral(api.getTown(victim))
                 || isNeutral(api.getTown(victim.getLocation()))) event.setCancelled(true);
     }
@@ -55,7 +55,7 @@ public final class NeutralityListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onNationNeutralDuringWar(NationToggleNeutralEvent event) {
         if (!event.getFutureState() || event.getCurrentState()) return;
-        if (plugin.getOrgManager().isNationInActiveWar(event.getNation().getName())) {
+        if (plugin.getOrgManager().getWarManager().isNationInActiveWar(event.getNation().getName())) {
             event.setCancelled(true);
             if (event.getSender() != null) event.getSender().sendMessage(
                     plugin.formatLocaleMessage("neutrality_blocked_during_war"));
@@ -67,8 +67,8 @@ public final class NeutralityListener implements Listener {
         if (!event.getFutureState() || event.getCurrentState()) return;
         Town town = event.getTown();
         var nation = town.getNationOrNull();
-        if (town.hasActiveWar() || plugin.getOrgManager().isTownInActiveWar(town.getName())
-                || nation != null && plugin.getOrgManager().isNationInActiveWar(nation.getName())) {
+        if (town.hasActiveWar() || plugin.getOrgManager().getWarManager().isTownInActiveWar(town.getName())
+                || nation != null && plugin.getOrgManager().getWarManager().isNationInActiveWar(nation.getName())) {
             event.setCancelled(true);
             if (event.getSender() != null) event.getSender().sendMessage(
                     plugin.formatLocaleMessage("neutrality_blocked_during_war"));

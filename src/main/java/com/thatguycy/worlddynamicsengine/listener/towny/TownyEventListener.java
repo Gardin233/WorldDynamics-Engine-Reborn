@@ -15,7 +15,6 @@ import com.thatguycy.worlddynamicsengine.manager.organization.OrgManager;
 import com.thatguycy.worlddynamicsengine.model.WDEorg;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Random;
 import org.bukkit.Bukkit;
@@ -49,8 +48,8 @@ public class TownyEventListener implements Listener {
     public void onTownySpawn(SpawnEvent event) {
         Town town = TownyAPI.getInstance().getTown(event.getPlayer());
         var nation = town == null ? null : town.getNationOrNull();
-        if (town == null || !(town.hasActiveWar() || orgManager.isTownInActiveWar(town.getName())
-                || nation != null && orgManager.isNationInActiveWar(nation.getName()))) return;
+        if (town == null || !(town.hasActiveWar() || orgManager.getWarManager().isTownInActiveWar(town.getName())
+                || nation != null && orgManager.getWarManager().isNationInActiveWar(nation.getName()))) return;
         event.setCancelled(true);
         event.setCancelMessage(plugin.getLocaleMessage("war_towny_spawn_blocked"));
     }
@@ -65,10 +64,6 @@ public class TownyEventListener implements Listener {
             }
         }
         townManager.saveTowns();
-        if (!plugin.getConfig().getBoolean("economy.townyResidentTaxOverride.enabled", true)) {
-            return;
-        }
-
         residentTaxCollectionActive = true;
         Bukkit.getScheduler().runTask(plugin, () -> residentTaxCollectionActive = false);
     }
@@ -85,19 +80,13 @@ public class TownyEventListener implements Listener {
             orgManager.updateBalance(org, newBalance);
         }
 
-        orgManager.processPeaceTreatyTributes(plugin.getNationManager());
+        orgManager.getWarManager().processPeaceTreatyTributes(plugin.getNationManager());
         orgManager.saveOrganizations();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onTownyResidentTax(TownyPreTransactionEvent event) {
         if (!residentTaxCollectionActive || handlingResidentTaxOverride) {
-            return;
-        }
-        if (economyBridge == null || !economyBridge.hasModernEconomy()) {
-            return;
-        }
-        if (!plugin.getConfig().getBoolean("economy.townyResidentTaxOverride.enabled", true)) {
             return;
         }
 
@@ -114,6 +103,22 @@ public class TownyEventListener implements Listener {
         if (!(receivingAccount.getEconomyHandler() instanceof Town town)) {
             return;
         }
+        if (town.isTaxPercentage()) {
+            event.setCancelled(true);
+            town.setTaxPercentage(false);
+            town.setTaxes(0D);
+            try {
+                town.save();
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to clear legacy proportional resident tax for "
+                        + town.getName() + ": " + e.getMessage());
+            }
+            return;
+        }
+        if (economyBridge == null || !economyBridge.hasModernEconomy()
+                || !plugin.getConfig().getBoolean("economy.townyResidentTaxOverride.enabled", true)) {
+            return;
+        }
 
         TownManager townManager = plugin.getTownManager();
         String senderPlayerName = resolvePlayerName(sendingAccount);
@@ -124,7 +129,7 @@ public class TownyEventListener implements Listener {
 
         event.setCancelled(true);
 
-        BigDecimal requestedDefault = resolveRequestedResidentTax(town, sendingAccount, transaction);
+        BigDecimal requestedDefault = BigDecimal.valueOf(transaction.getAmount()).max(BigDecimal.ZERO);
         handlingResidentTaxOverride = true;
         try {
             EconomyBridge.CollectionResult result = economyBridge.collectMaximumAsDefault(
@@ -172,54 +177,6 @@ public class TownyEventListener implements Listener {
         }
     }
 
-    private BigDecimal resolveRequestedResidentTax(Town town, Account sendingAccount, Transaction transaction) {
-        BigDecimal fallbackAmount = BigDecimal.valueOf(transaction.getAmount()).max(BigDecimal.ZERO);
-        if (town == null || sendingAccount == null || !town.isTaxPercentage()) {
-            return fallbackAmount;
-        }
-
-        BigDecimal totalWealthDefault = economyBridge.getTotalWealthAsDefault(
-                sendingAccount.getUUID(),
-                resolveWorldName(sendingAccount),
-                plugin.getCurrencyExchangeRates().keySet()
-        );
-        if (totalWealthDefault.compareTo(BigDecimal.ZERO) <= 0) {
-            return BigDecimal.ZERO;
-        }
-
-        BigDecimal percentageRate = resolveTaxPercentageRate(town, sendingAccount, fallbackAmount);
-        if (percentageRate.compareTo(BigDecimal.ZERO) <= 0) {
-            return fallbackAmount;
-        }
-
-        BigDecimal requestedAmount = totalWealthDefault.multiply(percentageRate).setScale(8, RoundingMode.HALF_UP);
-        double maxPercentTaxAmount = town.getMaxPercentTaxAmount();
-        if (maxPercentTaxAmount > 0D) {
-            requestedAmount = requestedAmount.min(BigDecimal.valueOf(maxPercentTaxAmount));
-        }
-        return requestedAmount.max(BigDecimal.ZERO);
-    }
-
-    private BigDecimal resolveTaxPercentageRate(Town town, Account sendingAccount, BigDecimal fallbackAmount) {
-        double configuredTaxValue = town.getTaxes();
-        if (configuredTaxValue <= 0D) {
-            return BigDecimal.ZERO;
-        }
-
-        BigDecimal rawRate = BigDecimal.valueOf(configuredTaxValue);
-        BigDecimal dividedRate = rawRate.divide(BigDecimal.valueOf(100), 8, RoundingMode.HALF_UP);
-        BigDecimal holdingBalance = BigDecimal.valueOf(Math.max(0D, sendingAccount.getHoldingBalance()));
-        if (holdingBalance.compareTo(BigDecimal.ZERO) <= 0 || fallbackAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            return configuredTaxValue > 1D ? dividedRate : rawRate;
-        }
-
-        BigDecimal rawExpected = holdingBalance.multiply(rawRate).setScale(8, RoundingMode.HALF_UP);
-        BigDecimal dividedExpected = holdingBalance.multiply(dividedRate).setScale(8, RoundingMode.HALF_UP);
-        BigDecimal rawDiff = rawExpected.subtract(fallbackAmount).abs();
-        BigDecimal dividedDiff = dividedExpected.subtract(fallbackAmount).abs();
-        return dividedDiff.compareTo(rawDiff) <= 0 ? dividedRate : rawRate;
-    }
-
     @EventHandler(ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player victim = event.getEntity();
@@ -227,23 +184,23 @@ public class TownyEventListener implements Listener {
         if (killer == null || killer.equals(victim)) {
             return;
         }
-        orgManager.recordUnifiedWarKill(killer, victim);
+        orgManager.getWarManager().recordUnifiedWarKill(killer, victim);
     }
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        if (!orgManager.isWarDefender(event.getPlayer())) {
+        if (!orgManager.getWarManager().isWarDefender(event.getPlayer())) {
             return;
         }
 
-        orgManager.registerRespawnLock(event.getPlayer().getUniqueId());
+        orgManager.getWarManager().registerRespawnLock(event.getPlayer().getUniqueId());
         event.getPlayer().sendMessage(plugin.formatLocaleMessage(plugin.userLang, "war_defender_respawn_locked",
-                orgManager.getIndependenceWarRespawnLockSeconds()));
+                orgManager.getWarManager().getIndependenceWarRespawnLockSeconds()));
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
-        if (!orgManager.isRespawnLocked(event.getPlayer().getUniqueId()) || event.getTo() == null) {
+        if (!orgManager.getWarManager().isRespawnLocked(event.getPlayer().getUniqueId()) || event.getTo() == null) {
             return;
         }
 

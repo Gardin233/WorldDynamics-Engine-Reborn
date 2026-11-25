@@ -88,15 +88,7 @@ public final class MiningDoctrineManager implements Listener {
         Boolean compliant = MiningDoctrineCalculator.assess(attitude);
         if (compliant == null) return;
 
-        int weight = Math.max(0, plugin.getReligionManager().getDoctrineMoodWeight(DOCTRINE_ID, attitude));
-        int moodChange = weight * Math.max(0,
-                plugin.getReligionManager().getDoctrineMoodChangePerWeight(
-                        DOCTRINE_ID, attitude, compliant, null));
-        var moodEntry = new DoctrineMoodEntry(DOCTRINE_ID, attitude, compliant, moodChange);
-        plugin.getMoodManager().applyDoctrineMoodChanges(player,
-                compliant ? moodChange : 0,
-                compliant ? 0 : moodChange,
-                moodEntry.source());
+        plugin.getMoodManager().applyDoctrineOutcome(player, DOCTRINE_ID, attitude, compliant);
         if (!compliant && plugin.getPlayerMenuManager() != null) {
             plugin.getPlayerMenuManager().sendDoctrineViolation(player, DOCTRINE_ID);
         }

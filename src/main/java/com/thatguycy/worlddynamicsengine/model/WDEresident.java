@@ -35,6 +35,7 @@ public class WDEresident implements ConfigurationSerializable {
     private long lastComfortSleepPlayedTicks;
     private boolean comfortSleepTracking;
     private long lastRitualParticipationAt;
+    private long stretchInspirationExpiresAt;
     private final List<MoodChange> moodChanges = new ArrayList<>();
     private final Map<String, Integer> persistentMoodChanges = new LinkedHashMap<>();
     private final Map<String, Integer> inspirationCharges = new LinkedHashMap<>();
@@ -68,6 +69,7 @@ public class WDEresident implements ConfigurationSerializable {
         this.lastComfortSleepPlayedTicks = -1L;
         this.comfortSleepTracking = false;
         this.lastRitualParticipationAt = System.currentTimeMillis();
+        this.stretchInspirationExpiresAt = 0L;
         this.activeCollapseId = "";
         this.activeCollapseExpiresAt = 0L;
         this.appliedBackgroundBonusIds = new HashSet<>();
@@ -106,6 +108,9 @@ public class WDEresident implements ConfigurationSerializable {
         Object rawLastRitualParticipationAt = map.get("lastRitualParticipationAt");
         this.lastRitualParticipationAt = rawLastRitualParticipationAt instanceof Number number
                 && number.longValue() > 0L ? number.longValue() : System.currentTimeMillis();
+        Object rawStretchInspirationExpiresAt = map.get("stretchInspirationExpiresAt");
+        this.stretchInspirationExpiresAt = rawStretchInspirationExpiresAt instanceof Number number
+                ? Math.max(0L, number.longValue()) : 0L;
         Object rawMood = map.get("mood");
         this.mood = clampMood(rawMood instanceof Number number ? number.intValue() : 50);
         Object rawMoodChanges = map.get("moodChanges");
@@ -149,6 +154,7 @@ public class WDEresident implements ConfigurationSerializable {
             moodChanges.clear();
             persistentMoodChanges.clear();
             inspirationCharges.clear();
+            stretchInspirationExpiresAt = 0L;
             mood = 50;
         }
         refreshMood(System.currentTimeMillis());
@@ -181,6 +187,7 @@ public class WDEresident implements ConfigurationSerializable {
         map.put("lastComfortSleepPlayedTicks", lastComfortSleepPlayedTicks);
         map.put("comfortSleepTracking", comfortSleepTracking);
         map.put("lastRitualParticipationAt", lastRitualParticipationAt);
+        map.put("stretchInspirationExpiresAt", stretchInspirationExpiresAt);
         List<Map<String, Object>> serializedMoodChanges = new ArrayList<>();
         for (MoodChange change : moodChanges) {
             serializedMoodChanges.add(Map.of("source", change.source(), "delta", change.delta(),
@@ -351,6 +358,7 @@ public class WDEresident implements ConfigurationSerializable {
             moodChanges.clear();
             persistentMoodChanges.clear();
             inspirationCharges.clear();
+            stretchInspirationExpiresAt = 0L;
             this.mood = 50;
             return;
         }
@@ -368,6 +376,15 @@ public class WDEresident implements ConfigurationSerializable {
         moodChanges.clear();
         persistentMoodChanges.clear();
         mood = calculateMood(System.currentTimeMillis());
+    }
+
+    /** Clears timed mood changes while preserving condition-based persistent modifiers. */
+    public boolean clearTemporaryMoodChanges() {
+        boolean changed = !moodChanges.isEmpty();
+        int previousMood = mood;
+        moodChanges.clear();
+        mood = calculateMood(System.currentTimeMillis());
+        return changed || mood != previousMood;
     }
 
     /** Advances the per-resident inspiration interval when it becomes due. */
@@ -408,6 +425,19 @@ public class WDEresident implements ConfigurationSerializable {
 
     public void clearInspirationCharges() {
         inspirationCharges.clear();
+        clearStretchInspiration();
+    }
+
+    public long getStretchInspirationExpiresAt() {
+        return stretchInspirationExpiresAt;
+    }
+
+    public void setStretchInspirationExpiresAt(long expiresAt) {
+        stretchInspirationExpiresAt = Math.max(0L, expiresAt);
+    }
+
+    public void clearStretchInspiration() {
+        stretchInspirationExpiresAt = 0L;
     }
 
     public void resetInspirationCheckTimer(long now) {
@@ -473,6 +503,7 @@ public class WDEresident implements ConfigurationSerializable {
             moodChanges.clear();
             persistentMoodChanges.clear();
             inspirationCharges.clear();
+            stretchInspirationExpiresAt = 0L;
             mood = 50;
             return changed;
         }
@@ -573,6 +604,7 @@ public class WDEresident implements ConfigurationSerializable {
             moodChanges.clear();
             persistentMoodChanges.clear();
             inspirationCharges.clear();
+            stretchInspirationExpiresAt = 0L;
             stopComfortSleepTracking();
             mood = 50;
             lastInspirationCheckAt = System.currentTimeMillis();

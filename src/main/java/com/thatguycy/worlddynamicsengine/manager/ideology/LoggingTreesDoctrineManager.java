@@ -106,15 +106,7 @@ public final class LoggingTreesDoctrineManager implements Listener {
     private void applyDoctrineOutcome(Player player, String doctrineId, String attitude, Boolean compliant) {
         if (attitude == null || compliant == null) return;
 
-        int weight = Math.max(0, plugin.getReligionManager().getDoctrineMoodWeight(doctrineId, attitude));
-        int moodChange = weight * Math.max(0,
-                plugin.getReligionManager().getDoctrineMoodChangePerWeight(
-                        doctrineId, attitude, compliant, null));
-        DoctrineMoodEntry moodEntry = new DoctrineMoodEntry(doctrineId, attitude, compliant, moodChange);
-        plugin.getMoodManager().applyDoctrineMoodChanges(player,
-                compliant ? moodChange : 0,
-                compliant ? 0 : moodChange,
-                moodEntry.source());
+        plugin.getMoodManager().applyDoctrineOutcome(player, doctrineId, attitude, compliant);
         if (!compliant && plugin.getPlayerMenuManager() != null) {
             plugin.getPlayerMenuManager().sendDoctrineViolation(player, doctrineId);
         }

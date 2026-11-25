@@ -1,13 +1,14 @@
 package com.thatguycy.worlddynamicsengine.manager.history;
 
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import com.thatguycy.worlddynamicsengine.model.NationChronicle;
 import com.thatguycy.worlddynamicsengine.model.WDEnation;
-import com.thatguycy.worlddynamicsengine.manager.organization.OrgManager.MilitaryWarState;
-import com.thatguycy.worlddynamicsengine.manager.organization.OrgManager.PeaceTreatyProposalState;
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager.MilitaryWarState;
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager.PeaceTreatyProposalState;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -246,7 +247,7 @@ public final class NationHistoryManager {
                 values.put("role", nation.equals(beneficiary) ? "BENEFICIARY" : "CONCEDING");
                 record(nation, "TREATY_CLAUSE", values);
             }
-            if (clause.getType() == com.thatguycy.worlddynamicsengine.manager.organization.OrgManager.PeaceTreatyClauseState.ClauseType.LIBERATE_SUBJECT) {
+            if (clause.getType() == com.thatguycy.worlddynamicsengine.manager.organization.WarManager.PeaceTreatyClauseState.ClauseType.LIBERATE_SUBJECT) {
                 record(clause.getString("subjectNation"), "SUBJECT_LIBERATED",
                         Map.of("beneficiary", beneficiary, "conceding", conceding, "war", proposal.getWarKey()));
             }

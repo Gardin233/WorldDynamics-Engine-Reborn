@@ -1,5 +1,6 @@
 package com.thatguycy.worlddynamicsengine.command.admin;
 
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.TownyUniverse;
 import com.thatguycy.worlddynamicsengine.command.CommandPermissions;
@@ -48,7 +49,7 @@ public final class AdminCommand implements CommandExecutor {
             new Entry("town", "setleader", "<town> <player>"),
             new Entry("town", "conscript", "<town> <player> <enabled|disabled>"),
             new Entry("town", "taxfree", "<town> <player> <enabled|disabled>"),
-            new Entry("town", "tax", "<town> <fixed|wealth_percentage> <amount>"),
+            new Entry("town", "tax", "<town> <fixed> <amount>"),
             new Entry("town", "election", "<town> <start|cancel> [candidate]"),
             new Entry("town", "electiondays", "<town> <days>"),
             new Entry("town", "transfer", "<town> <nation> confirm"),
@@ -134,7 +135,7 @@ public final class AdminCommand implements CommandExecutor {
             Map.entry("<DICTATORSHIP|REPUBLIC>", "<政体: DICTATORSHIP|REPUBLIC>"),
             Map.entry("<enabled|disabled>", "<状态: enabled|disabled>"),
             Map.entry("<add|remove>", "<操作: add|remove>"),
-            Map.entry("<fixed|wealth_percentage>", "<税制: fixed|wealth_percentage>"),
+            Map.entry("<fixed>", "<税制: fixed>"),
             Map.entry("<friendly|neutral|unfriendly>", "<关系: friendly|neutral|unfriendly>"),
             Map.entry("<accept|reject>", "<审核结果: accept|reject>"),
             Map.entry("<start|cancel|cancelarmy>", "<操作: start|cancel|cancelarmy>"),
@@ -449,8 +450,8 @@ public final class AdminCommand implements CommandExecutor {
             }
             case "tax" -> {
                 size(a, 6); String type = a[4].toLowerCase(Locale.ROOT);
-                require(List.of("fixed", "wealth_percentage").contains(type), "admin_invalid_argument");
-                require(plugin.getTownManager().configureResidentTax(t, type, number(a[5], type.equals("fixed") ? Double.MAX_VALUE : 100), true), "admin_operation_blocked");
+                require("fixed".equals(type), "admin_invalid_argument");
+                require(plugin.getTownManager().configureResidentTax(t, type, number(a[5], Double.MAX_VALUE), true), "admin_operation_blocked");
             }
             case "electiondays" -> { size(a, 5); t.setElectionIntervalDays(integer(a[4], 1, 36500)); }
             case "election" -> {
@@ -465,8 +466,8 @@ public final class AdminCommand implements CommandExecutor {
             case "transfer" -> {
                 size(a, 6); confirm(a[5]);
                 WDEnation destination = nation(a[4]);
-                require(!plugin.getOrgManager().isNationInActiveWar(t.getNationName())
-                        && !plugin.getOrgManager().isNationInActiveWar(destination.getNationName()), "admin_operation_blocked");
+                require(!plugin.getOrgManager().getWarManager().isNationInActiveWar(t.getNationName())
+                        && !plugin.getOrgManager().getWarManager().isNationInActiveWar(destination.getNationName()), "admin_operation_blocked");
                 require(plugin.getTownManager().transferTownToNation(t.getTownName(), destination.getNationName()), "admin_operation_blocked");
             }
             default -> throw new AdminFailure("admin_invalid_argument");
@@ -501,12 +502,12 @@ public final class AdminCommand implements CommandExecutor {
             }
             case "dissolve" -> {
                 size(a, 5); confirm(a[4]);
-                require(o.getMemberNationNames().stream().noneMatch(manager::isNationInActiveWar), "admin_operation_blocked");
+                require(o.getMemberNationNames().stream().noneMatch(manager.getWarManager()::isNationInActiveWar), "admin_operation_blocked");
                 manager.removeOrganization(o);
             }
             case "addnation" -> {
                 size(a, 5); WDEnation n = nation(a[4]);
-                require(!manager.isNationInActiveWar(n.getNationName()), "admin_operation_blocked");
+                require(!manager.getWarManager().isNationInActiveWar(n.getNationName()), "admin_operation_blocked");
                 require(!o.isSovereignEmpire() || manager.getSovereignEmpireByNation(n.getNationName()) == null, "admin_operation_blocked");
                 require(manager.canNationJoinOrganization(o, n.getNationName(), plugin.getNationManager())
                         && manager.addMemberNation(o, n.getNationName()), "admin_operation_blocked");
@@ -517,7 +518,7 @@ public final class AdminCommand implements CommandExecutor {
                 if (action.equals("chairman")) require(manager.adminSetChairman(o, n.getNationName()), "admin_operation_blocked");
                 else {
                     require(!o.getChairmanNationName().equalsIgnoreCase(n.getNationName())
-                            && !manager.isNationInActiveWar(n.getNationName()), "admin_operation_blocked");
+                            && !manager.getWarManager().isNationInActiveWar(n.getNationName()), "admin_operation_blocked");
                     if (action.equals("independence")) require(o.isSovereignEmpire(), "admin_invalid_argument");
                     manager.removeMemberNationAndAdjust(o, n.getNationName());
                 }
@@ -549,19 +550,19 @@ public final class AdminCommand implements CommandExecutor {
                 size(a, action.equals("start") ? 7 : 6); confirm(a[a.length - 1]);
                 String first = nation(a[3]).getNationName(), second = nation(a[4]).getNationName();
                 require(!first.equalsIgnoreCase(second), "admin_invalid_argument");
-                if (action.equals("end")) require(manager.adminEndMilitaryWar(first, second), "admin_not_found");
+                if (action.equals("end")) require(manager.getWarManager().adminEndMilitaryWar(first, second), "admin_not_found");
                 else {
-                    require(!manager.hasActiveWarBetween(first, second)
+                    require(!manager.getWarManager().hasActiveWarBetween(first, second)
                             && !plugin.getNationManager().hasActiveWarTruce(first, second), "admin_operation_blocked");
                     var reason = com.thatguycy.worlddynamicsengine.model.war.WarReason.parse(a[5]);
-                    require(manager.validWarReason(reason, second), "admin_invalid_argument");
-                    require(manager.handleMilitaryAllianceWar(first, second, plugin.getNationManager(), reason)
+                    require(manager.getWarManager().validWarReason(reason, second), "admin_invalid_argument");
+                    require(manager.getWarManager().handleMilitaryAllianceWar(first, second, plugin.getNationManager(), reason)
                             .getHostilePairsApplied() > 0, "admin_operation_blocked");
                     manager.saveOrganizations();
                 }
             }
             case "score" -> {
-                size(a, 7); require(manager.adminSetMilitaryScores(nation(a[3]).getNationName(), nation(a[4]).getNationName(),
+                size(a, 7); require(manager.getWarManager().adminSetMilitaryScores(nation(a[3]).getNationName(), nation(a[4]).getNationName(),
                         number(a[5], Double.MAX_VALUE), number(a[6], Double.MAX_VALUE)), "admin_not_found");
             }
             case "truce" -> {
@@ -573,23 +574,23 @@ public final class AdminCommand implements CommandExecutor {
             }
             case "independencestart" -> {
                 size(a, 6); confirm(a[5]); WDEorg o = org(a[3]); String subject = nation(a[4]).getNationName();
-                require(manager.isSovereignSubjectNation(o, subject) && manager.startIndependenceWar(o, subject), "admin_operation_blocked");
+                require(manager.isSovereignSubjectNation(o, subject) && manager.getWarManager().startIndependenceWar(o, subject), "admin_operation_blocked");
             }
             case "independenceend" -> {
                 size(a, 7); confirm(a[6]);
-                require(manager.adminResolveIndependence(org(a[3]), nation(a[4]).getNationName(),
-                        OrgManager.IndependenceWarOutcome.valueOf(a[5].toUpperCase(Locale.ROOT))), "admin_not_found");
+                require(manager.getWarManager().adminResolveIndependence(org(a[3]), nation(a[4]).getNationName(),
+                        WarManager.IndependenceWarOutcome.valueOf(a[5].toUpperCase(Locale.ROOT))), "admin_not_found");
             }
             case "independencescore" -> {
                 size(a, 7);
-                require(manager.adminSetIndependenceScores(org(a[3]), nation(a[4]).getNationName(),
+                require(manager.getWarManager().adminSetIndependenceScores(org(a[3]), nation(a[4]).getNationName(),
                         number(a[5], Double.MAX_VALUE), number(a[6], Double.MAX_VALUE)), "admin_not_found");
             }
             case "reviewtreaty" -> {
                 size(a, 8); confirm(a[7]);
-                var result = manager.reviewPeaceTreaty(org(a[3]), nation(a[4]).getNationName(), nation(a[5]).getNationName(),
+                var result = manager.getWarManager().reviewPeaceTreaty(org(a[3]), nation(a[4]).getNationName(), nation(a[5]).getNationName(),
                         choice(a[6], "accept", "reject"), plugin.getNationManager());
-                require(result.getStatus() != OrgManager.PeaceTreatyReviewResult.Status.INVALID, "admin_operation_blocked");
+                require(result.getStatus() != WarManager.PeaceTreatyReviewResult.Status.INVALID, "admin_operation_blocked");
             }
             default -> throw new AdminFailure("admin_invalid_argument");
         }
@@ -617,6 +618,9 @@ public final class AdminCommand implements CommandExecutor {
                         if (plugin.getMentalCollapseManager() != null) {
                             plugin.getMentalCollapseManager().cancelCollapse(target);
                         }
+                        if (plugin.getInspirationManager() != null) {
+                            plugin.getInspirationManager().clearStretchInspiration(target);
+                        }
                         resident.setDehumanized(false);
                         resident.clearMoodChanges();
                         resident.clearInspirationCharges();
@@ -628,7 +632,12 @@ public final class AdminCommand implements CommandExecutor {
                         }
                     }
                     case "dehumanized" -> resident.setDehumanized(false);
-                    case "inspiration" -> resident.clearInspirationCharges();
+                    case "inspiration" -> {
+                        if (plugin.getInspirationManager() != null) {
+                            plugin.getInspirationManager().clearStretchInspiration(target);
+                        }
+                        resident.clearInspirationCharges();
+                    }
                     default -> throw new AdminFailure("admin_invalid_argument");
                 }
                 plugin.getResidentManager().saveResident(resident);

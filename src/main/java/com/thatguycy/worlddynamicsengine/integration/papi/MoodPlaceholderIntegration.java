@@ -22,7 +22,7 @@ public final class MoodPlaceholderIntegration {
             Method register = expansionClass.getMethod("register");
             return (boolean) register.invoke(expansion);
         } catch (ReflectiveOperationException | LinkageError exception) {
-            plugin.getLogger().warning("Could not load the PlaceholderAPI mood expansion: "
+            plugin.getLogger().warning("Could not load the PlaceholderAPI WDER expansion: "
                     + getCauseMessage(exception));
             expansion = null;
             return false;
@@ -40,7 +40,7 @@ public final class MoodPlaceholderIntegration {
                 unregister.invoke(expansion);
             }
         } catch (ReflectiveOperationException | LinkageError exception) {
-            plugin.getLogger().warning("Could not unregister the PlaceholderAPI mood expansion: "
+            plugin.getLogger().warning("Could not unregister the PlaceholderAPI WDER expansion: "
                     + getCauseMessage(exception));
         } finally {
             expansion = null;

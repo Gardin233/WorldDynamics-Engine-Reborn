@@ -62,18 +62,14 @@ sovereignEmpire:
     autonomyPromotionResetSuppression: 90
     # 主席国成功降低从仆国一级自治等级后，镇压度会被重置为该值。
     autonomyDemotionResetSuppression: 10
-    # 不同自治等级下，从仆国可设置给下属城镇的最高税收。
-    # fixed 为固定税上限；wealthPercentage 为财产税比例上限。
+    # 不同自治等级下，从仆国可设置给下属城镇的最高固定税额。
     taxCaps:
       dominion:
         fixed: 5000.0
-        wealthPercentage: 25.0
       protectorate:
         fixed: 3000.0
-        wealthPercentage: 15.0
       puppet:
         fixed: 1500.0
-        wealthPercentage: 8.0
     autonomyUpgradeCost:
       # 当从仆国镇压度归零后，提升一级自治等级所需费用。
       # 路径：傀儡国 -> 保护国 -> 自治领 -> 和平独立；最后一步使用相同费用，且要求该国未参战。

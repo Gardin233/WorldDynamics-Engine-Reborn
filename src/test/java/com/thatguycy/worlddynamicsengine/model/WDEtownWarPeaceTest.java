@@ -29,4 +29,20 @@ class WDEtownWarPeaceTest {
         assertTrue(town.getWarPeaceSince() >= beforeLoad);
         assertTrue(town.getLastEconomicWarAt() >= beforeLoad);
     }
+
+    @Test
+    void legacyPercentageResidentTaxMigratesToStoppedFixedTax() {
+        WDEtown town = WDEtown.deserialize(Map.of(
+                "townName", "Legacy Town",
+                "nationName", "Legacy Nation",
+                "residentTaxManagedByNation", true,
+                "residentTaxType", "WEALTH_PERCENTAGE",
+                "residentTaxAmount", 25.0D
+        ));
+
+        assertEquals("FIXED", town.getResidentTaxType());
+        assertEquals(0.0D, town.getResidentTaxAmount(), 0.0001D);
+        assertEquals("FIXED", town.serialize().get("residentTaxType"));
+        assertEquals(0.0D, ((Number) town.serialize().get("residentTaxAmount")).doubleValue(), 0.0001D);
+    }
 }

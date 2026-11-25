@@ -1,7 +1,6 @@
 package com.thatguycy.worlddynamicsengine.model;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,14 +15,11 @@ import org.bukkit.configuration.serialization.SerializableAs;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * 意识形态持久化实体，保存领袖、模因、戒律、修改冷却、单向金库及什一税政策。
+ * 意识形态持久化实体，保存领袖、模因、戒律、修改冷却、单向金库及定额什一税。
  */
 @SerializableAs("WDEreligion")
 public class WDEreligion implements ConfigurationSerializable {
-    /**
-     * 定义定额与财富比例两种什一税计税方式。
-     */
-    public enum TitheType { FIXED, WEALTH_PERCENTAGE }
+    public enum TitheType { FIXED }
     public enum GovernanceMode { LIFETIME, CARDINAL, SYNODAL }
     public static final BigDecimal MAX_FIXED_TITHE = new BigDecimal("1000000000000");
     private final String religionName;
@@ -43,6 +39,7 @@ public class WDEreligion implements ConfigurationSerializable {
     private BigDecimal treasuryBalance = BigDecimal.ZERO;
     private TitheType titheType = TitheType.FIXED;
     private BigDecimal titheAmount = BigDecimal.ZERO;
+    private boolean legacyPercentageTithe;
     private GovernanceMode governanceMode = GovernanceMode.LIFETIME;
     private boolean governanceModeMigrated;
     private boolean ideologyUuidMigrated;
@@ -99,12 +96,18 @@ public class WDEreligion implements ConfigurationSerializable {
         this.doctrineCooldowns = new LinkedHashMap<>();
 
         this.treasuryBalance = readNonNegativeDecimal(map.get("treasuryBalance"));
-        try {
-            setTithePolicy(TitheType.valueOf(String.valueOf(map.getOrDefault("titheType", "FIXED"))),
-                    readNonNegativeDecimal(map.get("titheAmount")));
-        } catch (IllegalArgumentException ignored) {
+        String storedTitheType = String.valueOf(map.getOrDefault("titheType", "FIXED"));
+        if ("WEALTH_PERCENTAGE".equalsIgnoreCase(storedTitheType)) {
             this.titheType = TitheType.FIXED;
             this.titheAmount = BigDecimal.ZERO;
+            this.legacyPercentageTithe = true;
+        } else {
+            try {
+                setTithePolicy(TitheType.valueOf(storedTitheType), readNonNegativeDecimal(map.get("titheAmount")));
+            } catch (IllegalArgumentException ignored) {
+                this.titheType = TitheType.FIXED;
+                this.titheAmount = BigDecimal.ZERO;
+            }
         }
         try {
             this.governanceMode = GovernanceMode.valueOf(
@@ -223,21 +226,21 @@ public class WDEreligion implements ConfigurationSerializable {
         titheAmount = amount;
     }
 
+    public boolean migrateLegacyPercentageTithe() {
+        boolean migrated = legacyPercentageTithe;
+        legacyPercentageTithe = false;
+        return migrated;
+    }
+
     public static void validateTithePolicy(TitheType type, BigDecimal amount) {
-        BigDecimal maximum = type == TitheType.WEALTH_PERCENTAGE
-                ? BigDecimal.valueOf(100) : MAX_FIXED_TITHE;
-        if (type == null || amount == null || amount.signum() < 0
-                || amount.scale() > 8 || amount.compareTo(maximum) > 0) {
+        if (type != TitheType.FIXED || amount == null || amount.signum() < 0
+                || amount.scale() > 8 || amount.compareTo(MAX_FIXED_TITHE) > 0) {
             throw new IllegalArgumentException("Invalid tithe policy.");
         }
     }
 
-    public BigDecimal calculateTithe(BigDecimal wealth) {
-        if (titheType == TitheType.FIXED) {
-            return titheAmount;
-        }
-        return (wealth == null ? BigDecimal.ZERO : wealth.max(BigDecimal.ZERO))
-                .multiply(titheAmount).divide(BigDecimal.valueOf(100), 8, RoundingMode.DOWN);
+    public BigDecimal calculateTithe() {
+        return titheAmount;
     }
 
     private static BigDecimal readNonNegativeDecimal(Object value) {

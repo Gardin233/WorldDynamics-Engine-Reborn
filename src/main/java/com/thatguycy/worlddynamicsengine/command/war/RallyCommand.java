@@ -157,7 +157,7 @@ public final class RallyCommand implements CommandExecutor {
     }
 
     private boolean locked(Player player) {
-        return plugin.getOrgManager() != null && plugin.getOrgManager().isRespawnLocked(player.getUniqueId())
+        return plugin.getOrgManager() != null && plugin.getOrgManager().getWarManager().isRespawnLocked(player.getUniqueId())
                 || plugin.getBackgroundManager() != null && plugin.getBackgroundManager().shouldLockMovement(player);
     }
 

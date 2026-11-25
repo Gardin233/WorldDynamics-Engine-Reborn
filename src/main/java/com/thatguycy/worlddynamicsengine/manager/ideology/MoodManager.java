@@ -8,6 +8,7 @@ import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.Resident;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,9 +24,19 @@ import org.bukkit.entity.Player;
 
 /** Persists doctrine mood changes and evaluates timed mood outcomes for online players. */
 public final class MoodManager {
+    public record ExpectationBreakdown(boolean exempt, int newPlayerTier, int newPlayerBonus,
+                                       int configuredTownMayorAdjustment, int townMayorAdjustment,
+                                       boolean townMayor, int configuredNationKingAdjustment,
+                                       int nationKingAdjustment, boolean nationKing,
+                                       int totalAdjustment) {}
+
     private final WorldDynamicsEngine plugin;
     private final Set<UUID> dirtyResidents = new HashSet<>();
     private final Map<UUID, List<WDEresident.MoodChangeEntry>> exemptMoodPreviews = new HashMap<>();
+    private long lastExpectationConfigModified;
+    private long lastExpectationConfigLength;
+    private long pendingExpectationConfigModified = -1L;
+    private long pendingExpectationConfigLength = -1L;
 
     public MoodManager(WorldDynamicsEngine plugin) {
         this.plugin = plugin;
@@ -33,6 +44,40 @@ public final class MoodManager {
 
     public void start() {
         Bukkit.getScheduler().runTaskTimer(plugin, this::evaluateOnlinePlayers, 20L * 60, 20L * 60);
+        File ideologyFile = new File(plugin.getDataFolder(), "ideology.yml");
+        lastExpectationConfigModified = ideologyFile.lastModified();
+        lastExpectationConfigLength = ideologyFile.length();
+        Bukkit.getScheduler().runTaskTimer(plugin, this::watchExpectationConfig, 20L, 20L);
+    }
+
+    public void evaluateOnlinePlayersNow() {
+        evaluateOnlinePlayers();
+    }
+
+    private void watchExpectationConfig() {
+        File ideologyFile = new File(plugin.getDataFolder(), "ideology.yml");
+        if (!ideologyFile.isFile()) return;
+
+        long modified = ideologyFile.lastModified();
+        long length = ideologyFile.length();
+        if (modified == lastExpectationConfigModified && length == lastExpectationConfigLength) {
+            pendingExpectationConfigModified = -1L;
+            pendingExpectationConfigLength = -1L;
+            return;
+        }
+        if (modified != pendingExpectationConfigModified || length != pendingExpectationConfigLength) {
+            pendingExpectationConfigModified = modified;
+            pendingExpectationConfigLength = length;
+            return;
+        }
+
+        lastExpectationConfigModified = modified;
+        lastExpectationConfigLength = length;
+        pendingExpectationConfigModified = -1L;
+        pendingExpectationConfigLength = -1L;
+        if (plugin.reloadMoodExpectationSettingsFromDisk()) {
+            evaluateOnlinePlayers();
+        }
     }
 
     public int getMood(UUID residentUuid) {
@@ -118,31 +163,59 @@ public final class MoodManager {
     }
 
     public int getExpectationModifier(Player player) {
-        if (player == null || isMoodExempt(player)) return 0;
-        var config = plugin.getIdeologyConfig();
-        if (config == null) return 0;
+        return getExpectationBreakdown(player).totalAdjustment();
+    }
 
+    public ExpectationBreakdown getExpectationBreakdown(Player player) {
+        if (player == null) {
+            return new ExpectationBreakdown(true, -1, 0, 0, 0, false, 0, 0, false, 0);
+        }
+        var config = plugin.getIdeologyConfig();
+        if (config == null) {
+            return new ExpectationBreakdown(false, -1, 0, 0, 0, false, 0, 0, false, 0);
+        }
+
+        boolean exempt = isMoodExempt(player);
+        int configuredMayorAdjustment = config.getInt("mood.expectations.roles.townMayor", -8);
+        int configuredKingAdjustment = config.getInt("mood.expectations.roles.nationKing", -12);
         int stepHours = Math.max(1, Math.min(24,
                 config.getInt("mood.expectations.newPlayer.stepHours", 2)));
-        int beginnerBonus = getNewPlayerExpectationBonus(
-                player.getStatistic(Statistic.PLAY_ONE_MINUTE),
-                stepHours,
-                config.getIntegerList("mood.expectations.newPlayer.moodBonuses"));
+        List<Integer> moodBonuses = config.getIntegerList("mood.expectations.newPlayer.moodBonuses");
+        long playedTicks = exempt ? -1L : player.getStatistic(Statistic.PLAY_ONE_MINUTE);
+        int tier = getNewPlayerExpectationTier(playedTicks, stepHours, moodBonuses.size());
+        int beginnerBonus = exempt ? 0 : getNewPlayerExpectationBonus(playedTicks, stepHours, moodBonuses);
 
-        int roleAdjustment = 0;
+        boolean townMayor = false;
+        boolean nationKing = false;
         Resident townyResident = TownyAPI.getInstance().getResident(player);
-        if (townyResident != null && townyResident.hasTown() && townyResident.getTownOrNull() != null) {
+        if (!exempt && townyResident != null && townyResident.hasTown() && townyResident.getTownOrNull() != null) {
             var town = townyResident.getTownOrNull();
-            if (town.getMayor() != null && town.getMayor().getUUID().equals(player.getUniqueId())) {
-                roleAdjustment += config.getInt("mood.expectations.roles.townMayor", -8);
-            }
+            townMayor = town.getMayor() != null && town.getMayor().getUUID().equals(player.getUniqueId());
             var nation = town.getNationOrNull();
-            if (nation != null && nation.getKing() != null
-                    && nation.getKing().getUUID().equals(player.getUniqueId())) {
-                roleAdjustment += config.getInt("mood.expectations.roles.nationKing", -12);
-            }
+            nationKing = nation != null && nation.getKing() != null
+                    && nation.getKing().getUUID().equals(player.getUniqueId());
         }
-        return clampMoodModifier((long) beginnerBonus + roleAdjustment);
+        int mayorAdjustment = !exempt && townMayor && !nationKing ? configuredMayorAdjustment : 0;
+        int kingAdjustment = !exempt && nationKing ? configuredKingAdjustment : 0;
+        int roleAdjustment = exempt ? 0 : selectRoleExpectationAdjustment(
+                townMayor, configuredMayorAdjustment, nationKing, configuredKingAdjustment);
+        int total = exempt ? 0 : clampMoodModifier(
+                (long) beginnerBonus + roleAdjustment);
+        return new ExpectationBreakdown(exempt, tier, beginnerBonus,
+                configuredMayorAdjustment, mayorAdjustment, townMayor,
+                configuredKingAdjustment, kingAdjustment, nationKing, total);
+    }
+
+    static int selectRoleExpectationAdjustment(boolean townMayor, int townMayorAdjustment,
+                                               boolean nationKing, int nationKingAdjustment) {
+        if (nationKing) return nationKingAdjustment;
+        return townMayor ? townMayorAdjustment : 0;
+    }
+
+    private static int getNewPlayerExpectationTier(long playedTicks, int stepHours, int tierCount) {
+        if (playedTicks < 0L || tierCount <= 0) return -1;
+        long stepTicks = Math.max(1, stepHours) * 72_000L;
+        return (int) Math.min(tierCount - 1, playedTicks / stepTicks);
     }
 
     public static int getNewPlayerExpectationBonus(long playedTicks, int stepHours, List<Integer> moodBonuses) {
@@ -226,6 +299,20 @@ public final class MoodManager {
         int durationMinutes = config == null ? 30
                 : Math.max(1, Math.min(1440, config.getInt("mood.decayMinutes", 30)));
         return applyTemporaryMoodChange(residentUuid, source, delta, durationMinutes * 60_000L);
+    }
+
+    /** Clears timed changes and exempt previews without disturbing persistent condition-based modifiers. */
+    public void clearTemporaryMoodChanges(UUID residentUuid) {
+        if (residentUuid == null) return;
+        WDEresident resident = plugin.getResidentManager().getResident(residentUuid);
+        if (resident != null && resident.clearTemporaryMoodChanges()) {
+            plugin.getResidentManager().saveResident(resident);
+        }
+        List<WDEresident.MoodChangeEntry> previews = exemptMoodPreviews.get(residentUuid);
+        if (previews != null) {
+            previews.removeIf(change -> !change.permanent());
+            if (previews.isEmpty()) exemptMoodPreviews.remove(residentUuid);
+        }
     }
 
     /** Applies a temporary mood delta with a caller-defined duration. */
@@ -360,7 +447,7 @@ public final class MoodManager {
 
             InspirationManager inspirations = plugin.getInspirationManager();
             String inspirationEffect = mood > 50 && inspirationDue && inspirations != null
-                    ? inspirations.chooseRandomEffect() : null;
+                    ? inspirations.chooseRandomEffect(player) : null;
             double chance = mood < 50 ? getOutcomeChancePercent(mood)
                     : inspirationEffect == null ? 0.0 : 100.0;
             PlayerMoodEvent.Outcome outcome = mood < 50

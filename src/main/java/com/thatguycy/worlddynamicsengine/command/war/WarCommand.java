@@ -1,5 +1,6 @@
 package com.thatguycy.worlddynamicsengine.command.war;
 
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.thatguycy.worlddynamicsengine.model.war.WarReason;
 import com.thatguycy.worlddynamicsengine.model.war.WarGoalType;
@@ -35,7 +36,7 @@ public final class WarCommand implements CommandExecutor {
             if (town == null || town.getMayor() == null || !town.getMayor().getUUID().equals(player.getUniqueId())) {
                 send(player, "common_no_authority"); return true;
             }
-            send(player, plugin.getOrgManager().surrenderTownWar(town, target) ? "war_town_surrendered" : "war_declaration_blocked");
+            send(player, plugin.getOrgManager().getWarManager().surrenderTownWar(town, target) ? "war_town_surrendered" : "war_declaration_blocked");
             return true;
         }
         if (args.length < 5 || !"declare".equalsIgnoreCase(args[1])) {
@@ -49,7 +50,7 @@ public final class WarCommand implements CommandExecutor {
                 send(player, "common_no_authority"); return true;
             }
             if (reason == WarReason.INDEPENDENCE) {
-                var result = plugin.getOrgManager().declareTownIndependence(town, args[3], plugin.getNationManager());
+                var result = plugin.getOrgManager().getWarManager().declareTownIndependence(town, args[3], plugin.getNationManager());
                 if (result.isSuccess()) send(player, "war_independence_declared", args[3]);
                 else send(player, result.getFailureMessageKey(), result.getFailureMessageArgs());
                 return true;
@@ -58,7 +59,7 @@ public final class WarCommand implements CommandExecutor {
             if (targetTown == null) {
                 send(player, "town_not_found", args[3]); return true;
             }
-            var result = plugin.getOrgManager().startTownWarDetailed(town, targetTown, reason);
+            var result = plugin.getOrgManager().getWarManager().startTownWarDetailed(town, targetTown, reason);
             if (result.isStarted()) {
                 send(player, "war_declared", args[3], plugin.getLocaleMessage(reason.messageKey()));
             } else {
@@ -96,11 +97,11 @@ public final class WarCommand implements CommandExecutor {
         if (plugin.getNationManager().getNation(target) == null) {
             send(player, "nation_not_found_with_name", target); return true;
         }
-        String reasonError = plugin.getOrgManager().warReasonFailure(reason, nation.getName(), target);
+        String reasonError = plugin.getOrgManager().getWarManager().warReasonFailure(reason, nation.getName(), target);
         if (reasonError != null) {
             send(player, reasonError); return true;
         }
-        String goalError = plugin.getOrgManager().validateWarGoalSelection(reason, nation.getName(), target,
+        String goalError = plugin.getOrgManager().getWarManager().validateWarGoalSelection(reason, nation.getName(), target,
                 goalTownName, goalOrganizationName);
         if (goalError != null) {
             send(player, goalError); return true;
@@ -108,11 +109,11 @@ public final class WarCommand implements CommandExecutor {
         var alliances = plugin.getOrgManager().getMilitaryAlliancesByNation(nation.getName());
         if (!alliances.isEmpty()) {
             var alliance = alliances.getFirst();
-            var result = plugin.getOrgManager().startMilitaryWarVote(alliance, nation.getName(), target,
+            var result = plugin.getOrgManager().getWarManager().startMilitaryWarVote(alliance, nation.getName(), target,
                     plugin.getNationManager(), reason, goalTownName, goalOrganizationName);
             sendMilitaryWarVoteResult(player, alliance, target, result);
         } else {
-            var result = plugin.getOrgManager().handleMilitaryAllianceWar(nation.getName(), target,
+            var result = plugin.getOrgManager().getWarManager().handleMilitaryAllianceWar(nation.getName(), target,
                     plugin.getNationManager(), reason, goalTownName, goalOrganizationName);
             if (result.isSuccess()) {
                 send(player, reason == WarReason.INDEPENDENCE ? "war_independence_declared" : "war_declared",
@@ -128,7 +129,7 @@ public final class WarCommand implements CommandExecutor {
     private void sendMilitaryWarVoteResult(Player player,
                                            com.thatguycy.worlddynamicsengine.model.WDEorg alliance,
                                            String target,
-                                           com.thatguycy.worlddynamicsengine.manager.organization.OrgManager.MilitaryWarVoteResult result) {
+                                           com.thatguycy.worlddynamicsengine.manager.organization.WarManager.MilitaryWarVoteResult result) {
         String key = "war_declaration_blocked";
         Object[] args = new Object[0];
         switch (result.getStatus()) {
@@ -178,7 +179,7 @@ public final class WarCommand implements CommandExecutor {
     }
 
     private boolean handleFocus(Player player, String[] args) {
-        List<com.thatguycy.worlddynamicsengine.manager.organization.OrgManager.WarFocusOption> wars =
+        List<com.thatguycy.worlddynamicsengine.manager.organization.WarManager.WarFocusOption> wars =
                 plugin.getWarScoreboardManager().getAvailableWars(player);
         if (wars.isEmpty()) {
             player.sendMessage(TextColors.RED + "你当前没有可专注的活跃战争。");

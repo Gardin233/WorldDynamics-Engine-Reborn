@@ -4,7 +4,7 @@
   <groupId>com.thatguycy</groupId>
   <artifactId>WorldDynamicsEngine-Reborn</artifactId>
   <name>WorldDynamicsEngine:Reborn</name>
-  <version>0.2.1</version>
+  <version>0.3.0</version>
   <description>Paper plugin extending Towny with national governance, diplomacy, organizations, wars and peace treaties.</description>
   <url>https://github.com/stoleyourharvs/WorldDynamics-Engine</url>
   <build>

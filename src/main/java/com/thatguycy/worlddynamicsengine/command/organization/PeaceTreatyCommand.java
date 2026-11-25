@@ -1,5 +1,6 @@
 package com.thatguycy.worlddynamicsengine.command.organization;
 
+import com.thatguycy.worlddynamicsengine.manager.organization.WarManager;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.TownyUniverse;
@@ -53,26 +54,26 @@ public class PeaceTreatyCommand {
         }
 
         String targetNation = args[3];
-        OrgManager.PeaceTreatyProposalState.ProposalType proposalType = OrgManager.PeaceTreatyProposalState.ProposalType.fromString(args[4]);
+        WarManager.PeaceTreatyProposalState.ProposalType proposalType = WarManager.PeaceTreatyProposalState.ProposalType.fromString(args[4]);
         if (proposalType == null) {
             sender.sendMessage(TextColors.RED + msg("org_usage_peacetreaty"));
             return true;
         }
 
-        List<OrgManager.PeaceTreatyClauseState> clauses = parseClauses(String.join(" ", java.util.Arrays.copyOfRange(args, 5, args.length)));
+        List<WarManager.PeaceTreatyClauseState> clauses = parseClauses(String.join(" ", java.util.Arrays.copyOfRange(args, 5, args.length)));
         if (clauses.isEmpty()) {
             sender.sendMessage(TextColors.RED + msg("org_peace_treaty_invalid_clause"));
             return true;
         }
 
-        OrgManager.PeaceTreatyProposalResult result = orgManager.proposePeaceTreaty(org, actorNation, targetNation, proposalType, clauses, nationManager);
+        WarManager.PeaceTreatyProposalResult result = orgManager.getWarManager().proposePeaceTreaty(org, actorNation, targetNation, proposalType, clauses, nationManager);
         if (!result.isSuccess()) {
             sender.sendMessage(TextColors.RED + msg(result.getMessageKey()));
             return true;
         }
 
         String scoreDifferenceText = String.format(Locale.US, "%.2f", result.getScoreDifference());
-        if (result.getStatus() == OrgManager.PeaceTreatyProposalResult.Status.FORCED_ACCEPTED) {
+        if (result.getStatus() == WarManager.PeaceTreatyProposalResult.Status.FORCED_ACCEPTED) {
             sender.sendMessage(TextColors.GREEN + msg("org_peace_treaty_forced_accepted",
                     targetNation,
                     result.getProposal().getTotalPoints(),
@@ -82,7 +83,7 @@ public class PeaceTreatyCommand {
 
         sender.sendMessage(TextColors.GREEN + msg("org_peace_treaty_proposed",
                 targetNation,
-                proposalType == OrgManager.PeaceTreatyProposalState.ProposalType.DEMAND ? msg("org_peace_treaty_type_demand") : msg("org_peace_treaty_type_surrender"),
+                proposalType == WarManager.PeaceTreatyProposalState.ProposalType.DEMAND ? msg("org_peace_treaty_type_demand") : msg("org_peace_treaty_type_surrender"),
                 result.getProposal().getTotalPoints(),
                 scoreDifferenceText));
         return true;
@@ -111,20 +112,20 @@ public class PeaceTreatyCommand {
             return true;
         }
 
-        OrgManager.PeaceTreatyReviewResult result = orgManager.reviewPeaceTreaty(org, actorNation, targetNation, accept, nationManager);
-        if (result.getStatus() == OrgManager.PeaceTreatyReviewResult.Status.INVALID) {
+        WarManager.PeaceTreatyReviewResult result = orgManager.getWarManager().reviewPeaceTreaty(org, actorNation, targetNation, accept, nationManager);
+        if (result.getStatus() == WarManager.PeaceTreatyReviewResult.Status.INVALID) {
             sender.sendMessage(TextColors.RED + msg(result.getMessageKey()));
             return true;
         }
 
-        sender.sendMessage(TextColors.GREEN + msg(result.getStatus() == OrgManager.PeaceTreatyReviewResult.Status.ACCEPTED
+        sender.sendMessage(TextColors.GREEN + msg(result.getStatus() == WarManager.PeaceTreatyReviewResult.Status.ACCEPTED
                 ? "org_peace_treaty_accepted"
                 : "org_peace_treaty_rejected", targetNation));
         return true;
     }
 
-    private List<OrgManager.PeaceTreatyClauseState> parseClauses(String rawText) {
-        List<OrgManager.PeaceTreatyClauseState> clauses = new ArrayList<>();
+    private List<WarManager.PeaceTreatyClauseState> parseClauses(String rawText) {
+        List<WarManager.PeaceTreatyClauseState> clauses = new ArrayList<>();
         if (rawText == null || rawText.isBlank()) {
             return clauses;
         }
@@ -132,8 +133,8 @@ public class PeaceTreatyCommand {
         String[] clauseTexts = rawText.split(";");
         for (String clauseText : clauseTexts) {
             String[] parts = clauseText.trim().split(":");
-            OrgManager.PeaceTreatyClauseState.ClauseType type =
-                    OrgManager.PeaceTreatyClauseState.ClauseType.fromString(parts[0]);
+            WarManager.PeaceTreatyClauseState.ClauseType type =
+                    WarManager.PeaceTreatyClauseState.ClauseType.fromString(parts[0]);
             if (type == null) {
                 continue;
             }
@@ -143,6 +144,11 @@ public class PeaceTreatyCommand {
                 case REPARATIONS -> {
                     if (parts.length >= 2) {
                         parameters.put("percent", parts[1]);
+                    }
+                }
+                case TRIBUTE -> {
+                    if (parts.length >= 2) {
+                        parameters.put("amount", parts[1]);
                     }
                 }
                 case TRANSFER_TOWN -> {
@@ -166,11 +172,11 @@ public class PeaceTreatyCommand {
                         parameters.put("organization", parts[1]);
                     }
                 }
-                case FORCE_CONVERSION, DISSOLVE_ALLIANCE, EXPEL_FROM_ALLIANCE, UNCONDITIONAL_PASSAGE, HUMILIATE, LOOT_CAPITAL, TRIBUTE, FORCE_VASSALIZE, ALLOW_INDEPENDENCE -> {
+                case FORCE_CONVERSION, DISSOLVE_ALLIANCE, EXPEL_FROM_ALLIANCE, UNCONDITIONAL_PASSAGE, HUMILIATE, LOOT_CAPITAL, FORCE_VASSALIZE, ALLOW_INDEPENDENCE -> {
                 }
             }
 
-            clauses.add(new OrgManager.PeaceTreatyClauseState(type, parameters));
+            clauses.add(new WarManager.PeaceTreatyClauseState(type, parameters));
         }
 
         return clauses;
@@ -211,7 +217,7 @@ public class PeaceTreatyCommand {
             }
             Nation nation = resident.getTown().getNationOrNull();
             if (resident.getTown().getMayor() != null && resident.getTown().getMayor().equals(resident)
-                    && orgManager.isTownInActiveWar(resident.getTown().getName())) {
+                    && orgManager.getWarManager().isTownInActiveWar(resident.getTown().getName())) {
                 return "town:" + resident.getTown().getName();
             }
             return nation == null ? null : nation.getName();

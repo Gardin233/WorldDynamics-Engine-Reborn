@@ -20,6 +20,7 @@ permissions:
     default: op
     children:
       wde.player: true
+      wde.menu.others: true
       wde.admin.system: true
       wde.admin.nation: true
       wde.admin.town: true
@@ -32,6 +33,9 @@ permissions:
       wde.reload: true
   wde.admin.system:
     description: Save, synchronize, configure and reload WDER.
+    default: op
+  wde.menu.others:
+    description: Open WDER menus for other online players without granting them additional permissions.
     default: op
   wde.admin.nation:
     description: Manage nation government, leaders, elections and diplomacy.

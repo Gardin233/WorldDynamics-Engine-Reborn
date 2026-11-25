@@ -94,6 +94,10 @@ public final class AnimalResonanceDoctrineManager implements Listener {
         }
     }
 
+    public void applyFeeding(Player player) {
+        apply(player, true);
+    }
+
     private static ItemStack getHandItem(Player player, EquipmentSlot hand) {
         return hand == EquipmentSlot.OFF_HAND
                 ? player.getInventory().getItemInOffHand()

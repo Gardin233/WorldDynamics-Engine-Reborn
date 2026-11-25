@@ -9,14 +9,14 @@ import org.junit.jupiter.api.Test;
 class MilitaryWarEconomicTermsTest {
     @Test
     void tracksEconomicTermsSeparatelyForEachWarSide() {
-        OrgManager.MilitaryWarState war = new OrgManager.MilitaryWarState(
+        WarManager.MilitaryWarState war = new WarManager.MilitaryWarState(
                 "Attacker", "Defender", List.of("Attacker", "Ally"), List.of("Defender"), 1L);
 
         assertTrue(war.markEconomicTermsDemanded("Ally"));
         assertTrue(war.hasAttackerEconomicTermsDemanded());
         assertFalse(war.hasDefenderEconomicTermsDemanded());
 
-        OrgManager.MilitaryWarState restored = OrgManager.MilitaryWarState.fromMap(
+        WarManager.MilitaryWarState restored = WarManager.MilitaryWarState.fromMap(
                 war.getWarKey(), war.toMap());
         assertTrue(restored.hasAttackerEconomicTermsDemanded());
         assertFalse(restored.hasDefenderEconomicTermsDemanded());

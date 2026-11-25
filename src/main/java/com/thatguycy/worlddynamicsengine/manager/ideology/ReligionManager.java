@@ -7,9 +7,7 @@ import com.thatguycy.worlddynamicsengine.manager.storage.DataStorageManager;
 import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineAttitudeDefinition;
 import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineAttitudeEffect;
 import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineDefinition;
-import com.thatguycy.worlddynamicsengine.model.IdeologyDoctrineMemeConstraint;
 import com.thatguycy.worlddynamicsengine.model.IdeologyMemeDefinition;
-import com.thatguycy.worlddynamicsengine.model.IdeologyMemeMoodEffect;
 import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import com.thatguycy.worlddynamicsengine.model.WDEreligion;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
@@ -29,7 +27,6 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.UUID;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -41,9 +38,6 @@ public class ReligionManager {
     private static final String STORAGE_CATEGORY = "religions";
     private static final long DAY_MILLIS = TimeUnit.DAYS.toMillis(1);
     private static final String PROSELYTIZING_DOCTRINE = "namespace:wder/proselytizing";
-    private static final String DOCTRINE_ID_PATTERN = "^[a-z0-9_.-]+:(?:wde|wder)/[a-z0-9_.-]+$";
-    private static final String ATTITUDE_ID_PATTERN = "^[a-z0-9_.-]+:(?:wde|wder)/[a-z0-9_.-]+/[a-z0-9_.-]+$";
-    private static final String LOCAL_ATTITUDE_ID_PATTERN = "^[a-z0-9_.-]+$";
     private static final Map<String, String> LEGACY_MEME_NAMES = createLegacyMemeNames();
 
     private final JavaPlugin plugin;
@@ -72,6 +66,7 @@ public class ReligionManager {
         religions.putAll(dataStorageManager.loadStringKeyed(STORAGE_CATEGORY, WDEreligion.class));
         boolean migrated = false;
         for (WDEreligion religion : religions.values()) {
+            migrated |= religion.migrateLegacyPercentageTithe();
             if (religion.needsGovernanceModeMigration()) {
                 religion.setGovernanceMode(religion.getGovernanceMode());
                 migrated = true;
@@ -114,9 +109,8 @@ public class ReligionManager {
         }
         FileConfiguration config = ((WorldDynamicsEngine) plugin).getIdeologyConfig();
         try {
-            religion.setTithePolicy(WDEreligion.TitheType.valueOf(
-                    config.getString("economy.treasury.defaultTitheType", "WEALTH_PERCENTAGE").toUpperCase(Locale.ROOT)),
-                    new BigDecimal(config.getString("economy.treasury.defaultTitheAmount", "10")));
+            religion.setTithePolicy(WDEreligion.TitheType.FIXED,
+                    new BigDecimal(config.getString("economy.treasury.defaultTitheAmount", "0")));
         } catch (IllegalArgumentException ignored) {
             plugin.getLogger().warning("Invalid default ideology tithe policy; new ideology starts with zero tithe.");
         }
@@ -287,6 +281,8 @@ public class ReligionManager {
         reconcileDoctrineAttitudes(religion);
         religions.put(religion.getReligionName().toLowerCase(), religion);
         saveReligions();
+        var shameManager = ((WorldDynamicsEngine) plugin).getNonhumanizationMoodManager();
+        if (shameManager != null) shameManager.refreshReligion(religion);
     }
 
     public synchronized void changeGovernanceMode(String religionName, UUID actor,
@@ -430,6 +426,9 @@ public class ReligionManager {
         if (residentUuid == null) return;
         WorldDynamicsEngine engine = (WorldDynamicsEngine) plugin;
         engine.refreshArmorDoctrineForPlayer(residentUuid);
+        if (engine.getNonhumanizationMoodManager() != null) {
+            engine.getNonhumanizationMoodManager().refreshResident(residentUuid);
+        }
         WDEresident resident = engine.getResidentManager().getResident(residentUuid);
         String currentIdeology = resident == null ? null : resident.getReligionName();
         String previousIdeology = resident == null
@@ -651,7 +650,8 @@ public class ReligionManager {
 
     public void reloadMemeRegistry() {
         registeredMemes.clear();
-        loadConfiguredMemes();
+        new IdeologyRegistryParser(plugin.getLogger()::warning, this::normalizeMeme)
+                .loadMemes(((WorldDynamicsEngine) plugin).getIdeologyConfig(), registeredMemes);
 
         IdeologyMemeRegistryEvent event = new IdeologyMemeRegistryEvent((WorldDynamicsEngine) plugin, registeredMemes);
         Bukkit.getPluginManager().callEvent(event);
@@ -665,7 +665,8 @@ public class ReligionManager {
     public void reloadDoctrineRegistry() {
         registeredDoctrines.clear();
         doctrineEffectsByAttitude.clear();
-        loadConfiguredDoctrines();
+        new IdeologyRegistryParser(plugin.getLogger()::warning, this::normalizeMeme)
+                .loadDoctrines(((WorldDynamicsEngine) plugin).getIdeologyConfig(), registeredDoctrines);
 
         IdeologyDoctrineRegistryEvent doctrineEvent = new IdeologyDoctrineRegistryEvent((WorldDynamicsEngine) plugin, registeredDoctrines);
         Bukkit.getPluginManager().callEvent(doctrineEvent);
@@ -684,6 +685,8 @@ public class ReligionManager {
         for (WDEreligion religion : religions.values()) {
             reconcileDoctrineAttitudes(religion);
         }
+        var shameManager = ((WorldDynamicsEngine) plugin).getNonhumanizationMoodManager();
+        if (shameManager != null) shameManager.refreshAllResidents();
     }
 
     public Collection<IdeologyMemeDefinition> getRegisteredMemes() {
@@ -917,25 +920,13 @@ public class ReligionManager {
     }
 
     public boolean canUseDoctrineAttitude(WDEreligion religion, String doctrineId, String attitudeId) {
-        IdeologyDoctrineDefinition doctrine = getDoctrine(doctrineId);
-        if (doctrine == null || attitudeId == null || doctrine.getAttitude(attitudeId) == null) {
-            return false;
-        }
-        if (religion == null) {
-            return true;
-        }
+        return DoctrineAttitudePolicy.canUse(getDoctrine(doctrineId), attitudeId,
+                religion == null ? null : getConfiguredMemes(religion.getMemes()));
+    }
 
-        for (String memeId : religion.getMemes()) {
-            String normalizedMemeId = normalizeMeme(memeId);
-            if (normalizedMemeId == null) {
-                continue;
-            }
-            IdeologyDoctrineMemeConstraint constraint = doctrine.getMemeConstraint(normalizedMemeId);
-            if (constraint != null && constraint.blocks(attitudeId)) {
-                return false;
-            }
-        }
-        return true;
+    static boolean canUseNonhumanizationAttitude(
+            String doctrineId, String attitudeId, Collection<String> configuredMemes) {
+        return DoctrineAttitudePolicy.canUseNonhumanizationAttitude(doctrineId, attitudeId, configuredMemes);
     }
 
     public String setDoctrineAttitude(WDEreligion religion, String doctrineId, String requestedAttitudeId) {
@@ -959,30 +950,8 @@ public class ReligionManager {
     }
 
     public String resolveDoctrineDefaultAttitude(WDEreligion religion, IdeologyDoctrineDefinition doctrine) {
-        if (doctrine == null) {
-            return null;
-        }
-
-        if (religion != null) {
-            for (String memeId : religion.getMemes()) {
-                String normalizedMemeId = normalizeMeme(memeId);
-                if (normalizedMemeId == null) {
-                    continue;
-                }
-                IdeologyDoctrineMemeConstraint constraint = doctrine.getMemeConstraint(normalizedMemeId);
-                if (constraint == null) {
-                    continue;
-                }
-
-                for (String candidateAttitudeId : constraint.getDefaultAttitudeIds()) {
-                    if (doctrine.getAttitude(candidateAttitudeId) != null) {
-                        return candidateAttitudeId;
-                    }
-                }
-            }
-        }
-
-        return doctrine.getDefaultAttitudeId();
+        return DoctrineAttitudePolicy.resolveDefault(doctrine,
+                religion == null ? null : getConfiguredMemes(religion.getMemes()));
     }
 
     public List<IdeologyDoctrineAttitudeEffect> getDoctrineEffects(String doctrineId, String attitudeId) {
@@ -1296,321 +1265,12 @@ public class ReligionManager {
         doctrineEffectsByAttitude.computeIfAbsent(buildDoctrineAttitudeKey(doctrineId, attitudeId), ignored -> new ArrayList<>()).add(effect);
     }
 
-    private void loadConfiguredMemes() {
-        FileConfiguration ideologyConfig = ((WorldDynamicsEngine) plugin).getIdeologyConfig();
-        if (ideologyConfig == null) {
-            return;
-        }
-
-        ConfigurationSection registrySection = ideologyConfig.getConfigurationSection("memes.registry");
-        if (registrySection == null) {
-            return;
-        }
-
-        for (String key : registrySection.getKeys(false)) {
-            String normalizedId = IdeologyMemeDefinition.normalizeId(key);
-            if (!isValidMemeId(normalizedId)) {
-                plugin.getLogger().warning("Skipped ideology meme with invalid id: " + key);
-                continue;
-            }
-
-            String basePath = "memes.registry." + key;
-            IdeologyMemeDefinition meme = new IdeologyMemeDefinition(
-                    normalizedId,
-                    ideologyConfig.getString(basePath + ".title", normalizedId),
-                    ideologyConfig.getString(basePath + ".description", ""),
-                    ideologyConfig.getString(basePath + ".color", ""),
-                    ideologyConfig.getString(basePath + ".icon", ""),
-                    "config",
-                    parseMemeExclusiveWith(ideologyConfig.get(basePath + ".exclusive_with")),
-                    parseMemeMoodEffects(ideologyConfig.get(basePath + ".moodEffects.ranges")),
-                    Map.of(
-                            "collapse", parseStringList(ideologyConfig.get(basePath + ".moodEffects.collapse")),
-                            "inspiration", parseStringList(ideologyConfig.get(basePath + ".moodEffects.inspiration"))
-                    )
-            );
-            if (!meme.isValid()) {
-                plugin.getLogger().warning("Skipped ideology meme with missing title: " + key);
-                continue;
-            }
-            if (registeredMemes.containsKey(normalizedId)) {
-                plugin.getLogger().warning("Skipped duplicate ideology meme id: " + normalizedId);
-                continue;
-            }
-            registeredMemes.put(normalizedId, meme);
-        }
-    }
-
-    private void loadConfiguredDoctrines() {
-        FileConfiguration ideologyConfig = ((WorldDynamicsEngine) plugin).getIdeologyConfig();
-        if (ideologyConfig == null) {
-            return;
-        }
-
-        ConfigurationSection registrySection = ideologyConfig.getConfigurationSection("doctrines.registry");
-        if (registrySection == null) {
-            return;
-        }
-
-        for (String key : registrySection.getKeys(false)) {
-            String normalizedDoctrineId = IdeologyDoctrineDefinition.normalizeId(key);
-            if (!isValidDoctrineId(normalizedDoctrineId)) {
-                plugin.getLogger().warning("Skipped ideology doctrine with invalid id: " + key);
-                continue;
-            }
-
-            Map<?, ?> doctrineValues = asMap(registrySection.get(key));
-            if (doctrineValues.isEmpty()) {
-                plugin.getLogger().warning("Skipped ideology doctrine without section body: " + key);
-                continue;
-            }
-
-            List<IdeologyDoctrineAttitudeDefinition> attitudes = parseDoctrineAttitudes(normalizedDoctrineId, doctrineValues.get("attitudes"));
-            if (attitudes.isEmpty()) {
-                plugin.getLogger().warning("Skipped ideology doctrine without attitudes: " + key);
-                continue;
-            }
-
-            IdeologyDoctrineDefinition doctrine = new IdeologyDoctrineDefinition(
-                    normalizedDoctrineId,
-                    getStringValue(doctrineValues, "title", normalizedDoctrineId),
-                    getStringValue(doctrineValues, "lore", ""),
-                    getStringValue(doctrineValues, "color", ""),
-                    getStringValue(doctrineValues, "icon", ""),
-                    attitudes,
-                    parseDoctrineMemeConstraints(normalizedDoctrineId, doctrineValues.get("meme")),
-                    "config"
-            );
-            if (!doctrine.isValid()) {
-                plugin.getLogger().warning("Skipped ideology doctrine with invalid payload: " + key);
-                continue;
-            }
-            if (registeredDoctrines.containsKey(normalizedDoctrineId)) {
-                plugin.getLogger().warning("Skipped duplicate ideology doctrine id: " + normalizedDoctrineId);
-                continue;
-            }
-            registeredDoctrines.put(normalizedDoctrineId, doctrine);
-        }
-    }
-
-    private List<IdeologyDoctrineAttitudeDefinition> parseDoctrineAttitudes(String doctrineId, Object rawAttitudes) {
-        List<IdeologyDoctrineAttitudeDefinition> attitudes = new ArrayList<>();
-        if (rawAttitudes instanceof Collection<?> entries) {
-            for (Object entry : entries) {
-                if (entry instanceof Map<?, ?> entryMap) {
-                    for (Map.Entry<?, ?> mapEntry : entryMap.entrySet()) {
-                        addDoctrineAttitudeFromEntry(attitudes, doctrineId, String.valueOf(mapEntry.getKey()), mapEntry.getValue());
-                    }
-                }
-            }
-        } else if (rawAttitudes instanceof ConfigurationSection section) {
-            for (String key : section.getKeys(false)) {
-                addDoctrineAttitudeFromEntry(attitudes, doctrineId, key, section.get(key));
-            }
-        }
-        return attitudes;
-    }
-
-    private void addDoctrineAttitudeFromEntry(List<IdeologyDoctrineAttitudeDefinition> attitudes, String doctrineId, String rawAttitudeId, Object rawValue) {
-        String attitudeId = normalizeAttitudeId(doctrineId, rawAttitudeId);
-        if (attitudeId == null) {
-            plugin.getLogger().warning("Skipped doctrine attitude with invalid id: " + rawAttitudeId);
-            return;
-        }
-
-        Map<?, ?> values = asMap(rawValue);
-        String title = getStringValue(values, "title", rawAttitudeId);
-        String lore = getStringValue(values, "lore", "");
-        String color = getStringValue(values, "color", "");
-        int moodWeight = Math.max(0, Math.min(10,
-                integerValue(values.get("moodWeight"), defaultMoodWeight(doctrineId, attitudeId))));
-        Map<?, ?> moodChange = asMap(values.get("moodChange"));
-        int compliantMoodChange = moodChange.containsKey("compliant")
-                ? integerValue(moodChange.get("compliant"), -1) : -1;
-        int violationMoodChange = moodChange.containsKey("violation")
-                ? integerValue(moodChange.get("violation"), -1) : -1;
-        IdeologyDoctrineAttitudeDefinition attitude =
-                new IdeologyDoctrineAttitudeDefinition(attitudeId, title, lore, color, moodWeight,
-                        compliantMoodChange, violationMoodChange);
-        if (!attitude.isValid()) {
-            plugin.getLogger().warning("Skipped doctrine attitude with missing title: " + rawAttitudeId);
-            return;
-        }
-        attitudes.add(attitude);
-    }
-
-    private int defaultMoodWeight(String doctrineId, String attitudeId) {
-        String doctrinePath = doctrineId.substring(doctrineId.lastIndexOf('/') + 1);
-        String attitude = attitudeId.substring(attitudeId.lastIndexOf('/') + 1);
-        return switch (doctrinePath) {
-            case "armor_wearing" -> Set.of("naked", "fully_covered").contains(attitude) ? 3 : 1;
-            case "cannibalism", "blood_feeding" -> switch (attitude) {
-                case "abhor" -> 3;
-                case "fear" -> 2;
-                case "disgust", "accept" -> 1;
-                case "enjoy" -> 2;
-                case "crave" -> 3;
-                case "greedy" -> 4;
-                default -> 1;
-            };
-            case "meat_eating" -> switch (attitude) {
-                case "abhor_meat", "anti_vegetarian_abhor" -> 3;
-                case "fear_meat", "anti_vegetarian_hate" -> 2;
-                default -> 1;
-            };
-            case "slaughter_animals" -> switch (attitude) {
-                case "taboo" -> 3;
-                case "fear" -> 2;
-                case "love" -> 2;
-                default -> 1;
-            };
-            case "killing_innocent_animals" -> switch (attitude) {
-                case "abhor" -> 3;
-                case "fear" -> 2;
-                default -> 1;
-            };
-            default -> 1;
-        };
-    }
-
-    private List<IdeologyDoctrineMemeConstraint> parseDoctrineMemeConstraints(String doctrineId, Object rawConstraints) {
-        List<IdeologyDoctrineMemeConstraint> constraints = new ArrayList<>();
-        if (!(rawConstraints instanceof Collection<?> entries)) {
-            return constraints;
-        }
-
-        for (Object entry : entries) {
-            if (!(entry instanceof Map<?, ?> entryMap)) {
-                continue;
-            }
-            for (Map.Entry<?, ?> mapEntry : entryMap.entrySet()) {
-                String memeId = normalizeMeme(String.valueOf(mapEntry.getKey()));
-                if (memeId == null) {
-                    memeId = String.valueOf(mapEntry.getKey()).trim().toLowerCase();
-                }
-                Map<?, ?> values = asMap(mapEntry.getValue());
-                List<String> defaultAttitudes = normalizeAttitudeIdList(doctrineId, values.get("default"));
-                List<String> blockedAttitudes = normalizeAttitudeIdList(doctrineId, values.get("cant_use"));
-                constraints.add(new IdeologyDoctrineMemeConstraint(memeId, defaultAttitudes, blockedAttitudes));
-            }
-        }
-        return constraints;
-    }
-
-    private List<String> parseMemeExclusiveWith(Object rawValue) {
-        List<String> exclusiveWith = new ArrayList<>();
-        if (rawValue instanceof Collection<?> values) {
-            for (Object value : values) {
-                String normalizedMemeId = normalizeMeme(value == null ? null : String.valueOf(value));
-                if (normalizedMemeId == null) {
-                    normalizedMemeId = IdeologyMemeDefinition.normalizeId(value == null ? null : String.valueOf(value));
-                }
-                if (normalizedMemeId != null && !normalizedMemeId.isBlank()) {
-                    exclusiveWith.add(normalizedMemeId);
-                }
-            }
-        } else if (rawValue != null) {
-            String normalizedMemeId = normalizeMeme(String.valueOf(rawValue));
-            if (normalizedMemeId == null) {
-                normalizedMemeId = IdeologyMemeDefinition.normalizeId(String.valueOf(rawValue));
-            }
-            if (normalizedMemeId != null && !normalizedMemeId.isBlank()) {
-                exclusiveWith.add(normalizedMemeId);
-            }
-        }
-        return exclusiveWith;
-    }
-
-    private List<IdeologyMemeMoodEffect> parseMemeMoodEffects(Object rawValue) {
-        List<IdeologyMemeMoodEffect> effects = new ArrayList<>();
-        if (!(rawValue instanceof Collection<?> ranges)) return effects;
-        for (Object rawRange : ranges) {
-            Map<?, ?> range = asMap(rawRange);
-            if (range.isEmpty()) continue;
-            int minimum = integerValue(range.get("min"), -1);
-            int maximum = integerValue(range.get("max"), -1);
-            List<String> effectIds = parseStringList(range.get("effects"));
-            if (minimum < 0 || maximum < minimum || maximum > 100) {
-                plugin.getLogger().warning("Skipped invalid mood effect range for meme: " + range);
-                continue;
-            }
-            effects.add(new IdeologyMemeMoodEffect(minimum, maximum, effectIds));
-        }
-        return effects;
-    }
-
-    private List<String> parseStringList(Object rawValue) {
-        if (!(rawValue instanceof Collection<?> values)) return List.of();
-        List<String> strings = new ArrayList<>();
-        for (Object value : values) {
-            if (value != null && !String.valueOf(value).isBlank()) strings.add(String.valueOf(value).trim());
-        }
-        return List.copyOf(strings);
-    }
-
-    private int integerValue(Object value, int defaultValue) {
-        if (value instanceof Number number) return number.intValue();
-        try {
-            return value == null ? defaultValue : Integer.parseInt(String.valueOf(value));
-        } catch (NumberFormatException ignored) {
-            return defaultValue;
-        }
-    }
-
-    private List<String> normalizeAttitudeIdList(String doctrineId, Object rawValue) {
-        List<String> normalizedIds = new ArrayList<>();
-        if (rawValue instanceof Collection<?> values) {
-            for (Object value : values) {
-                String normalizedId = normalizeAttitudeId(doctrineId, value == null ? null : String.valueOf(value));
-                if (normalizedId != null) {
-                    normalizedIds.add(normalizedId);
-                }
-            }
-        }
-        return normalizedIds;
-    }
-
     private String normalizeAttitudeId(String doctrineId, String rawAttitudeId) {
-        if (rawAttitudeId == null) {
-            return null;
-        }
-
-        String normalized = rawAttitudeId.trim().toLowerCase();
-        if (normalized.matches(ATTITUDE_ID_PATTERN)) {
-            return normalized;
-        }
-
-        if (!isValidDoctrineId(doctrineId) || !normalized.matches(LOCAL_ATTITUDE_ID_PATTERN)) {
-            return null;
-        }
-        return doctrineId + "/" + normalized;
-    }
-
-    private Map<?, ?> asMap(Object rawValue) {
-        if (rawValue instanceof Map<?, ?> map) {
-            return map;
-        }
-        if (rawValue instanceof ConfigurationSection section) {
-            return section.getValues(false);
-        }
-        return Collections.emptyMap();
-    }
-
-    private String getStringValue(Map<?, ?> values, String key, String fallback) {
-        Object rawValue = values.get(key);
-        return rawValue == null ? fallback : String.valueOf(rawValue);
+        return DoctrineAttitudePolicy.normalizeAttitudeId(doctrineId, rawAttitudeId);
     }
 
     private String buildDoctrineAttitudeKey(String doctrineId, String attitudeId) {
         return doctrineId + "|" + attitudeId;
-    }
-
-    private boolean isValidMemeId(String memeId) {
-        return memeId != null && memeId.matches("[a-z0-9._-]{2,64}");
-    }
-
-    private boolean isValidDoctrineId(String doctrineId) {
-        return doctrineId != null && doctrineId.matches(DOCTRINE_ID_PATTERN);
     }
 
     private static Map<String, String> createLegacyMemeNames() {

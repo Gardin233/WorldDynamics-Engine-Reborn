@@ -64,7 +64,7 @@ public class SovereignSubjectCommand {
 
         SovereignSubjectState.AutonomyTier currentTier = orgManager.getSubjectAutonomyTier(org, actorNation);
         boolean peacefulIndependence = currentTier == SovereignSubjectState.AutonomyTier.DOMINION;
-        if (peacefulIndependence && orgManager.isNationInActiveWar(actorNation)) {
+        if (peacefulIndependence && orgManager.getWarManager().isNationInActiveWar(actorNation)) {
             sender.sendMessage(TextColors.RED + msg("org_subject_peaceful_independence_blocked_by_war"));
             return true;
         }
@@ -353,7 +353,7 @@ public class SovereignSubjectCommand {
     }
 
     private boolean isIndependenceWarActive(CommandSender sender, WDEorg org, String nationName) {
-        if (!orgManager.hasActiveIndependenceWar(org, nationName)) {
+        if (!orgManager.getWarManager().hasActiveIndependenceWar(org, nationName)) {
             return false;
         }
         sender.sendMessage(TextColors.RED + msg("org_subject_control_blocked_by_war", nationName));

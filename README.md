@@ -7,6 +7,8 @@
 
 WDER 为 Towny 城镇和国家增加治理、国家集团、主权帝国、外交、战争与战后条约规则。它不替代 Towny 的建镇、建国和领土保护。
 
+当前项目版本为 **0.3.0**。旧 `OrgManager` 战争 Java API 已移除；引用旧 API 的扩展需要改用 `WarManager` 并重新编译。上游源码版本仍为 `v0.2.1`。
+
 ## 项目链接
 
 - [上游 v0.2.1 源码](https://github.com/stoleyourharvs/WorldDynamics-Engine/releases/tag/v0.2.1)
