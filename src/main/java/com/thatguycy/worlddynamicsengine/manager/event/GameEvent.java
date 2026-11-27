@@ -3,10 +3,13 @@ package com.thatguycy.worlddynamicsengine.manager.event;
 import com.thatguycy.worlddynamicsengine.api.event.RandomEvent;
 import com.thatguycy.worlddynamicsengine.api.event.RandomEventContext;
 import com.thatguycy.worlddynamicsengine.api.event.RandomEventOccurrence;
+import java.util.UUID;
+import org.bukkit.Location;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
-import java.util.UUID;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 
 /** An event implementation executes only after EventManager selects it. */
 interface GameEvent extends RandomEvent {
@@ -47,6 +50,14 @@ interface EventOccurrence extends RandomEventOccurrence {
     }
 
     default boolean shouldCancelPortal(EntityPortalEvent event) {
+        return false;
+    }
+
+    default Location ejectPlayerFromPortal(PlayerMoveEvent event) {
+        return null;
+    }
+
+    default boolean shouldBlockPortalActivation(PortalCreateEvent event) {
         return false;
     }
 }

@@ -1,6 +1,9 @@
 package com.thatguycy.worlddynamicsengine.manager.event;
 
+import com.palmergames.bukkit.towny.object.Town;
+import com.palmergames.bukkit.towny.object.WorldCoord;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -31,23 +34,26 @@ final class NetherPortalSite {
         this.portalPositions = Set.copyOf(portalPositions);
     }
 
-    static NetherPortalSite find(Location townSpawn, int minimumRadius, int maximumRadius,
-                                 int attempts, Random random) {
-        if (townSpawn == null || townSpawn.getWorld() == null) {
+    static NetherPortalSite find(Town town, int attempts, Random random) {
+        if (town == null || town.getWorld() == null) {
             return null;
         }
-        World world = townSpawn.getWorld();
-        int minRadius = Math.max(8, minimumRadius);
-        int maxRadius = Math.max(minRadius, maximumRadius);
+        World world = town.getWorld();
+        List<WorldCoord> wildernessPlots = WildernessAnimalSpawns.findWildernessPlots(town);
+        if (wildernessPlots.isEmpty()) {
+            return null;
+        }
+        Collections.shuffle(wildernessPlots, random);
 
         for (int attempt = 0; attempt < Math.max(1, attempts); attempt++) {
-            double angle = random.nextDouble() * Math.PI * 2.0D;
-            int radius = minRadius + random.nextInt(maxRadius - minRadius + 1);
-            int x = townSpawn.getBlockX() + (int) Math.round(Math.cos(angle) * radius);
-            int z = townSpawn.getBlockZ() + (int) Math.round(Math.sin(angle) * radius);
-            int baseY = world.getHighestBlockYAt(x, z) + 1;
+            WorldCoord plot = wildernessPlots.get(attempt % wildernessPlots.size());
+            Location candidate = WildernessAnimalSpawns.randomSafeLocation(plot, random);
+            if (candidate == null) {
+                continue;
+            }
             Axis axis = random.nextBoolean() ? Axis.X : Axis.Z;
-            NetherPortalSite site = create(world, x, baseY, z, axis);
+            NetherPortalSite site = create(
+                    world, candidate.getBlockX(), candidate.getBlockY(), candidate.getBlockZ(), axis);
             if (site != null && site.isValid()) {
                 return site;
             }
@@ -103,6 +109,64 @@ final class NetherPortalSite {
         return new Location(world, centerX, firstFrame.y() + 2.5D, centerZ);
     }
 
+    World world() {
+        return world;
+    }
+
+    boolean isWithinCorrespondingNetherChunks(World netherWorld, Location location, int chunkRadius) {
+        if (netherWorld == null || location == null
+                || !netherWorld.equals(location.getWorld())
+                || world.getEnvironment() != World.Environment.NORMAL
+                || netherWorld.getEnvironment() != World.Environment.NETHER) {
+            return false;
+        }
+
+        Location portalCenter = center();
+        return NetherPortalProtectionRules.isWithinNetherChunkRadius(
+                portalCenter.getX(), portalCenter.getZ(),
+                location.getBlockX(), location.getBlockZ(), chunkRadius);
+    }
+
+    Location ejectionLocation(Location location) {
+        Location portalCenter = center();
+        double side = axis == Axis.X
+                ? location.getZ() - portalCenter.getZ()
+                : location.getX() - portalCenter.getX();
+        double direction = side < 0.0D ? -1.0D : 1.0D;
+
+        for (double distance = 1.5D; distance <= 4.5D; distance += 1.0D) {
+            double x = axis == Axis.Z
+                    ? portalCenter.getX() + direction * distance
+                    : location.getX();
+            double z = axis == Axis.X
+                    ? portalCenter.getZ() + direction * distance
+                    : location.getZ();
+            int blockX = Location.locToBlock(x);
+            int blockZ = Location.locToBlock(z);
+            int feetY = world.getHighestBlockYAt(blockX, blockZ) + 1;
+            if (feetY + 1 >= world.getMaxHeight() || feetY < world.getMinHeight()) {
+                continue;
+            }
+
+            Location candidate = new Location(
+                    world, blockX + 0.5D, feetY, blockZ + 0.5D,
+                    location.getYaw(), location.getPitch());
+            if (candidate.getBlock().isPassable()
+                    && candidate.clone().add(0.0D, 1.0D, 0.0D).getBlock().isPassable()
+                    && candidate.clone().subtract(0.0D, 1.0D, 0.0D).getBlock().getType().isSolid()) {
+                return candidate;
+            }
+        }
+
+        double x = axis == Axis.Z
+                ? portalCenter.getX() + direction * 5.5D
+                : location.getX();
+        double z = axis == Axis.X
+                ? portalCenter.getZ() + direction * 5.5D
+                : location.getZ();
+        return new Location(world, x, location.getY(), z, location.getYaw(), location.getPitch());
+    }
+
     void remove(Block preserveFrameBlock) {
         BlockPosition preserve = preserveFrameBlock == null ? null : BlockPosition.from(preserveFrameBlock);
         for (BlockPosition position : portalPositions) {
@@ -136,6 +200,9 @@ final class NetherPortalSite {
             }
         }
         for (BlockPosition position : framePositions) {
+            if (position.y() != baseY) {
+                continue;
+            }
             Block floor = world.getBlockAt(position.x(), baseY - 1, position.z());
             if (!floor.getType().isSolid() || !TownyWilderness.isUnclaimed(floor.getLocation())) {
                 return false;

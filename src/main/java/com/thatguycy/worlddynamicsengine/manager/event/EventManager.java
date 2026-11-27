@@ -25,8 +25,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import org.bukkit.NamespacedKey;
+import org.bukkit.Location;
 import org.bukkit.Chunk;
+import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -40,9 +41,11 @@ import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -429,6 +432,51 @@ public final class EventManager implements Listener, RandomEventRegistry {
             if (activeEvent.shouldCancelPortal(event)) {
                 event.setCancelled(true);
                 return;
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPortalCreate(PortalCreateEvent event) {
+        if (event.getReason() != PortalCreateEvent.CreateReason.FIRE) {
+            return;
+        }
+        for (EventOccurrence activeEvent : List.copyOf(activeEvents.values())) {
+            if (activeEvent.shouldBlockPortalActivation(event)) {
+                event.setCancelled(true);
+                notifyPortalActivationBlocked(event);
+                return;
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerMove(PlayerMoveEvent event) {
+        if (event.getTo() == null) {
+            return;
+        }
+        for (EventOccurrence activeEvent : List.copyOf(activeEvents.values())) {
+            Location ejection = activeEvent.ejectPlayerFromPortal(event);
+            if (ejection != null) {
+                event.setTo(ejection);
+                return;
+            }
+        }
+    }
+
+    private void notifyPortalActivationBlocked(PortalCreateEvent event) {
+        String warning = message("nether-invasion", "portal-activation-blocked");
+        if (event.getEntity() instanceof Player player) {
+            player.sendMessage(warning);
+            return;
+        }
+        if (event.getBlocks().isEmpty()) {
+            return;
+        }
+        Location portalLocation = event.getBlocks().get(0).getLocation().add(0.5D, 0.5D, 0.5D);
+        for (Player player : event.getWorld().getPlayers()) {
+            if (player.getLocation().distanceSquared(portalLocation) <= 32.0D * 32.0D) {
+                player.sendMessage(warning);
             }
         }
     }
@@ -974,7 +1022,8 @@ public final class EventManager implements Listener, RandomEventRegistry {
                 "raiding.cooldown-minutes", "generation.town-cooldown-minutes",
                 "raiding.enabled", "raiding.minimum-player-wealth",
                 "raiding.strength.formula", "raiding.strength.maximum-points",
-                "raiding.strength.maximum-mobs-per-raid")) {
+                "raiding.strength.maximum-mobs-per-raid",
+                "nether-invasion.spawn.minimum-radius", "nether-invasion.spawn.maximum-radius")) {
             if (config.contains(path)) {
                 config.set(path, null);
                 changed = true;

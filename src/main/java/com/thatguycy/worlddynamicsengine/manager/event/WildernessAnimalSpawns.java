@@ -101,7 +101,7 @@ final class WildernessAnimalSpawns {
         return location;
     }
 
-    private static List<WorldCoord> findWildernessPlots(Town town) {
+    static List<WorldCoord> findWildernessPlots(Town town) {
         if (town == null) {
             return List.of();
         }
@@ -132,7 +132,7 @@ final class WildernessAnimalSpawns {
         return new ArrayList<>(wildernessPlots);
     }
 
-    private static Location randomSafeLocation(WorldCoord plot, Random random) {
+    static Location randomSafeLocation(WorldCoord plot, Random random) {
         BoundingBox bounds = plot.getBoundingBox();
         int minX = (int) Math.floor(bounds.getMinX());
         int maxX = (int) Math.ceil(bounds.getMaxX()) - 1;

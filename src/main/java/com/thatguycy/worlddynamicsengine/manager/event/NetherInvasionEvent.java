@@ -1,6 +1,5 @@
 package com.thatguycy.worlddynamicsengine.manager.event;
 
-import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import com.thatguycy.worlddynamicsengine.api.event.RandomEventContext;
 import java.util.EnumMap;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
@@ -19,6 +19,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -51,24 +53,10 @@ final class NetherInvasionEvent implements AttackGameEvent {
             return null;
         }
 
-        Location townSpawn;
-        try {
-            townSpawn = context.town().getSpawn();
-        } catch (TownyException exception) {
-            plugin.getLogger().warning("Could not get town spawn for Nether invasion in "
-                    + context.townName() + ": " + exception.getMessage());
-            return null;
-        }
-        if (townSpawn == null || townSpawn.getWorld() == null) {
-            return null;
-        }
-
         ConfigurationSection spawnConfig = config.getConfigurationSection("nether-invasion.spawn");
-        int minimumRadius = Math.max(8, getInt(spawnConfig, "minimum-radius", 32));
-        int maximumRadius = Math.max(minimumRadius, getInt(spawnConfig, "maximum-radius", 64));
         int siteAttempts = Math.max(1, getInt(spawnConfig, "site-attempts", 40));
         NetherPortalSite portalSite = NetherPortalSite.find(
-                townSpawn, minimumRadius, maximumRadius, siteAttempts, new Random());
+                context.town(), siteAttempts, new Random());
         if (portalSite == null) {
             return null;
         }
@@ -239,6 +227,26 @@ final class NetherInvasionEvent implements AttackGameEvent {
         }
 
         @Override
+        public Location ejectPlayerFromPortal(PlayerMoveEvent event) {
+            Location destination = event.getTo();
+            return portalSite.containsPortalLocation(destination)
+                    ? portalSite.ejectionLocation(destination)
+                    : null;
+        }
+
+        @Override
+        public boolean shouldBlockPortalActivation(PortalCreateEvent event) {
+            if (event.getReason() != PortalCreateEvent.CreateReason.FIRE) {
+                return false;
+            }
+            World netherWorld = correspondingNetherWorld();
+            return netherWorld != null && event.getBlocks().stream()
+                    .filter(block -> block.getType() == Material.NETHER_PORTAL)
+                    .anyMatch(block -> portalSite.isWithinCorrespondingNetherChunks(
+                            netherWorld, block.getLocation(), 10));
+        }
+
+        @Override
         public void updateTownPlayers(List<Player> onlinePlayers) {
             onlinePlayers.forEach(this::addParticipant);
             List<Player> livingPlayers = onlinePlayers.stream()
@@ -297,6 +305,21 @@ final class NetherInvasionEvent implements AttackGameEvent {
 
         private void addParticipant(Player player) {
             successTracker.addParticipant(player.getUniqueId());
+        }
+
+        private World correspondingNetherWorld() {
+            World overworld = portalSite.world();
+            if (overworld.getEnvironment() != World.Environment.NORMAL) {
+                return null;
+            }
+            World namedNether = plugin.getServer().getWorld(overworld.getName() + "_nether");
+            if (namedNether != null && namedNether.getEnvironment() == World.Environment.NETHER) {
+                return namedNether;
+            }
+            List<World> netherWorlds = plugin.getServer().getWorlds().stream()
+                    .filter(world -> world.getEnvironment() == World.Environment.NETHER)
+                    .toList();
+            return netherWorlds.size() == 1 ? netherWorlds.get(0) : null;
         }
 
         private boolean spawnMob(Player target) {

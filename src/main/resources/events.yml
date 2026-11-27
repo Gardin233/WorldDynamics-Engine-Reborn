@@ -93,8 +93,6 @@ nether-invasion:
     WITHER_SKELETON: 3.0
     ZOGLIN: 1.0
   spawn:
-    minimum-radius: 32
-    maximum-radius: 64
     site-attempts: 40
     minimum-mob-radius: 4
     maximum-mob-radius: 10
@@ -110,6 +108,7 @@ nether-invasion:
     started: "§4%town% 城镇外围出现了下界入侵！%count% 只敌对生物已从传送门涌出（强度：%points%）。破坏任意一块黑曜石门框即可结束入侵。"
     destroyed: "§a%town% 外围的地狱门框架已被破坏，下界入侵结束。"
     building-blocked: "§c下界入侵期间，不能在地狱门周围放置方块。"
+    portal-activation-blocked: "§c你所处的位置靠近一个被入侵的城镇，你无法在此激活地狱门。"
     raid-success: "§4%town% 的镇民已全部遭到劫掠，下界入侵成功，原目标损失 5% 余额。"
     expired: "§7%town% 外围的下界入侵持续时间已到，地狱门与入侵生物消失。"
 
