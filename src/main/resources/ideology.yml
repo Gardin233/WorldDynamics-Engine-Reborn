@@ -275,6 +275,31 @@ mood:
       enabled: true
       # 在指定药水物品列表中命中时，为“医疗或社交”和“必须”态度添加额外奖励。
       inebriationMoodBonus: 10
+      # 饮用任何药水时给予的短期满足心情值。
+      reinforcementMoodBonus: 5
+      # 成功获取依赖时增加的依赖百分比；每次饮用都会恢复满足度。
+      dependencyGainPerPotion: 5
+      satisfactionGainPerPotion: 35
+      # 每次获得依赖的基础概率；连续饮用会递增至上限，间隔超出窗口则重新计算。
+      dependencyAcquisition:
+        baseChancePercent: 10
+        increasePerConsecutiveDrinkPercent: 10
+        maximumChancePercent: 100
+        streakWindowMinutes: 10
+      # 满足度每小时自然减少值；依赖值达到 100% 时最多额外加速 20%。
+      satisfactionDecayPerHour: 10
+      maxDependencyDecayAccelerationPercent: 20
+      # 被喷溅药水命中时额外损失的满足度。
+      splashSatisfactionLoss: 20
+      satisfactionThresholds:
+        satisfiedMinimum: 75
+        deficientMinimum: 50
+        cravingMinimum: 25
+      moodByStage:
+        satisfied: 2
+        deficient: -5
+        craving: -10
+        madness: -20
       # 此列表只声明哪些 CE 物品按药水戒律处理，不代表负面效果，例如 "alchemy:healing_tonic"。
       craftenginePotionItems: []
       # “醉生梦死”药水名单：原版使用 PotionType 名称，CE 使用物品完整 ID。

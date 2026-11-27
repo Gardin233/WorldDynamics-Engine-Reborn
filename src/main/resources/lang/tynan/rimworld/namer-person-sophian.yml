@@ -1,0 +1,36 @@
+# Extracted from RimWorld Royalty's NamerPersonSophian rule pack.
+# Original rules: Data/Royalty/Defs/FactionDefs/Faction_Empire.xml
+# Name and syllable pools are organized under en/ and zh/.
+name-rules:
+  male:
+    - weight: 3.0
+      pattern: FIRST_LAST
+    - weight: 2.0
+      pattern: FIRST_IMPERIAL
+    - weight: 2.0
+      pattern: IMPERIAL_IMPERIAL
+  female:
+    - weight: 3.0
+      pattern: FIRST_LAST
+    - weight: 2.0
+      pattern: FIRST_IMPERIAL
+    - weight: 2.0
+      pattern: IMPERIAL_IMPERIAL
+word-imperial:
+  - weight: 4.0
+    syllables: 2
+  - weight: 2.0
+    syllables: 3
+  - weight: 0.2
+    syllables: 4
+files:
+  en:
+    male-first: en/Names/Imperial_First_Male.txt
+    female-first: en/Names/Imperial_First_Female.txt
+    last: en/Names/Imperial_Last.txt
+    syllables: en/WordParts/Syllables_Byzantinian.txt
+  zh:
+    male-first: zh/Names/Imperial_First_Male.txt
+    female-first: zh/Names/Imperial_First_Female.txt
+    last: zh/Names/Imperial_Last.txt
+    syllables: zh/WordParts/Syllables_Byzantinian.txt

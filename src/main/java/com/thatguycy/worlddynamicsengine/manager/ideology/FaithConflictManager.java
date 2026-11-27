@@ -72,8 +72,13 @@ public final class FaithConflictManager implements Listener {
         awardBetrayerHunt(victim, victim.getKiller());
 
         WDEresident victimData = plugin.getResidentManager().getResident(victim.getUniqueId());
-        if (victimData != null && !victimData.getBetrayedReligionName().isBlank()) {
-            victimData.setBetrayedReligionName("");
+        if (victimData != null) {
+            victimData.resetAlchemyDependency(System.currentTimeMillis());
+            plugin.getMoodManager().replacePersistentMoodModifier(
+                    victim.getUniqueId(), PotionDoctrineManager.ALCHEMY_SOURCE_PREFIX, null, 0);
+            if (!victimData.getBetrayedReligionName().isBlank()) {
+                victimData.setBetrayedReligionName("");
+            }
             plugin.getResidentManager().saveResident(victimData);
         }
     }

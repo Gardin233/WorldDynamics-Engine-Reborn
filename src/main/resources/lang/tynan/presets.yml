@@ -1,0 +1,5 @@
+version: 1
+
+# Shared presets available to all players. Player-owned presets are stored
+# separately in lang/tynan/presets/<uuid>.yml.
+presets: []

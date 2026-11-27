@@ -1,0 +1,168 @@
+---
+tales:
+- id: NoxiousHaze
+  package: biotech
+  label:
+    en: acidic smog
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: acidic smog sweeping over [PAWN_nameDef]'s [Community]
+    - keyword: tale_noun
+      weight:
+      en: the atmosphere near [PAWN_nameDef]'s [Community] becoming noxious
+    image:
+    - keyword: image
+      weight:
+      en: an ominous sky, [circumstance_group]
+    - keyword: image
+      weight:
+      en: the air becoming thick and [circumstance_group]
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: with no life in sight
+    - keyword: circumstance_phrase
+      weight:
+      en: waiting for the acidic smog to clear
+    - keyword: circumstance_phrase
+      weight:
+      en: watching the animals flee
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef] hides near a [TerrainFeature], gazing out with a [AdjectiveAngsty] look."
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef] looks on with a cloth wrapped around [PAWN_possessive] face."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] dead [Animal]s lay on the ground."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] dying [Animal]s lay on the ground."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] suffocating [Animal]s lay on the ground."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [Animal]s flee."
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - Animal
+    - Community
+    - PAWN_nameDef
+    - PAWN_possessive
+    - Quantity_adjphrase
+    - TerrainFeature
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 13

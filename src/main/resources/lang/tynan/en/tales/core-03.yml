@@ -1,0 +1,2497 @@
+---
+tales:
+- id: HypothermiaRevealed
+  package: core
+  label:
+    en: hypothermia revealed
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] getting hypothermia"
+    image:
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] trudging through snow [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] huddled beside a [TerrainFeature] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] searching for a warm [Apparel] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] crouching next to a fire [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] trying to light a fire [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: while [PAWN_possessive] face slowly turns blue
+    - keyword: circumstance_phrase
+      weight:
+      en: and shivering uncontrollably
+    - keyword: circumstance_phrase
+      weight:
+      en: while covered in frost
+    - keyword: circumstance_phrase
+      weight:
+      en: while exhaling clouds of fog
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] frozen [Animal] corpses surround the area."
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef]'s clothes are tattered and worn."
+    - keyword: desc_sentence
+      weight:
+      en: A cold blue moon looms in the background.
+    - keyword: desc_sentence
+      weight:
+      en: The scene takes place inside a snow-covered [TreeType] forest.
+    - keyword: desc_sentence
+      weight:
+      en: The scene appears to take place inside a freezer.
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] shivering [Animal]s surround the scene."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] dying [Animal]s lay on the ground."
+  slots:
+    tokens:
+    - Animal
+    - Apparel
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - Quantity_adjphrase
+    - TerrainFeature
+    - TreeType
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 17
+- id: BecameLover
+  package: core
+  label:
+    en: became lover
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PURSUER_nameDef] and [ACCEPTER_nameDef] becoming lovers"
+    image:
+    - keyword: image
+      weight:
+      en: "[PURSUER_nameFull] whispering sweet nothings into [ACCEPTER_nameFull]'s ear [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PURSUER_nameFull] leading [ACCEPTER_nameFull] by the hand into bed [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PURSUER_nameFull] gambolling in bed with [ACCEPTER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PURSUER_nameFull] deeply kissing [ACCEPTER_nameFull] [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: in an unrealistically large bed
+    - keyword: circumstance_phrase
+      weight:
+      en: between the sheets
+    - keyword: circumstance_phrase
+      weight:
+      en: with few clothes in sight
+    - keyword: circumstance_phrase
+      weight:
+      en: while both are drenched in sweat
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[PURSUER_nameDef] is snuggling up against [ACCEPTER_nameDef]."
+    - keyword: desc_sentence
+      weight:
+      en: "[PURSUER_nameDef] is locking eyes with [ACCEPTER_nameDef]."
+    - keyword: desc_sentence
+      weight:
+      en: "[PURSUER_nameDef] is blowing air at [ACCEPTER_nameDef]."
+    - keyword: desc_sentence
+      weight:
+      en: "[PURSUER_nameDef] is stylistically bonded with [ACCEPTER_nameDef]."
+    - keyword: desc_sentence
+      weight:
+      en: "[PURSUER_nameDef] is a near-mirror image of [ACCEPTER_nameDef]."
+    - keyword: desc_sentence
+      weight:
+      en: "[PURSUER_nameDef] is touching [ACCEPTER_nameDef] aggressively."
+  slots:
+    tokens:
+    - ACCEPTER_nameDef
+    - ACCEPTER_nameFull
+    - PURSUER_nameDef
+    - PURSUER_nameFull
+    - circumstance_group
+    roles:
+    - prefix: ACCEPTER
+      label:
+        en: ACCEPTER
+      fields:
+      - token: ACCEPTER_nameFull
+        kind: person
+        prefix: ACCEPTER
+        field: nameFull
+        label:
+          en: ACCEPTER nameFull
+        required: true
+      - token: ACCEPTER_nameDef
+        kind: person
+        prefix: ACCEPTER
+        field: nameDef
+        label:
+          en: ACCEPTER nameDef
+        required: true
+      - token: ACCEPTER_title
+        kind: person
+        prefix: ACCEPTER
+        field: title
+        label:
+          en: ACCEPTER title
+        required: false
+      - token: ACCEPTER_pronoun
+        kind: person
+        prefix: ACCEPTER
+        field: pronoun
+        label:
+          en: ACCEPTER pronoun
+        required: true
+      - token: ACCEPTER_possessive
+        kind: person
+        prefix: ACCEPTER
+        field: possessive
+        label:
+          en: ACCEPTER possessive
+        required: true
+      - token: ACCEPTER_objective
+        kind: person
+        prefix: ACCEPTER
+        field: objective
+        label:
+          en: ACCEPTER objective
+        required: false
+    - prefix: PURSUER
+      label:
+        en: PURSUER
+      fields:
+      - token: PURSUER_nameFull
+        kind: person
+        prefix: PURSUER
+        field: nameFull
+        label:
+          en: PURSUER nameFull
+        required: true
+      - token: PURSUER_nameDef
+        kind: person
+        prefix: PURSUER
+        field: nameDef
+        label:
+          en: PURSUER nameDef
+        required: true
+      - token: PURSUER_title
+        kind: person
+        prefix: PURSUER
+        field: title
+        label:
+          en: PURSUER title
+        required: false
+      - token: PURSUER_pronoun
+        kind: person
+        prefix: PURSUER
+        field: pronoun
+        label:
+          en: PURSUER pronoun
+        required: true
+      - token: PURSUER_possessive
+        kind: person
+        prefix: PURSUER
+        field: possessive
+        label:
+          en: PURSUER possessive
+        required: true
+      - token: PURSUER_objective
+        kind: person
+        prefix: PURSUER
+        field: objective
+        label:
+          en: PURSUER objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: ACCEPTER_nameFull
+      kind: person
+      prefix: ACCEPTER
+      field: nameFull
+      label:
+        en: ACCEPTER nameFull
+      required: true
+    - token: ACCEPTER_nameDef
+      kind: person
+      prefix: ACCEPTER
+      field: nameDef
+      label:
+        en: ACCEPTER nameDef
+      required: true
+    - token: ACCEPTER_title
+      kind: person
+      prefix: ACCEPTER
+      field: title
+      label:
+        en: ACCEPTER title
+      required: false
+    - token: ACCEPTER_pronoun
+      kind: person
+      prefix: ACCEPTER
+      field: pronoun
+      label:
+        en: ACCEPTER pronoun
+      required: true
+    - token: ACCEPTER_possessive
+      kind: person
+      prefix: ACCEPTER
+      field: possessive
+      label:
+        en: ACCEPTER possessive
+      required: true
+    - token: ACCEPTER_objective
+      kind: person
+      prefix: ACCEPTER
+      field: objective
+      label:
+        en: ACCEPTER objective
+      required: false
+    - token: PURSUER_nameFull
+      kind: person
+      prefix: PURSUER
+      field: nameFull
+      label:
+        en: PURSUER nameFull
+      required: true
+    - token: PURSUER_nameDef
+      kind: person
+      prefix: PURSUER
+      field: nameDef
+      label:
+        en: PURSUER nameDef
+      required: true
+    - token: PURSUER_title
+      kind: person
+      prefix: PURSUER
+      field: title
+      label:
+        en: PURSUER title
+      required: false
+    - token: PURSUER_pronoun
+      kind: person
+      prefix: PURSUER
+      field: pronoun
+      label:
+        en: PURSUER pronoun
+      required: true
+    - token: PURSUER_possessive
+      kind: person
+      prefix: PURSUER
+      field: possessive
+      label:
+        en: PURSUER possessive
+      required: true
+    - token: PURSUER_objective
+      kind: person
+      prefix: PURSUER
+      field: objective
+      label:
+        en: PURSUER objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 15
+- id: DidSurgery
+  package: core
+  label:
+    en: surgery performed
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[SURGEON_nameDef] operating on [PATIENT_nameDef]"
+    - keyword: tale_noun
+      weight:
+      en: "[SURGEON_nameDef] performing a medical operation on [PATIENT_nameDef]"
+    - keyword: tale_noun
+      weight:
+      en: "[PATIENT_nameDef]'s medical operation"
+    image:
+    - keyword: image
+      weight:
+      en: "[SURGEON_nameFull] putting [PATIENT_nameFull] to sleep with anesthetic [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[SURGEON_nameFull] elbow-deep in [PATIENT_nameFull] during surgery [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[SURGEON_nameFull] slicing into [PATIENT_nameFull] during surgery [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: as [PATIENT_pronoun] trembles with fear
+    - keyword: circumstance_phrase
+      weight:
+      en: as blood pools at [SURGEON_nameDef]'s feet
+    - keyword: circumstance_phrase
+      weight:
+      en: while surrounded by scary-looking surgical tools
+    - keyword: circumstance_phrase
+      weight:
+      en: with improvised but effective tools
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[SURGEON_nameDef] is sweating profusely."
+    - keyword: desc_sentence
+      weight:
+      en: "[SURGEON_nameDef] looks incredibly focused on the task."
+    - keyword: desc_sentence
+      weight:
+      en: "[SURGEON_nameDef] has blood smeared on [SURGEON_possessive] face."
+    - keyword: desc_sentence
+      weight:
+      en: "[PATIENT_nameDef] is shaking and writhing."
+  slots:
+    tokens:
+    - PATIENT_nameDef
+    - PATIENT_nameFull
+    - PATIENT_pronoun
+    - SURGEON_nameDef
+    - SURGEON_nameFull
+    - SURGEON_possessive
+    - circumstance_group
+    roles:
+    - prefix: PATIENT
+      label:
+        en: Patient
+      fields:
+      - token: PATIENT_nameFull
+        kind: person
+        prefix: PATIENT
+        field: nameFull
+        label:
+          en: Patient nameFull
+        required: true
+      - token: PATIENT_nameDef
+        kind: person
+        prefix: PATIENT
+        field: nameDef
+        label:
+          en: Patient nameDef
+        required: true
+      - token: PATIENT_title
+        kind: person
+        prefix: PATIENT
+        field: title
+        label:
+          en: Patient title
+        required: false
+      - token: PATIENT_pronoun
+        kind: person
+        prefix: PATIENT
+        field: pronoun
+        label:
+          en: Patient pronoun
+        required: true
+      - token: PATIENT_possessive
+        kind: person
+        prefix: PATIENT
+        field: possessive
+        label:
+          en: Patient possessive
+        required: true
+      - token: PATIENT_objective
+        kind: person
+        prefix: PATIENT
+        field: objective
+        label:
+          en: Patient objective
+        required: false
+    - prefix: SURGEON
+      label:
+        en: SURGEON
+      fields:
+      - token: SURGEON_nameFull
+        kind: person
+        prefix: SURGEON
+        field: nameFull
+        label:
+          en: SURGEON nameFull
+        required: true
+      - token: SURGEON_nameDef
+        kind: person
+        prefix: SURGEON
+        field: nameDef
+        label:
+          en: SURGEON nameDef
+        required: true
+      - token: SURGEON_title
+        kind: person
+        prefix: SURGEON
+        field: title
+        label:
+          en: SURGEON title
+        required: false
+      - token: SURGEON_pronoun
+        kind: person
+        prefix: SURGEON
+        field: pronoun
+        label:
+          en: SURGEON pronoun
+        required: true
+      - token: SURGEON_possessive
+        kind: person
+        prefix: SURGEON
+        field: possessive
+        label:
+          en: SURGEON possessive
+        required: true
+      - token: SURGEON_objective
+        kind: person
+        prefix: SURGEON
+        field: objective
+        label:
+          en: SURGEON objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PATIENT_nameFull
+      kind: person
+      prefix: PATIENT
+      field: nameFull
+      label:
+        en: Patient nameFull
+      required: true
+    - token: PATIENT_nameDef
+      kind: person
+      prefix: PATIENT
+      field: nameDef
+      label:
+        en: Patient nameDef
+      required: true
+    - token: PATIENT_title
+      kind: person
+      prefix: PATIENT
+      field: title
+      label:
+        en: Patient title
+      required: false
+    - token: PATIENT_pronoun
+      kind: person
+      prefix: PATIENT
+      field: pronoun
+      label:
+        en: Patient pronoun
+      required: true
+    - token: PATIENT_possessive
+      kind: person
+      prefix: PATIENT
+      field: possessive
+      label:
+        en: Patient possessive
+      required: true
+    - token: PATIENT_objective
+      kind: person
+      prefix: PATIENT
+      field: objective
+      label:
+        en: Patient objective
+      required: false
+    - token: SURGEON_nameFull
+      kind: person
+      prefix: SURGEON
+      field: nameFull
+      label:
+        en: SURGEON nameFull
+      required: true
+    - token: SURGEON_nameDef
+      kind: person
+      prefix: SURGEON
+      field: nameDef
+      label:
+        en: SURGEON nameDef
+      required: true
+    - token: SURGEON_title
+      kind: person
+      prefix: SURGEON
+      field: title
+      label:
+        en: SURGEON title
+      required: false
+    - token: SURGEON_pronoun
+      kind: person
+      prefix: SURGEON
+      field: pronoun
+      label:
+        en: SURGEON pronoun
+      required: true
+    - token: SURGEON_possessive
+      kind: person
+      prefix: SURGEON
+      field: possessive
+      label:
+        en: SURGEON possessive
+      required: true
+    - token: SURGEON_objective
+      kind: person
+      prefix: SURGEON
+      field: objective
+      label:
+        en: SURGEON objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 14
+- id: Stripped
+  package: core
+  label:
+    en: stripped
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[TAKER_nameDef] stripping [STRIPPED_nameDef]"
+    image:
+    - keyword: image
+      weight:
+      en: "[TAKER_nameFull] disrobing [STRIPPED_nameFull] in public [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[TAKER_nameFull] removing the clothes of [STRIPPED_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[TAKER_nameFull] holding an armful of [Apparel]s while standing next to [STRIPPED_nameFull], who is completely naked [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[TAKER_nameFull] waiting patiently as [STRIPPED_nameFull] removes [STRIPPED_possessive] clothes [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: with a sense of purpose
+    - keyword: circumstance_phrase
+      weight:
+      en: with no hint of shame
+    - keyword: circumstance_phrase
+      weight:
+      en: while others look on
+    - keyword: circumstance_phrase
+      weight:
+      en: for no apparent reason
+    - keyword: circumstance_phrase
+      weight:
+      en: while confused animals look on
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[STRIPPED_nameDef] is visibly aroused."
+    - keyword: desc_sentence
+      weight:
+      en: "[STRIPPED_nameDef] is covered in unexplained moisture."
+    - keyword: desc_sentence
+      weight:
+      en: "[STRIPPED_nameDef] is breathing heavily for no obvious reason."
+    - keyword: desc_sentence
+      weight:
+      en: "[STRIPPED_nameDef] is fondling a shrub."
+    - keyword: desc_sentence
+      weight:
+      en: "[STRIPPED_nameDef] wears only a [AdjectiveAngsty] expression."
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - Apparel
+    - STRIPPED_nameDef
+    - STRIPPED_nameFull
+    - STRIPPED_possessive
+    - TAKER_nameDef
+    - TAKER_nameFull
+    - circumstance_group
+    roles:
+    - prefix: STRIPPED
+      label:
+        en: STRIPPED
+      fields:
+      - token: STRIPPED_nameFull
+        kind: person
+        prefix: STRIPPED
+        field: nameFull
+        label:
+          en: STRIPPED nameFull
+        required: true
+      - token: STRIPPED_nameDef
+        kind: person
+        prefix: STRIPPED
+        field: nameDef
+        label:
+          en: STRIPPED nameDef
+        required: true
+      - token: STRIPPED_title
+        kind: person
+        prefix: STRIPPED
+        field: title
+        label:
+          en: STRIPPED title
+        required: false
+      - token: STRIPPED_pronoun
+        kind: person
+        prefix: STRIPPED
+        field: pronoun
+        label:
+          en: STRIPPED pronoun
+        required: true
+      - token: STRIPPED_possessive
+        kind: person
+        prefix: STRIPPED
+        field: possessive
+        label:
+          en: STRIPPED possessive
+        required: true
+      - token: STRIPPED_objective
+        kind: person
+        prefix: STRIPPED
+        field: objective
+        label:
+          en: STRIPPED objective
+        required: false
+    - prefix: TAKER
+      label:
+        en: TAKER
+      fields:
+      - token: TAKER_nameFull
+        kind: person
+        prefix: TAKER
+        field: nameFull
+        label:
+          en: TAKER nameFull
+        required: true
+      - token: TAKER_nameDef
+        kind: person
+        prefix: TAKER
+        field: nameDef
+        label:
+          en: TAKER nameDef
+        required: true
+      - token: TAKER_title
+        kind: person
+        prefix: TAKER
+        field: title
+        label:
+          en: TAKER title
+        required: false
+      - token: TAKER_pronoun
+        kind: person
+        prefix: TAKER
+        field: pronoun
+        label:
+          en: TAKER pronoun
+        required: true
+      - token: TAKER_possessive
+        kind: person
+        prefix: TAKER
+        field: possessive
+        label:
+          en: TAKER possessive
+        required: true
+      - token: TAKER_objective
+        kind: person
+        prefix: TAKER
+        field: objective
+        label:
+          en: TAKER objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: STRIPPED_nameFull
+      kind: person
+      prefix: STRIPPED
+      field: nameFull
+      label:
+        en: STRIPPED nameFull
+      required: true
+    - token: STRIPPED_nameDef
+      kind: person
+      prefix: STRIPPED
+      field: nameDef
+      label:
+        en: STRIPPED nameDef
+      required: true
+    - token: STRIPPED_title
+      kind: person
+      prefix: STRIPPED
+      field: title
+      label:
+        en: STRIPPED title
+      required: false
+    - token: STRIPPED_pronoun
+      kind: person
+      prefix: STRIPPED
+      field: pronoun
+      label:
+        en: STRIPPED pronoun
+      required: true
+    - token: STRIPPED_possessive
+      kind: person
+      prefix: STRIPPED
+      field: possessive
+      label:
+        en: STRIPPED possessive
+      required: true
+    - token: STRIPPED_objective
+      kind: person
+      prefix: STRIPPED
+      field: objective
+      label:
+        en: STRIPPED objective
+      required: false
+    - token: TAKER_nameFull
+      kind: person
+      prefix: TAKER
+      field: nameFull
+      label:
+        en: TAKER nameFull
+      required: true
+    - token: TAKER_nameDef
+      kind: person
+      prefix: TAKER
+      field: nameDef
+      label:
+        en: TAKER nameDef
+      required: true
+    - token: TAKER_title
+      kind: person
+      prefix: TAKER
+      field: title
+      label:
+        en: TAKER title
+      required: false
+    - token: TAKER_pronoun
+      kind: person
+      prefix: TAKER
+      field: pronoun
+      label:
+        en: TAKER pronoun
+      required: true
+    - token: TAKER_possessive
+      kind: person
+      prefix: TAKER
+      field: possessive
+      label:
+        en: TAKER possessive
+      required: true
+    - token: TAKER_objective
+      kind: person
+      prefix: TAKER
+      field: objective
+      label:
+        en: TAKER objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 15
+- id: SocialFight
+  package: core
+  label:
+    en: social fight
+  keywords:
+  - tale_noun
+  - image
+  - fight_name_present
+  - circumstance_phrase
+  - desc_sentence
+  - target
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[INITIATOR_nameDef] [fight_name_present] [RESPONDER_nameDef]"
+    image:
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] insulting [RESPONDER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] taunting [RESPONDER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] threatening [RESPONDER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] intimidating [RESPONDER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] attacking [RESPONDER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] assaulting [RESPONDER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] punching [RESPONDER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] kicking [RESPONDER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[INITIATOR_nameFull] cowering from [RESPONDER_nameFull] [circumstance_group]"
+    fight_name_present:
+    - keyword: fight_name_present
+      weight:
+      en: assaulting
+    - keyword: fight_name_present
+      weight:
+      en: attacking
+    - keyword: fight_name_present
+      weight:
+      en: fighting
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] insults [INITIATOR_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] taunts [INITIATOR_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] threatens [INITIATOR_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] intimidates [INITIATOR_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] attacks [INITIATOR_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] assaults [INITIATOR_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] punches [INITIATOR_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] kicks [INITIATOR_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: while [RESPONDER_nameDef] cowers from [INITIATOR_objective]
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[target] appears without remorse."
+    - keyword: desc_sentence
+      weight:
+      en: "[target] is consumed with passionate rage."
+    - keyword: desc_sentence
+      weight:
+      en: "[target] has no emotion or expression."
+    - keyword: desc_sentence
+      weight:
+      en: "[target]'s body is covered in [Gore]."
+    - keyword: desc_sentence
+      weight:
+      en: "[target] is screaming furiously."
+    - keyword: desc_sentence
+      weight:
+      en: "[target] is visibly wounded."
+    - keyword: desc_sentence
+      weight:
+      en: "[target]'s eyes are glowing [Color]."
+    target:
+    - keyword: target
+      weight:
+      en: "[INITIATOR_nameDef]"
+    - keyword: target
+      weight:
+      en: "[RESPONDER_nameDef]"
+  slots:
+    tokens:
+    - Color
+    - Gore
+    - INITIATOR_nameDef
+    - INITIATOR_nameFull
+    - INITIATOR_objective
+    - RESPONDER_nameDef
+    - RESPONDER_nameFull
+    - circumstance_group
+    - fight_name_present
+    - target
+    roles:
+    - prefix: INITIATOR
+      label:
+        en: Initiator
+      fields:
+      - token: INITIATOR_nameFull
+        kind: person
+        prefix: INITIATOR
+        field: nameFull
+        label:
+          en: Initiator nameFull
+        required: true
+      - token: INITIATOR_nameDef
+        kind: person
+        prefix: INITIATOR
+        field: nameDef
+        label:
+          en: Initiator nameDef
+        required: true
+      - token: INITIATOR_title
+        kind: person
+        prefix: INITIATOR
+        field: title
+        label:
+          en: Initiator title
+        required: false
+      - token: INITIATOR_pronoun
+        kind: person
+        prefix: INITIATOR
+        field: pronoun
+        label:
+          en: Initiator pronoun
+        required: true
+      - token: INITIATOR_possessive
+        kind: person
+        prefix: INITIATOR
+        field: possessive
+        label:
+          en: Initiator possessive
+        required: true
+      - token: INITIATOR_objective
+        kind: person
+        prefix: INITIATOR
+        field: objective
+        label:
+          en: Initiator objective
+        required: false
+    - prefix: RESPONDER
+      label:
+        en: Responder
+      fields:
+      - token: RESPONDER_nameFull
+        kind: person
+        prefix: RESPONDER
+        field: nameFull
+        label:
+          en: Responder nameFull
+        required: true
+      - token: RESPONDER_nameDef
+        kind: person
+        prefix: RESPONDER
+        field: nameDef
+        label:
+          en: Responder nameDef
+        required: true
+      - token: RESPONDER_title
+        kind: person
+        prefix: RESPONDER
+        field: title
+        label:
+          en: Responder title
+        required: false
+      - token: RESPONDER_pronoun
+        kind: person
+        prefix: RESPONDER
+        field: pronoun
+        label:
+          en: Responder pronoun
+        required: true
+      - token: RESPONDER_possessive
+        kind: person
+        prefix: RESPONDER
+        field: possessive
+        label:
+          en: Responder possessive
+        required: true
+      - token: RESPONDER_objective
+        kind: person
+        prefix: RESPONDER
+        field: objective
+        label:
+          en: Responder objective
+        required: false
+    things: []
+    metas: []
+    extras:
+    - token: fight_name_present
+      kind: text
+      prefix: fight
+      field: fight_name_present
+      label:
+        en: fight_name_present
+      required: false
+    flat:
+    - token: INITIATOR_nameFull
+      kind: person
+      prefix: INITIATOR
+      field: nameFull
+      label:
+        en: Initiator nameFull
+      required: true
+    - token: INITIATOR_nameDef
+      kind: person
+      prefix: INITIATOR
+      field: nameDef
+      label:
+        en: Initiator nameDef
+      required: true
+    - token: INITIATOR_title
+      kind: person
+      prefix: INITIATOR
+      field: title
+      label:
+        en: Initiator title
+      required: false
+    - token: INITIATOR_pronoun
+      kind: person
+      prefix: INITIATOR
+      field: pronoun
+      label:
+        en: Initiator pronoun
+      required: true
+    - token: INITIATOR_possessive
+      kind: person
+      prefix: INITIATOR
+      field: possessive
+      label:
+        en: Initiator possessive
+      required: true
+    - token: INITIATOR_objective
+      kind: person
+      prefix: INITIATOR
+      field: objective
+      label:
+        en: Initiator objective
+      required: false
+    - token: RESPONDER_nameFull
+      kind: person
+      prefix: RESPONDER
+      field: nameFull
+      label:
+        en: Responder nameFull
+      required: true
+    - token: RESPONDER_nameDef
+      kind: person
+      prefix: RESPONDER
+      field: nameDef
+      label:
+        en: Responder nameDef
+      required: true
+    - token: RESPONDER_title
+      kind: person
+      prefix: RESPONDER
+      field: title
+      label:
+        en: Responder title
+      required: false
+    - token: RESPONDER_pronoun
+      kind: person
+      prefix: RESPONDER
+      field: pronoun
+      label:
+        en: Responder pronoun
+      required: true
+    - token: RESPONDER_possessive
+      kind: person
+      prefix: RESPONDER
+      field: possessive
+      label:
+        en: Responder possessive
+      required: true
+    - token: RESPONDER_objective
+      kind: person
+      prefix: RESPONDER
+      field: objective
+      label:
+        en: Responder objective
+      required: false
+    - token: fight_name_present
+      kind: text
+      prefix: fight
+      field: fight_name_present
+      label:
+        en: fight_name_present
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 31
+- id: GainedMasterSkillWithoutPassion
+  package: core
+  label:
+    en: gained master skill
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] becoming a master at [SKILL_label] tasks"
+    image:
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] practicing [SKILL_label] skills [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] reading a tome on [SKILL_label] methods [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] receiving training in [SKILL_label] skills [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] working feverishly [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] finishing a project [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: while covered in sweat
+    - keyword: circumstance_phrase
+      weight:
+      en: with visible exhaustion
+    - keyword: circumstance_phrase
+      weight:
+      en: with a [AdjectiveAngsty] expression
+    - keyword: circumstance_phrase
+      weight:
+      en: with a bored expression
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: The scene is surrounded by [Quantity_adjphrase] failed experiments.
+    - keyword: desc_sentence
+      weight:
+      en: The scene is surrounded by [Quantity_adjphrase] books.
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_possessive] skill is visible in the work."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [PersonJob]s watch with amazement."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [Animal]s watch with amazement."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] ethereal spirits of ancient masters watch from above."
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - Animal
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - PersonJob
+    - Quantity_adjphrase
+    - SKILL_label
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things:
+    - prefix: SKILL
+      label:
+        en: SKILL
+      fields:
+      - token: SKILL_label
+        kind: thing
+        prefix: SKILL
+        field: label
+        label:
+          en: SKILL label
+        required: true
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+    - token: SKILL_label
+      kind: thing
+      prefix: SKILL
+      field: label
+      label:
+        en: SKILL label
+      required: true
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 16
+- id: Recruited
+  package: core
+  label:
+    en: person recruited
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[RECRUITER_nameDef] recruiting [JOINER_nameDef]"
+    - keyword: tale_noun
+      weight:
+      en: "[JOINER_nameDef] being recruited by [RECRUITER_nameDef]"
+    - keyword: tale_noun
+      weight:
+      en: the recruitment of [JOINER_nameDef]
+    image:
+    - keyword: image
+      weight:
+      en: "[RECRUITER_nameFull] recruiting [JOINER_nameFull] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[RECRUITER_nameFull] welcoming [JOINER_nameFull] as [JOINER_pronoun] becomes a colonist [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[RECRUITER_nameFull] speaking convincingly to [JOINER_nameFull] [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: with obvious goodwill
+    - keyword: circumstance_phrase
+      weight:
+      en: with a hearty handshake
+    - keyword: circumstance_phrase
+      weight:
+      en: with smiles all around
+    - keyword: circumstance_phrase
+      weight:
+      en: in front of the whole colony
+    - keyword: circumstance_phrase
+      weight:
+      en: in a prison cell
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[JOINER_nameDef] is nodding in understanding."
+    - keyword: desc_sentence
+      weight:
+      en: "[JOINER_nameDef] is smiling and making eye contact."
+    - keyword: desc_sentence
+      weight:
+      en: "[JOINER_nameDef] looks relieved."
+    - keyword: desc_sentence
+      weight:
+      en: "[JOINER_nameDef] looks hopeful."
+  slots:
+    tokens:
+    - JOINER_nameDef
+    - JOINER_nameFull
+    - JOINER_pronoun
+    - RECRUITER_nameDef
+    - RECRUITER_nameFull
+    - circumstance_group
+    roles:
+    - prefix: JOINER
+      label:
+        en: Joiner
+      fields:
+      - token: JOINER_nameFull
+        kind: person
+        prefix: JOINER
+        field: nameFull
+        label:
+          en: Joiner nameFull
+        required: true
+      - token: JOINER_nameDef
+        kind: person
+        prefix: JOINER
+        field: nameDef
+        label:
+          en: Joiner nameDef
+        required: true
+      - token: JOINER_title
+        kind: person
+        prefix: JOINER
+        field: title
+        label:
+          en: Joiner title
+        required: false
+      - token: JOINER_pronoun
+        kind: person
+        prefix: JOINER
+        field: pronoun
+        label:
+          en: Joiner pronoun
+        required: true
+      - token: JOINER_possessive
+        kind: person
+        prefix: JOINER
+        field: possessive
+        label:
+          en: Joiner possessive
+        required: true
+      - token: JOINER_objective
+        kind: person
+        prefix: JOINER
+        field: objective
+        label:
+          en: Joiner objective
+        required: false
+    - prefix: RECRUITER
+      label:
+        en: Recruiter
+      fields:
+      - token: RECRUITER_nameFull
+        kind: person
+        prefix: RECRUITER
+        field: nameFull
+        label:
+          en: Recruiter nameFull
+        required: true
+      - token: RECRUITER_nameDef
+        kind: person
+        prefix: RECRUITER
+        field: nameDef
+        label:
+          en: Recruiter nameDef
+        required: true
+      - token: RECRUITER_title
+        kind: person
+        prefix: RECRUITER
+        field: title
+        label:
+          en: Recruiter title
+        required: false
+      - token: RECRUITER_pronoun
+        kind: person
+        prefix: RECRUITER
+        field: pronoun
+        label:
+          en: Recruiter pronoun
+        required: true
+      - token: RECRUITER_possessive
+        kind: person
+        prefix: RECRUITER
+        field: possessive
+        label:
+          en: Recruiter possessive
+        required: true
+      - token: RECRUITER_objective
+        kind: person
+        prefix: RECRUITER
+        field: objective
+        label:
+          en: Recruiter objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: JOINER_nameFull
+      kind: person
+      prefix: JOINER
+      field: nameFull
+      label:
+        en: Joiner nameFull
+      required: true
+    - token: JOINER_nameDef
+      kind: person
+      prefix: JOINER
+      field: nameDef
+      label:
+        en: Joiner nameDef
+      required: true
+    - token: JOINER_title
+      kind: person
+      prefix: JOINER
+      field: title
+      label:
+        en: Joiner title
+      required: false
+    - token: JOINER_pronoun
+      kind: person
+      prefix: JOINER
+      field: pronoun
+      label:
+        en: Joiner pronoun
+      required: true
+    - token: JOINER_possessive
+      kind: person
+      prefix: JOINER
+      field: possessive
+      label:
+        en: Joiner possessive
+      required: true
+    - token: JOINER_objective
+      kind: person
+      prefix: JOINER
+      field: objective
+      label:
+        en: Joiner objective
+      required: false
+    - token: RECRUITER_nameFull
+      kind: person
+      prefix: RECRUITER
+      field: nameFull
+      label:
+        en: Recruiter nameFull
+      required: true
+    - token: RECRUITER_nameDef
+      kind: person
+      prefix: RECRUITER
+      field: nameDef
+      label:
+        en: Recruiter nameDef
+      required: true
+    - token: RECRUITER_title
+      kind: person
+      prefix: RECRUITER
+      field: title
+      label:
+        en: Recruiter title
+      required: false
+    - token: RECRUITER_pronoun
+      kind: person
+      prefix: RECRUITER
+      field: pronoun
+      label:
+        en: Recruiter pronoun
+      required: true
+    - token: RECRUITER_possessive
+      kind: person
+      prefix: RECRUITER
+      field: possessive
+      label:
+        en: Recruiter possessive
+      required: true
+    - token: RECRUITER_objective
+      kind: person
+      prefix: RECRUITER
+      field: objective
+      label:
+        en: Recruiter objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 15
+- id: VisitedGrave
+  package: core
+  label:
+    en: visited grave
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[VISITOR_nameDef] visiting the grave of [CORPSE_nameDef]"
+    - keyword: tale_noun
+      weight:
+      en: "[VISITOR_nameDef] visiting [CORPSE_nameDef]'s grave"
+    image:
+    - keyword: image
+      weight:
+      en: "[VISITOR_nameFull] standing next to [CORPSE_nameFull]'s grave [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[VISITOR_nameFull] sitting next to [CORPSE_nameFull]'s grave [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[VISITOR_nameFull] leaning against [CORPSE_nameFull]'s grave [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[VISITOR_nameFull] reading the text on [CORPSE_nameFull]'s grave [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[VISITOR_nameFull] looking at the art on [CORPSE_nameFull]'s grave [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: with a [AdjectiveAngsty] expression
+    - keyword: circumstance_phrase
+      weight:
+      en: and consumed in thought
+    - keyword: circumstance_phrase
+      weight:
+      en: while gazing at a faraway [TerrainFeature]
+    - keyword: circumstance_phrase
+      weight:
+      en: and talking quietly to the memorial
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: A [Color] aurora shines in the background.
+    - keyword: desc_sentence
+      weight:
+      en: In the distance, a [Community] is covered with snow.
+    - keyword: desc_sentence
+      weight:
+      en: A spectral image of [CORPSE_nameDef] looks over the scene with a [AdjectiveFriendly] expression.
+    - keyword: desc_sentence
+      weight:
+      en: A spectral image of [CORPSE_nameDef] stands next to [VISITOR_nameDef], wearing a [AdjectiveFriendly] expression.
+    - keyword: desc_sentence
+      weight:
+      en: A spectral image of [CORPSE_nameDef] looks over the scene with a [AdjectiveAngsty] expression.
+    - keyword: desc_sentence
+      weight:
+      en: A spectral image of [CORPSE_nameDef] stands next to [VISITOR_nameDef], wearing a [AdjectiveAngsty] expression.
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [Animal]s rest near the scene."
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - AdjectiveFriendly
+    - Animal
+    - CORPSE_nameDef
+    - CORPSE_nameFull
+    - Color
+    - Community
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - Quantity_adjphrase
+    - TerrainFeature
+    - VISITOR_nameDef
+    - VISITOR_nameFull
+    - circumstance_group
+    roles:
+    - prefix: CORPSE
+      label:
+        en: Corpse
+      fields:
+      - token: CORPSE_nameFull
+        kind: person
+        prefix: CORPSE
+        field: nameFull
+        label:
+          en: Corpse nameFull
+        required: true
+      - token: CORPSE_nameDef
+        kind: person
+        prefix: CORPSE
+        field: nameDef
+        label:
+          en: Corpse nameDef
+        required: true
+      - token: CORPSE_title
+        kind: person
+        prefix: CORPSE
+        field: title
+        label:
+          en: Corpse title
+        required: false
+      - token: CORPSE_pronoun
+        kind: person
+        prefix: CORPSE
+        field: pronoun
+        label:
+          en: Corpse pronoun
+        required: true
+      - token: CORPSE_possessive
+        kind: person
+        prefix: CORPSE
+        field: possessive
+        label:
+          en: Corpse possessive
+        required: true
+      - token: CORPSE_objective
+        kind: person
+        prefix: CORPSE
+        field: objective
+        label:
+          en: Corpse objective
+        required: false
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    - prefix: VISITOR
+      label:
+        en: VISITOR
+      fields:
+      - token: VISITOR_nameFull
+        kind: person
+        prefix: VISITOR
+        field: nameFull
+        label:
+          en: VISITOR nameFull
+        required: true
+      - token: VISITOR_nameDef
+        kind: person
+        prefix: VISITOR
+        field: nameDef
+        label:
+          en: VISITOR nameDef
+        required: true
+      - token: VISITOR_title
+        kind: person
+        prefix: VISITOR
+        field: title
+        label:
+          en: VISITOR title
+        required: false
+      - token: VISITOR_pronoun
+        kind: person
+        prefix: VISITOR
+        field: pronoun
+        label:
+          en: VISITOR pronoun
+        required: true
+      - token: VISITOR_possessive
+        kind: person
+        prefix: VISITOR
+        field: possessive
+        label:
+          en: VISITOR possessive
+        required: true
+      - token: VISITOR_objective
+        kind: person
+        prefix: VISITOR
+        field: objective
+        label:
+          en: VISITOR objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: CORPSE_nameFull
+      kind: person
+      prefix: CORPSE
+      field: nameFull
+      label:
+        en: Corpse nameFull
+      required: true
+    - token: CORPSE_nameDef
+      kind: person
+      prefix: CORPSE
+      field: nameDef
+      label:
+        en: Corpse nameDef
+      required: true
+    - token: CORPSE_title
+      kind: person
+      prefix: CORPSE
+      field: title
+      label:
+        en: Corpse title
+      required: false
+    - token: CORPSE_pronoun
+      kind: person
+      prefix: CORPSE
+      field: pronoun
+      label:
+        en: Corpse pronoun
+      required: true
+    - token: CORPSE_possessive
+      kind: person
+      prefix: CORPSE
+      field: possessive
+      label:
+        en: Corpse possessive
+      required: true
+    - token: CORPSE_objective
+      kind: person
+      prefix: CORPSE
+      field: objective
+      label:
+        en: Corpse objective
+      required: false
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+    - token: VISITOR_nameFull
+      kind: person
+      prefix: VISITOR
+      field: nameFull
+      label:
+        en: VISITOR nameFull
+      required: true
+    - token: VISITOR_nameDef
+      kind: person
+      prefix: VISITOR
+      field: nameDef
+      label:
+        en: VISITOR nameDef
+      required: true
+    - token: VISITOR_title
+      kind: person
+      prefix: VISITOR
+      field: title
+      label:
+        en: VISITOR title
+      required: false
+    - token: VISITOR_pronoun
+      kind: person
+      prefix: VISITOR
+      field: pronoun
+      label:
+        en: VISITOR pronoun
+      required: true
+    - token: VISITOR_possessive
+      kind: person
+      prefix: VISITOR
+      field: possessive
+      label:
+        en: VISITOR possessive
+      required: true
+    - token: VISITOR_objective
+      kind: person
+      prefix: VISITOR
+      field: objective
+      label:
+        en: VISITOR objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 18
+- id: KilledMajorThreat
+  package: core
+  label:
+    en: killed major threat
+  keywords:
+  - tale_noun
+  - image
+  - wound_name_past
+  - wound_name_present
+  - with_weapon_optional
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[KILLER_nameDef] [wound_name_present] [VICTIM_nameDef]"
+    - keyword: tale_noun
+      weight:
+      en: "[KILLER_nameDef] [wound_name_present] [VICTIM_nameDef] with a [WEAPON_label]"
+    - keyword: tale_noun
+      weight:
+      en: the [wound_name_present] of [VICTIM_nameDef] by [KILLER_nameDef]
+    - keyword: tale_noun
+      weight:
+      en: the [wound_name_present] of [VICTIM_nameDef] by [KILLER_nameDef] with a [WEAPON_label]
+    image:
+    - keyword: image
+      weight:
+      en: "[VICTIM_nameFull] being [wound_name_past] by [KILLER_nameFull] [with_weapon_optional]"
+    - keyword: image
+      weight:
+      en: "[KILLER_nameFull] [wound_name_present] [VICTIM_nameFull] [with_weapon_optional]"
+    - keyword: image
+      weight:
+      en: "[KILLER_nameFull] brutally [wound_name_present] [VICTIM_nameFull] [with_weapon_optional]"
+    - keyword: image
+      weight:
+      en: "[VICTIM_nameFull] being [wound_name_past] [with_weapon_optional]"
+    wound_name_past:
+    - keyword: wound_name_past
+      weight:
+      en: slain
+    - keyword: wound_name_past
+      weight:
+      en: defeated
+    - keyword: wound_name_past
+      weight:
+      en: overcome
+    wound_name_present:
+    - keyword: wound_name_present
+      weight:
+      en: slaying
+    - keyword: wound_name_present
+      weight:
+      en: defeating
+    - keyword: wound_name_present
+      weight:
+      en: overcoming
+    with_weapon_optional:
+    - keyword: with_weapon_optional
+      weight:
+      en: with a [WEAPON_label] [circumstance_group]
+    - keyword: with_weapon_optional
+      weight:
+      en: "[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: with cold efficiency
+    - keyword: circumstance_phrase
+      weight:
+      en: with quick, efficient movements
+    - keyword: circumstance_phrase
+      weight:
+      en: without emotion or expression
+    - keyword: circumstance_phrase
+      weight:
+      en: with great heroism
+    - keyword: circumstance_phrase
+      weight:
+      en: with incredible strength
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [Animal]s look on."
+    - keyword: desc_sentence
+      weight:
+      en: A [PersonJob] watches silently [side_position].
+    - keyword: desc_sentence
+      weight:
+      en: "[VICTIM_nameDef] looks [AdjectiveAngsty]."
+    - keyword: desc_sentence
+      weight:
+      en: "[VICTIM_nameDef]'s eyes are closed."
+    - keyword: desc_sentence
+      weight:
+      en: "[VICTIM_nameDef] is covered in [Gore]."
+    - keyword: desc_sentence
+      weight:
+      en: "[VICTIM_nameDef] and [KILLER_nameDef] are both covered in [Gore]."
+    - keyword: desc_sentence
+      weight:
+      en: "[VICTIM_nameDef]'s corpse towers over [KILLER_nameDef]."
+    - keyword: desc_sentence
+      weight:
+      en: "[VICTIM_nameDef]'s massive corpse covers a [TerrainFeature]."
+    - keyword: desc_sentence
+      weight:
+      en: "[VICTIM_nameDef]'s eyes glow [Color]."
+    - keyword: desc_sentence
+      weight:
+      en: "[KILLER_nameDef] is covered in [Gore]."
+    - keyword: desc_sentence
+      weight:
+      en: "[KILLER_nameDef] is baring [KILLER_possessive] teeth."
+    - keyword: desc_sentence
+      weight:
+      en: "[KILLER_nameDef] seems satisfied."
+    - keyword: desc_sentence
+      weight:
+      en: "[KILLER_nameDef] looks triumphant."
+    - keyword: desc_sentence
+      weight:
+      en: "[KILLER_nameDef] looks [AdjectiveBadass]."
+    - keyword: desc_sentence
+      weight:
+      en: "[KILLER_nameDef] is glowing with a heroic aura."
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - AdjectiveBadass
+    - Animal
+    - Color
+    - Gore
+    - KILLER_nameDef
+    - KILLER_nameFull
+    - KILLER_possessive
+    - PersonJob
+    - Quantity_adjphrase
+    - TerrainFeature
+    - VICTIM_nameDef
+    - VICTIM_nameFull
+    - WEAPON_label
+    - circumstance_group
+    - side_position
+    - with_weapon_optional
+    - wound_name_past
+    - wound_name_present
+    roles:
+    - prefix: KILLER
+      label:
+        en: Killer
+      fields:
+      - token: KILLER_nameFull
+        kind: person
+        prefix: KILLER
+        field: nameFull
+        label:
+          en: Killer nameFull
+        required: true
+      - token: KILLER_nameDef
+        kind: person
+        prefix: KILLER
+        field: nameDef
+        label:
+          en: Killer nameDef
+        required: true
+      - token: KILLER_title
+        kind: person
+        prefix: KILLER
+        field: title
+        label:
+          en: Killer title
+        required: false
+      - token: KILLER_pronoun
+        kind: person
+        prefix: KILLER
+        field: pronoun
+        label:
+          en: Killer pronoun
+        required: true
+      - token: KILLER_possessive
+        kind: person
+        prefix: KILLER
+        field: possessive
+        label:
+          en: Killer possessive
+        required: true
+      - token: KILLER_objective
+        kind: person
+        prefix: KILLER
+        field: objective
+        label:
+          en: Killer objective
+        required: false
+    - prefix: VICTIM
+      label:
+        en: Victim
+      fields:
+      - token: VICTIM_nameFull
+        kind: person
+        prefix: VICTIM
+        field: nameFull
+        label:
+          en: Victim nameFull
+        required: true
+      - token: VICTIM_nameDef
+        kind: person
+        prefix: VICTIM
+        field: nameDef
+        label:
+          en: Victim nameDef
+        required: true
+      - token: VICTIM_title
+        kind: person
+        prefix: VICTIM
+        field: title
+        label:
+          en: Victim title
+        required: false
+      - token: VICTIM_pronoun
+        kind: person
+        prefix: VICTIM
+        field: pronoun
+        label:
+          en: Victim pronoun
+        required: true
+      - token: VICTIM_possessive
+        kind: person
+        prefix: VICTIM
+        field: possessive
+        label:
+          en: Victim possessive
+        required: true
+      - token: VICTIM_objective
+        kind: person
+        prefix: VICTIM
+        field: objective
+        label:
+          en: Victim objective
+        required: false
+    things:
+    - prefix: WEAPON
+      label:
+        en: Weapon
+      fields:
+      - token: WEAPON_label
+        kind: thing
+        prefix: WEAPON
+        field: label
+        label:
+          en: Weapon label
+        required: true
+    metas: []
+    extras:
+    - token: with_weapon_optional
+      kind: text
+      prefix: with
+      field: with_weapon_optional
+      label:
+        en: with_weapon_optional
+      required: false
+    - token: wound_name_past
+      kind: text
+      prefix: wound
+      field: wound_name_past
+      label:
+        en: wound_name_past
+      required: false
+    - token: wound_name_present
+      kind: text
+      prefix: wound
+      field: wound_name_present
+      label:
+        en: wound_name_present
+      required: false
+    flat:
+    - token: KILLER_nameFull
+      kind: person
+      prefix: KILLER
+      field: nameFull
+      label:
+        en: Killer nameFull
+      required: true
+    - token: KILLER_nameDef
+      kind: person
+      prefix: KILLER
+      field: nameDef
+      label:
+        en: Killer nameDef
+      required: true
+    - token: KILLER_title
+      kind: person
+      prefix: KILLER
+      field: title
+      label:
+        en: Killer title
+      required: false
+    - token: KILLER_pronoun
+      kind: person
+      prefix: KILLER
+      field: pronoun
+      label:
+        en: Killer pronoun
+      required: true
+    - token: KILLER_possessive
+      kind: person
+      prefix: KILLER
+      field: possessive
+      label:
+        en: Killer possessive
+      required: true
+    - token: KILLER_objective
+      kind: person
+      prefix: KILLER
+      field: objective
+      label:
+        en: Killer objective
+      required: false
+    - token: VICTIM_nameFull
+      kind: person
+      prefix: VICTIM
+      field: nameFull
+      label:
+        en: Victim nameFull
+      required: true
+    - token: VICTIM_nameDef
+      kind: person
+      prefix: VICTIM
+      field: nameDef
+      label:
+        en: Victim nameDef
+      required: true
+    - token: VICTIM_title
+      kind: person
+      prefix: VICTIM
+      field: title
+      label:
+        en: Victim title
+      required: false
+    - token: VICTIM_pronoun
+      kind: person
+      prefix: VICTIM
+      field: pronoun
+      label:
+        en: Victim pronoun
+      required: true
+    - token: VICTIM_possessive
+      kind: person
+      prefix: VICTIM
+      field: possessive
+      label:
+        en: Victim possessive
+      required: true
+    - token: VICTIM_objective
+      kind: person
+      prefix: VICTIM
+      field: objective
+      label:
+        en: Victim objective
+      required: false
+    - token: WEAPON_label
+      kind: thing
+      prefix: WEAPON
+      field: label
+      label:
+        en: Weapon label
+      required: true
+    - token: with_weapon_optional
+      kind: text
+      prefix: with
+      field: with_weapon_optional
+      label:
+        en: with_weapon_optional
+      required: false
+    - token: wound_name_past
+      kind: text
+      prefix: wound
+      field: wound_name_past
+      label:
+        en: wound_name_past
+      required: false
+    - token: wound_name_present
+      kind: text
+      prefix: wound
+      field: wound_name_present
+      label:
+        en: wound_name_present
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 36

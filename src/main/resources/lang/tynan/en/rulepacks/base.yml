@@ -1,0 +1,917 @@
+---
+rulepacks:
+  ArtDescriptionRoot_HasTale:
+    id: ArtDescriptionRoot_HasTale
+    package: core
+    category: root
+    keywords:
+    - r_art_description
+    - circumstance_group
+    - desc_sentence_group
+    - context_sentence
+    rulesByKeyword:
+      r_art_description:
+      - keyword: r_art_description
+        weight:
+        en: "[physical_description_root] [context_sentence]"
+      circumstance_group:
+      - keyword: circumstance_group
+        weight:
+        en: "[circumstance_phrase]"
+      desc_sentence_group:
+      - keyword: desc_sentence_group
+        weight:
+        en: "[desc_sentence] [style_group]"
+      context_sentence:
+      - keyword: context_sentence
+        weight:
+        en: This [depiction] refers to [tale_noun] on [DATE].
+      - keyword: context_sentence
+        weight:
+        en: This [depiction] relates to [tale_noun] on [DATE].
+      - keyword: context_sentence
+        weight:
+        en: This [depiction] tells the story of [tale_noun] on [DATE].
+    ruleCount: 6
+  ArtDescriptionRoot_Taleless:
+    id: ArtDescriptionRoot_Taleless
+    package: core
+    category: root
+    keywords:
+    - r_art_description
+    - desc_sentence_group
+    rulesByKeyword:
+      r_art_description:
+      - keyword: r_art_description
+        weight:
+        en: "[physical_description_root]"
+      desc_sentence_group:
+      - keyword: desc_sentence_group
+        weight:
+        en: "[style_group]"
+    ruleCount: 2
+  ArtDescriptionUtility_Global:
+    id: ArtDescriptionUtility_Global
+    package: core
+    category: style
+    keywords:
+    - style_group
+    - artconjunction
+    - artextra_clause
+    - subimageany
+    - subimagesingle
+    - subimageplural
+    - pawn_adj
+    - emotional_expression
+    - idles
+    - side_position
+    - style_clause
+    - symbolizes
+    - depicts
+    - depiction
+    - composition
+    - artstyle_adj
+    rulesByKeyword:
+      style_group:
+      - keyword: style_group
+        weight:
+        en: "[artextra_clause]. [style_clause]."
+      - keyword: style_group
+        weight:
+        en: "[style_clause]. [artconjunction] [artextra_clause]."
+      - keyword: style_group
+        weight:
+        en: "[style_clause]."
+      - keyword: style_group
+        weight:
+        en: "[artextra_clause]."
+      - keyword: style_group
+        weight:
+        en: ''
+      artconjunction:
+      - keyword: artconjunction
+        weight: 6.0
+        en: ''
+      - keyword: artconjunction
+        weight:
+        en: as an interesting contrast,
+      - keyword: artconjunction
+        weight:
+        en: rounding out the work,
+      - keyword: artconjunction
+        weight:
+        en: in addition to that,
+      - keyword: artconjunction
+        weight:
+        en: strikingly,
+      - keyword: artconjunction
+        weight:
+        en: provocatively,
+      - keyword: artconjunction
+        weight:
+        en: unusually for this kind of work,
+      - keyword: artconjunction
+        weight:
+        en: though few would expect it,
+      - keyword: artconjunction
+        weight:
+        en: besides that,
+      artextra_clause:
+      - keyword: artextra_clause
+        weight:
+        en: the image is bordered by [subimageplural]
+      - keyword: artextra_clause
+        weight:
+        en: at the edge of the image are [subimageplural]
+      - keyword: artextra_clause
+        weight:
+        en: there is [subimagesingle] [side_position]
+      - keyword: artextra_clause
+        weight:
+        en: the subjects are in front of [subimageany]
+      - keyword: artextra_clause
+        weight:
+        en: the lower part of the image is dominated by [subimageany]
+      - keyword: artextra_clause
+        weight:
+        en: the scene takes place in the middle of a [Community]
+      - keyword: artextra_clause
+        weight:
+        en: the scene takes place on the outskirts of a [Community]
+      - keyword: artextra_clause
+        weight:
+        en: the scene takes place inside a [Community] built near a [TerrainFeature]
+      - keyword: artextra_clause
+        weight:
+        en: a [Character] [idles] [side_position]
+      - keyword: artextra_clause
+        weight:
+        en: a [pawn_adj] [Character] [idles] [side_position]
+      - keyword: artextra_clause
+        weight:
+        en: "[Quantity_adjphrase] [Character]s appear [side_position]"
+      - keyword: artextra_clause
+        weight:
+        en: "[Quantity_adjphrase] [pawn_adj] [Character]s appear [side_position]"
+      - keyword: artextra_clause
+        weight:
+        en: a [Animal] [idles] [side_position]
+      - keyword: artextra_clause
+        weight:
+        en: if you squint your eyes, the [composition] composition of the image reveals the outline of [subimageany]
+      - keyword: artextra_clause
+        weight:
+        en: the [emotional_expression] head of a [pawn_adj] [PersonJob] watches over all
+      - keyword: artextra_clause
+        weight:
+        en: a [pawn_adj] [PersonJob] watches over all while [emotional_expression]
+      - keyword: artextra_clause
+        weight:
+        en: the head of a [pawn_adj] [PersonJob] watches over all
+      - keyword: artextra_clause
+        weight:
+        en: the whole image is depicted by the careful arrangement of [subimageplural]
+      - keyword: artextra_clause
+        weight:
+        en: "[subimagesingle] [side_position] [symbolizes] [ConceptAny]"
+      subimageany:
+      - keyword: subimageany
+        weight:
+        en: "[subimagesingle]"
+      - keyword: subimageany
+        weight:
+        en: "[subimageplural]"
+      subimagesingle:
+      - keyword: subimagesingle
+        weight: 4.0
+        en: a [Character]
+      - keyword: subimagesingle
+        weight:
+        en: a [TerrainFeature]
+      - keyword: subimagesingle
+        weight:
+        en: a [Community]
+      - keyword: subimagesingle
+        weight:
+        en: a [TreeType] tree
+      - keyword: subimagesingle
+        weight:
+        en: a [Vegetable]
+      - keyword: subimagesingle
+        weight:
+        en: a [AnimalGroup] of [Animal]s
+      subimageplural:
+      - keyword: subimageplural
+        weight: 3.0
+        en: "[Quantity_adjphrase] [Character]s"
+      - keyword: subimageplural
+        weight:
+        en: "[Quantity_adjphrase] [Vegetable]s"
+      - keyword: subimageplural
+        weight:
+        en: "[Quantity_adjphrase] [Shape]s"
+      pawn_adj:
+      - keyword: pawn_adj
+        weight:
+        en: dead
+      - keyword: pawn_adj
+        weight:
+        en: dying
+      - keyword: pawn_adj
+        weight:
+        en: injured
+      - keyword: pawn_adj
+        weight:
+        en: sleeping
+      - keyword: pawn_adj
+        weight:
+        en: standing
+      - keyword: pawn_adj
+        weight:
+        en: sitting
+      - keyword: pawn_adj
+        weight:
+        en: crazy
+      - keyword: pawn_adj
+        weight:
+        en: young
+      - keyword: pawn_adj
+        weight:
+        en: old
+      - keyword: pawn_adj
+        weight:
+        en: "[Gore]-covered"
+      - keyword: pawn_adj
+        weight:
+        en: filthy
+      - keyword: pawn_adj
+        weight:
+        en: "[Apparel]-wearing"
+      - keyword: pawn_adj
+        weight:
+        en: "[Weapon]-wielding"
+      - keyword: pawn_adj
+        weight:
+        en: "[Vegetable]-eating"
+      emotional_expression:
+      - keyword: emotional_expression
+        weight:
+        en: smiling
+      - keyword: emotional_expression
+        weight:
+        en: frowning
+      - keyword: emotional_expression
+        weight:
+        en: scowling
+      - keyword: emotional_expression
+        weight:
+        en: laughing
+      - keyword: emotional_expression
+        weight:
+        en: staring
+      - keyword: emotional_expression
+        weight:
+        en: crying
+      - keyword: emotional_expression
+        weight:
+        en: screaming
+      - keyword: emotional_expression
+        weight:
+        en: overjoyed
+      idles:
+      - keyword: idles
+        weight:
+        en: sits
+      - keyword: idles
+        weight:
+        en: stands
+      - keyword: idles
+        weight:
+        en: waits
+      - keyword: idles
+        weight:
+        en: smiles
+      - keyword: idles
+        weight:
+        en: lies
+      - keyword: idles
+        weight:
+        en: poses
+      - keyword: idles
+        weight:
+        en: appears
+      - keyword: idles
+        weight:
+        en: is shown
+      - keyword: idles
+        weight:
+        en: fades in
+      - keyword: idles
+        weight:
+        en: floats
+      side_position:
+      - keyword: side_position
+        weight:
+        en: off to one side
+      - keyword: side_position
+        weight:
+        en: in the background
+      - keyword: side_position
+        weight:
+        en: in the distance
+      - keyword: side_position
+        weight:
+        en: in the lower part of the image
+      - keyword: side_position
+        weight:
+        en: in the upper part of the image
+      - keyword: side_position
+        weight:
+        en: to the left of the main scene
+      - keyword: side_position
+        weight:
+        en: to the right of the main scene
+      - keyword: side_position
+        weight:
+        en: near the edge of the image
+      - keyword: side_position
+        weight:
+        en: near the main subject
+      - keyword: side_position
+        weight:
+        en: far from the main subject
+      - keyword: side_position
+        weight:
+        en: beneath the main subject
+      - keyword: side_position
+        weight:
+        en: behind the focal point
+      style_clause:
+      - keyword: style_clause
+        weight: 4.0
+        en: the work [symbolizes] [ConceptAny]
+      - keyword: style_clause
+        weight:
+        en: the work is infused with the idea of [ConceptAny] and is done in a [artstyle_adj] style
+      - keyword: style_clause
+        weight:
+        en: the work is executed in a [artstyle_adj] style
+      - keyword: style_clause
+        weight:
+        en: the [artstyle_adj] style of the central scene clashes with the [artstyle_adj] depiction of the background
+      - keyword: style_clause
+        weight:
+        en: the work has a [artstyle_adj] feeling and a [composition] structure
+      - keyword: style_clause
+        weight:
+        en: the overall composition is [composition]
+      - keyword: style_clause
+        weight:
+        en: the style is [artstyle_adj] with [artstyle_adj] elements
+      - keyword: style_clause
+        weight:
+        en: the image somehow expresses both [ConceptAny] and [ConceptAny]
+      - keyword: style_clause
+        weight:
+        en: the image contrasts [ConceptAny] with [ConceptAny]
+      - keyword: style_clause
+        weight:
+        en: the [composition] structure of the image almost conflicts with its [artstyle_adj] style
+      - keyword: style_clause
+        weight:
+        en: the work is shaded in hues of [Color] and [Color]
+      - keyword: style_clause
+        weight:
+        en: almost every shape in the image seems to be [composition]
+      symbolizes:
+      - keyword: symbolizes
+        weight:
+        en: symbolizes
+      - keyword: symbolizes
+        weight:
+        en: seems to symbolize
+      - keyword: symbolizes
+        weight:
+        en: represents
+      - keyword: symbolizes
+        weight:
+        en: seems to represent
+      - keyword: symbolizes
+        weight:
+        en: seems to express
+      - keyword: symbolizes
+        weight:
+        en: reminds the viewer of
+      - keyword: symbolizes
+        weight:
+        en: conveys the emotions of
+      - keyword: symbolizes
+        weight:
+        en: makes the viewer think of
+      - keyword: symbolizes
+        weight:
+        en: represents the artist's
+      - keyword: symbolizes
+        weight:
+        en: suggests the concept of
+      depicts:
+      - keyword: depicts
+        weight:
+        en: depicts
+      - keyword: depicts
+        weight:
+        en: shows
+      - keyword: depicts
+        weight:
+        en: portrays
+      - keyword: depicts
+        weight:
+        en: resembles
+      - keyword: depicts
+        weight:
+        en: illustrates
+      - keyword: depicts
+        weight:
+        en: represents
+      - keyword: depicts
+        weight:
+        en: is shaped like
+      depiction:
+      - keyword: depiction
+        weight:
+        en: depiction
+      - keyword: depiction
+        weight:
+        en: image
+      - keyword: depiction
+        weight:
+        en: portrayal
+      - keyword: depiction
+        weight:
+        en: representation
+      - keyword: depiction
+        weight:
+        en: illustration
+      - keyword: depiction
+        weight:
+        en: artwork
+      composition:
+      - keyword: composition
+        weight:
+        en: triangular
+      - keyword: composition
+        weight:
+        en: rectangular
+      - keyword: composition
+        weight:
+        en: square
+      - keyword: composition
+        weight:
+        en: unbalanced
+      - keyword: composition
+        weight:
+        en: well-balanced
+      - keyword: composition
+        weight:
+        en: dynamic
+      - keyword: composition
+        weight:
+        en: static
+      - keyword: composition
+        weight:
+        en: vertical
+      - keyword: composition
+        weight:
+        en: horizontal
+      - keyword: composition
+        weight:
+        en: focused
+      artstyle_adj:
+      - keyword: artstyle_adj
+        weight:
+        en: unoriginal
+        id: unoriginal
+      - keyword: artstyle_adj
+        weight:
+        en: simple
+        id: simple
+      - keyword: artstyle_adj
+        weight:
+        en: complex and realistic
+        id: complex and realistic
+      - keyword: artstyle_adj
+        weight:
+        en: surrealistic
+        id: surrealistic
+      - keyword: artstyle_adj
+        weight:
+        en: classical
+        id: classical
+      - keyword: artstyle_adj
+        weight:
+        en: modern
+        id: modern
+      - keyword: artstyle_adj
+        weight:
+        en: symbolic
+        id: symbolic
+      - keyword: artstyle_adj
+        weight:
+        en: amateurish yet attractive
+        id: amateurish yet attractive
+      - keyword: artstyle_adj
+        weight:
+        en: detail-oriented
+        id: detail-oriented
+      - keyword: artstyle_adj
+        weight:
+        en: blocky
+        id: blocky
+      - keyword: artstyle_adj
+        weight:
+        en: cubist
+        id: cubist
+      - keyword: artstyle_adj
+        weight:
+        en: impressionistic
+        id: impressionistic
+      - keyword: artstyle_adj
+        weight:
+        en: expressionistic
+        id: expressionistic
+      - keyword: artstyle_adj
+        weight:
+        en: photographic
+        id: photographic
+      - keyword: artstyle_adj
+        weight:
+        en: baroque
+        id: baroque
+      - keyword: artstyle_adj
+        weight:
+        en: dadaist
+        id: dadaist
+      - keyword: artstyle_adj
+        weight:
+        en: glitch-art
+        id: glitch-art
+      - keyword: artstyle_adj
+        weight:
+        en: pixelated
+        id: pixelated
+      - keyword: artstyle_adj
+        weight:
+        en: fauvist
+        id: fauvist
+      - keyword: artstyle_adj
+        weight:
+        en: folksy
+        id: folksy
+      - keyword: artstyle_adj
+        weight:
+        en: figurative
+        id: figurative
+      - keyword: artstyle_adj
+        weight:
+        en: sinuous
+        id: sinuous
+      - keyword: artstyle_adj
+        weight:
+        en: geometric
+        id: geometric
+      - keyword: artstyle_adj
+        weight:
+        en: abstract
+        id: abstract
+      - keyword: artstyle_adj
+        weight:
+        en: hyper-realistic
+        id: hyper-realistic
+      - keyword: artstyle_adj
+        weight:
+        en: pop art
+        id: pop art
+      - keyword: artstyle_adj
+        weight:
+        en: minimalistic
+        id: minimalistic
+      - keyword: artstyle_adj
+        weight:
+        en: neoclassical
+        id: neoclassical
+      - keyword: artstyle_adj
+        weight:
+        en: cel-shaded
+        id: cel-shaded
+      - keyword: artstyle_adj
+        weight:
+        en: post-impressionistic
+        id: post-impressionistic
+      - keyword: artstyle_adj
+        weight:
+        en: purist
+        id: purist
+      - keyword: artstyle_adj
+        weight:
+        en: rococo
+        id: rococo
+      - keyword: artstyle_adj
+        weight:
+        en: romanesque
+        id: romanesque
+      - keyword: artstyle_adj
+        weight:
+        en: romantic
+        id: romantic
+      - keyword: artstyle_adj
+        weight:
+        en: graffiti-like
+        id: graffiti-like
+      - keyword: artstyle_adj
+        weight:
+        en: erotic
+        id: erotic
+      - keyword: artstyle_adj
+        weight:
+        en: sensual
+        id: sensual
+      - keyword: artstyle_adj
+        weight:
+        en: heartfelt
+        id: heartfelt
+    ruleCount: 171
+  TalelessImages:
+    id: TalelessImages
+    package: core
+    category: taleless
+    keywords:
+    - image
+    - desc_pawn
+    rulesByKeyword:
+      image:
+      - keyword: image
+        weight:
+        en: a solitary [Character] [desc_pawn]
+      - keyword: image
+        weight:
+        en: a solitary [Character] [desc_pawn] near a [TerrainFeature]
+      - keyword: image
+        weight:
+        en: a solitary [Character] [desc_pawn] near a [Community]
+      - keyword: image
+        weight:
+        en: a [Character] [desc_pawn] surrounded by [Character]s
+      - keyword: image
+        weight:
+        en: "[Character]s playing [Game]"
+      - keyword: image
+        weight:
+        en: a [Character] [desc_pawn] playing [Game] with [Quantity_adjphrase] [Character]s
+      - keyword: image
+        weight:
+        en: a [Character] [desc_pawn] holding a [Weapon]
+      - keyword: image
+        weight:
+        en: a [Character] [desc_pawn] eating a [Vegetable]
+      - keyword: image
+        weight:
+        en: "[Quantity_adjphrase] [PersonJob]s and [PersonJob]s eating [Vegetable]s together"
+      - keyword: image
+        weight:
+        en: the minor celebrity [NamePerson] [desc_pawn]
+      - keyword: image
+        weight:
+        en: a [Character] wearing a [Apparel] [desc_pawn]
+      - keyword: image
+        weight:
+        en: a [Community]
+      - keyword: image
+        weight:
+        en: a [TerrainFeature]
+      - keyword: image
+        weight:
+        en: a [Weapon]
+      - keyword: image
+        weight:
+        en: a [TreeType] tree
+      - keyword: image
+        weight:
+        en: a [NaturalObject]
+      - keyword: image
+        weight:
+        en: "[Quantity_adjphrase] [Weapon]s"
+      - keyword: image
+        weight:
+        en: "[Quantity_adjphrase] [Vegetable]s"
+      - keyword: image
+        weight:
+        en: an empty [Apparel]
+      - keyword: image
+        weight:
+        en: a [Shape]
+      - keyword: image
+        weight:
+        en: a [Shape] surrounded by [Shape]s
+      - keyword: image
+        weight:
+        en: an abstracted rendering of [ConceptAny]
+      - keyword: image
+        weight:
+        en: a [AdjectiveAny] abstract shape
+      desc_pawn:
+      - keyword: desc_pawn
+        weight: 12.0
+        en: ''
+      - keyword: desc_pawn
+        weight:
+        en: flying through the air
+      - keyword: desc_pawn
+        weight:
+        en: suspended in the air
+      - keyword: desc_pawn
+        weight:
+        en: moving to the left
+      - keyword: desc_pawn
+        weight:
+        en: moving to the right
+      - keyword: desc_pawn
+        weight:
+        en: sitting on a table
+      - keyword: desc_pawn
+        weight:
+        en: seen through a looking glass
+      - keyword: desc_pawn
+        weight:
+        en: rendered in silhouette
+      - keyword: desc_pawn
+        weight:
+        en: riding on a [Animal] wearing a [Apparel]
+      - keyword: desc_pawn
+        weight:
+        en: looking [AdjectiveAny]
+      - keyword: desc_pawn
+        weight:
+        en: covered in [Gore]
+    ruleCount: 34
+  GlobalUtility:
+    id: GlobalUtility
+    package: core
+    category: global_utility
+    keywords:
+    - Trans
+    - Character
+    - Quantity_adjphrase
+    - Shape
+    - AdjectiveAny
+    - ConceptAny
+    - PersonalCharacteristic
+    rulesByKeyword:
+      Trans:
+      - keyword: Trans
+        weight:
+        en: of
+      - keyword: Trans
+        weight:
+        en: for
+      - keyword: Trans
+        weight:
+        en: by
+      - keyword: Trans
+        weight:
+        en: with
+      Character:
+      - keyword: Character
+        weight: 6.0
+        en: "[PersonJob]"
+      - keyword: Character
+        weight: 4.0
+        en: "[Animal]"
+      - keyword: Character
+        weight: 3.0
+        en: "[Enemy]"
+      - keyword: Character
+        weight:
+        en: "[Mechanoid]"
+      Quantity_adjphrase:
+      - keyword: Quantity_adjphrase
+        weight:
+        en: two
+      - keyword: Quantity_adjphrase
+        weight:
+        en: three
+      - keyword: Quantity_adjphrase
+        weight:
+        en: four
+      - keyword: Quantity_adjphrase
+        weight:
+        en: five
+      - keyword: Quantity_adjphrase
+        weight:
+        en: six
+      - keyword: Quantity_adjphrase
+        weight:
+        en: seven
+      - keyword: Quantity_adjphrase
+        weight:
+        en: eight
+      - keyword: Quantity_adjphrase
+        weight:
+        en: nine
+      - keyword: Quantity_adjphrase
+        weight:
+        en: ten
+      - keyword: Quantity_adjphrase
+        weight:
+        en: several
+      - keyword: Quantity_adjphrase
+        weight:
+        en: a group of
+      - keyword: Quantity_adjphrase
+        weight:
+        en: a large group of
+      - keyword: Quantity_adjphrase
+        weight:
+        en: dozens of
+      - keyword: Quantity_adjphrase
+        weight:
+        en: hundreds of
+      - keyword: Quantity_adjphrase
+        weight:
+        en: a thousand
+      - keyword: Quantity_adjphrase
+        weight:
+        en: thousands of
+      Shape:
+      - keyword: Shape
+        weight:
+        en: triangle
+      - keyword: Shape
+        weight:
+        en: square
+      - keyword: Shape
+        weight:
+        en: rectangle
+      - keyword: Shape
+        weight:
+        en: cone
+      - keyword: Shape
+        weight:
+        en: line
+      - keyword: Shape
+        weight:
+        en: heart
+      - keyword: Shape
+        weight:
+        en: star
+      - keyword: Shape
+        weight:
+        en: circle
+      - keyword: Shape
+        weight:
+        en: ellipse
+      AdjectiveAny:
+      - keyword: AdjectiveAny
+        weight:
+        en: "[AdjectiveBadass]"
+      - keyword: AdjectiveAny
+        weight:
+        en: "[AdjectiveAngsty]"
+      - keyword: AdjectiveAny
+        weight:
+        en: "[AdjectiveFriendly]"
+      - keyword: AdjectiveAny
+        weight:
+        en: "[AdjectiveNatural]"
+      ConceptAny:
+      - keyword: ConceptAny
+        weight:
+        en: "[ConceptPositive]"
+      - keyword: ConceptAny
+        weight:
+        en: "[ConceptBadass]"
+      - keyword: ConceptAny
+        weight:
+        en: "[ConceptAngsty]"
+      PersonalCharacteristic:
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        en: genitals
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        en: pubic hair
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        en: body hair
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        en: toilet habits
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        en: sexual prowess
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        en: sexual preferences
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        en: sexual experience
+    ruleCount: 47

@@ -1,0 +1,2228 @@
+---
+tales:
+- id: Wounded
+  package: core
+  label:
+    zh: 受伤
+  keywords:
+  - tale_noun
+  - image
+  - wound_name_past
+  - wound_name_present
+  - with_weapon_optional
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[KILLER_nameDef][wound_name_present][VICTIM_nameDef]"
+    - keyword: tale_noun
+      weight:
+      zh: "[KILLER_nameDef]用[WEAPON_label][wound_name_present][VICTIM_nameDef]"
+    - keyword: tale_noun
+      weight:
+      zh: "[VICTIM_nameDef]被[KILLER_nameDef][wound_name_present]"
+    - keyword: tale_noun
+      weight:
+      zh: "[VICTIM_nameDef]被人用[WEAPON_label][wound_name_present]"
+    - keyword: tale_noun
+      weight:
+      zh: "[VICTIM_nameDef]被[wound_name_present]"
+    image:
+    - keyword: image
+      weight:
+      zh: "[VICTIM_nameFull]被[wound_name_past]，杀手[KILLER_nameFull][with_weapon_optional]"
+    - keyword: image
+      weight:
+      zh: "[KILLER_nameFull][wound_name_present][VICTIM_nameFull]，杀手[with_weapon_optional]"
+    - keyword: image
+      weight:
+      zh: "[KILLER_nameFull]粗暴地[wound_name_present][VICTIM_nameFull]，杀手[with_weapon_optional]"
+    - keyword: image
+      weight:
+      zh: "[VICTIM_nameFull]被[wound_name_past]，杀手[with_weapon_optional]"
+    wound_name_past:
+    - keyword: wound_name_past
+      weight:
+      zh: 打伤
+    - keyword: wound_name_past
+      weight:
+      zh: 伤害
+    - keyword: wound_name_past
+      weight:
+      zh: 弄伤
+    - keyword: wound_name_past
+      weight:
+      zh: 殴打
+    - keyword: wound_name_past
+      weight:
+      zh: 攻击
+    wound_name_present:
+    - keyword: wound_name_present
+      weight:
+      zh: 打伤
+    - keyword: wound_name_present
+      weight:
+      zh: 伤害
+    - keyword: wound_name_present
+      weight:
+      zh: 弄伤
+    - keyword: wound_name_present
+      weight:
+      zh: 殴打
+    - keyword: wound_name_present
+      weight:
+      zh: 攻击
+    with_weapon_optional:
+    - keyword: with_weapon_optional
+      weight:
+      zh: 使用了[WEAPON_label]，[circumstance_group]
+    - keyword: with_weapon_optional
+      weight:
+      zh: "[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 毫不留情
+    - keyword: circumstance_phrase
+      weight:
+      zh: 冷酷无情
+    - keyword: circumstance_phrase
+      weight:
+      zh: 怒不可歇
+    - keyword: circumstance_phrase
+      weight:
+      zh: 身手敏捷
+    - keyword: circumstance_phrase
+      weight:
+      zh: 面无表情
+    - keyword: circumstance_phrase
+      weight:
+      zh: 已经放弃希望
+    - keyword: circumstance_phrase
+      weight:
+      zh: 看上去很害怕，不得已的选择
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][Animal]在一旁围观。"
+    - keyword: desc_sentence
+      weight:
+      zh: 一位[PersonJob]在[side_position]静观其变。
+    - keyword: desc_sentence
+      weight:
+      zh: "[VICTIM_nameDef]浑身是血。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[VICTIM_nameDef]浑身都是[Gore]。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[VICTIM_nameDef]看上去[AdjectiveAngsty]。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[VICTIM_nameDef]疼痛不堪。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[VICTIM_nameDef]在剧烈的疼痛中挣扎。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[KILLER_nameDef]咧开嘴，露出[KILLER_possessive]牙齿。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[KILLER_nameDef]似乎很满意。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[KILLER_nameDef]面对[KILLER_pronoun]自己的所作所为，感到十分痛苦。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[KILLER_nameDef]看上去对这一切很满意。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[KILLER_nameDef]露出胜利者的姿态。"
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - Animal
+    - Gore
+    - KILLER_nameDef
+    - KILLER_nameFull
+    - KILLER_possessive
+    - KILLER_pronoun
+    - PersonJob
+    - Quantity_adjphrase
+    - VICTIM_nameDef
+    - VICTIM_nameFull
+    - WEAPON_label
+    - circumstance_group
+    - side_position
+    - with_weapon_optional
+    - wound_name_past
+    - wound_name_present
+    roles:
+    - prefix: KILLER
+      label:
+        zh: 击杀者
+      fields:
+      - token: KILLER_nameFull
+        kind: person
+        prefix: KILLER
+        field: nameFull
+        label:
+          zh: 击杀者·全名
+        required: true
+      - token: KILLER_nameDef
+        kind: person
+        prefix: KILLER
+        field: nameDef
+        label:
+          zh: 击杀者·简称
+        required: true
+      - token: KILLER_title
+        kind: person
+        prefix: KILLER
+        field: title
+        label:
+          zh: 击杀者·头衔
+        required: false
+      - token: KILLER_pronoun
+        kind: person
+        prefix: KILLER
+        field: pronoun
+        label:
+          zh: 击杀者·代词(主)
+        required: true
+      - token: KILLER_possessive
+        kind: person
+        prefix: KILLER
+        field: possessive
+        label:
+          zh: 击杀者·代词(属)
+        required: true
+      - token: KILLER_objective
+        kind: person
+        prefix: KILLER
+        field: objective
+        label:
+          zh: 击杀者·代词(宾)
+        required: false
+    - prefix: VICTIM
+      label:
+        zh: 受害者
+      fields:
+      - token: VICTIM_nameFull
+        kind: person
+        prefix: VICTIM
+        field: nameFull
+        label:
+          zh: 受害者·全名
+        required: true
+      - token: VICTIM_nameDef
+        kind: person
+        prefix: VICTIM
+        field: nameDef
+        label:
+          zh: 受害者·简称
+        required: true
+      - token: VICTIM_title
+        kind: person
+        prefix: VICTIM
+        field: title
+        label:
+          zh: 受害者·头衔
+        required: false
+      - token: VICTIM_pronoun
+        kind: person
+        prefix: VICTIM
+        field: pronoun
+        label:
+          zh: 受害者·代词(主)
+        required: true
+      - token: VICTIM_possessive
+        kind: person
+        prefix: VICTIM
+        field: possessive
+        label:
+          zh: 受害者·代词(属)
+        required: true
+      - token: VICTIM_objective
+        kind: person
+        prefix: VICTIM
+        field: objective
+        label:
+          zh: 受害者·代词(宾)
+        required: false
+    things:
+    - prefix: WEAPON
+      label:
+        zh: 武器
+      fields:
+      - token: WEAPON_label
+        kind: thing
+        prefix: WEAPON
+        field: label
+        label:
+          zh: 武器·名称
+        required: true
+    metas: []
+    extras:
+    - token: with_weapon_optional
+      kind: text
+      prefix: with
+      field: with_weapon_optional
+      label:
+        zh: with_weapon_optional
+      required: false
+    - token: wound_name_past
+      kind: text
+      prefix: wound
+      field: wound_name_past
+      label:
+        zh: wound_name_past
+      required: false
+    - token: wound_name_present
+      kind: text
+      prefix: wound
+      field: wound_name_present
+      label:
+        zh: wound_name_present
+      required: false
+    flat:
+    - token: KILLER_nameFull
+      kind: person
+      prefix: KILLER
+      field: nameFull
+      label:
+        zh: 击杀者·全名
+      required: true
+    - token: KILLER_nameDef
+      kind: person
+      prefix: KILLER
+      field: nameDef
+      label:
+        zh: 击杀者·简称
+      required: true
+    - token: KILLER_title
+      kind: person
+      prefix: KILLER
+      field: title
+      label:
+        zh: 击杀者·头衔
+      required: false
+    - token: KILLER_pronoun
+      kind: person
+      prefix: KILLER
+      field: pronoun
+      label:
+        zh: 击杀者·代词(主)
+      required: true
+    - token: KILLER_possessive
+      kind: person
+      prefix: KILLER
+      field: possessive
+      label:
+        zh: 击杀者·代词(属)
+      required: true
+    - token: KILLER_objective
+      kind: person
+      prefix: KILLER
+      field: objective
+      label:
+        zh: 击杀者·代词(宾)
+      required: false
+    - token: VICTIM_nameFull
+      kind: person
+      prefix: VICTIM
+      field: nameFull
+      label:
+        zh: 受害者·全名
+      required: true
+    - token: VICTIM_nameDef
+      kind: person
+      prefix: VICTIM
+      field: nameDef
+      label:
+        zh: 受害者·简称
+      required: true
+    - token: VICTIM_title
+      kind: person
+      prefix: VICTIM
+      field: title
+      label:
+        zh: 受害者·头衔
+      required: false
+    - token: VICTIM_pronoun
+      kind: person
+      prefix: VICTIM
+      field: pronoun
+      label:
+        zh: 受害者·代词(主)
+      required: true
+    - token: VICTIM_possessive
+      kind: person
+      prefix: VICTIM
+      field: possessive
+      label:
+        zh: 受害者·代词(属)
+      required: true
+    - token: VICTIM_objective
+      kind: person
+      prefix: VICTIM
+      field: objective
+      label:
+        zh: 受害者·代词(宾)
+      required: false
+    - token: WEAPON_label
+      kind: thing
+      prefix: WEAPON
+      field: label
+      label:
+        zh: 武器·名称
+      required: true
+    - token: with_weapon_optional
+      kind: text
+      prefix: with
+      field: with_weapon_optional
+      label:
+        zh: with_weapon_optional
+      required: false
+    - token: wound_name_past
+      kind: text
+      prefix: wound
+      field: wound_name_past
+      label:
+        zh: wound_name_past
+      required: false
+    - token: wound_name_present
+      kind: text
+      prefix: wound
+      field: wound_name_present
+      label:
+        zh: wound_name_present
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 40
+- id: Vomited
+  package: core
+  label:
+    zh: 呕吐
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: 正在呕吐的[PAWN_nameDef]
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正[circumstance_group]往地上呕吐着"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]被结块的呕吐物弄了一身，还[circumstance_group]干呕着，看着非常恶心"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]弯着腰，[circumstance_group]再次往地上吐了起来"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]扶着膝盖，[circumstance_group]往地板上干呕着"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 很痛苦地
+    - keyword: circumstance_phrase
+      weight:
+      zh: 一脸羞愧地
+    - keyword: circumstance_phrase
+      weight:
+      zh: 在其他人的围观下
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_pronoun]似乎对周围的环境一无所知。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_possessive]脸似乎变得浮肿。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_pronoun]几乎不省人事，伸着舌头口吐白沫。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_pronoun]剧烈地抽搐着。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_pronoun]满脸羞愧。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_pronoun]无视当前的环境，似乎想要试着笑一笑。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_pronoun]看起来虚脱了，仿佛整个人被剧烈的呕吐掏空。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_pronoun]被一圈非常有艺术感的呕吐物围绕着。"
+    - keyword: desc_sentence
+      weight:
+      zh: 背景中一只[Animal]正在吃地上残存的呕吐物。
+  slots:
+    tokens:
+    - Animal
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_objective
+    - PAWN_possessive
+    - PAWN_pronoun
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 17
+- id: BuriedCorpse
+  package: core
+  label:
+    zh: 埋葬尸体
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]埋葬[CORPSE_nameDef]"
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]使[CORPSE_nameDef]得到安息"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]站在[CORPSE_nameFull]的坟墓前，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]蹲坐在[CORPSE_nameFull]的坟墓前，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]倚靠在[CORPSE_nameFull]的坟墓前[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]在[CORPSE_nameFull]的墓碑上雕刻文字，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]在[CORPSE_nameFull]的棺木上进行艺术创作，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]将[CORPSE_nameFull]的尸体放入坟墓，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 面带[AdjectiveAngsty]的神情
+    - keyword: circumstance_phrase
+      weight:
+      zh: 陷入沉思
+    - keyword: circumstance_phrase
+      weight:
+      zh: 凝视着远方的[TerrainFeature]
+    - keyword: circumstance_phrase
+      weight:
+      zh: 向墓碑静静私语
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: 背景中[Color]的极光闪烁。
+    - keyword: desc_sentence
+      weight:
+      zh: 远处的[Community]被白雪覆盖。
+    - keyword: desc_sentence
+      weight:
+      zh: "[CORPSE_nameDef]的灵魂带着[AdjectiveFriendly]的神情俯瞰着四周。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[CORPSE_nameDef]的灵魂站在[PAWN_nameDef]身边，面带[AdjectiveFriendly]的神情。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[CORPSE_nameDef]的灵魂带着[AdjectiveAngsty]的神情俯瞰着四周。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[CORPSE_nameDef]的灵魂站在[PAWN_nameDef]身边，面带[AdjectiveAngsty]的神情。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][Animal]在附近休息。"
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - AdjectiveFriendly
+    - Animal
+    - CORPSE_nameDef
+    - CORPSE_nameFull
+    - Color
+    - Community
+    - DIGGER_nameDef
+    - DIGGER_nameFull
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - Quantity_adjphrase
+    - TerrainFeature
+    - circumstance_group
+    roles:
+    - prefix: CORPSE
+      label:
+        zh: 尸体
+      fields:
+      - token: CORPSE_nameFull
+        kind: person
+        prefix: CORPSE
+        field: nameFull
+        label:
+          zh: 尸体·全名
+        required: true
+      - token: CORPSE_nameDef
+        kind: person
+        prefix: CORPSE
+        field: nameDef
+        label:
+          zh: 尸体·简称
+        required: true
+      - token: CORPSE_title
+        kind: person
+        prefix: CORPSE
+        field: title
+        label:
+          zh: 尸体·头衔
+        required: false
+      - token: CORPSE_pronoun
+        kind: person
+        prefix: CORPSE
+        field: pronoun
+        label:
+          zh: 尸体·代词(主)
+        required: true
+      - token: CORPSE_possessive
+        kind: person
+        prefix: CORPSE
+        field: possessive
+        label:
+          zh: 尸体·代词(属)
+        required: true
+      - token: CORPSE_objective
+        kind: person
+        prefix: CORPSE
+        field: objective
+        label:
+          zh: 尸体·代词(宾)
+        required: false
+    - prefix: DIGGER
+      label:
+        zh: DIGGER
+      fields:
+      - token: DIGGER_nameFull
+        kind: person
+        prefix: DIGGER
+        field: nameFull
+        label:
+          zh: DIGGER·全名
+        required: true
+      - token: DIGGER_nameDef
+        kind: person
+        prefix: DIGGER
+        field: nameDef
+        label:
+          zh: DIGGER·简称
+        required: true
+      - token: DIGGER_title
+        kind: person
+        prefix: DIGGER
+        field: title
+        label:
+          zh: DIGGER·头衔
+        required: false
+      - token: DIGGER_pronoun
+        kind: person
+        prefix: DIGGER
+        field: pronoun
+        label:
+          zh: DIGGER·代词(主)
+        required: true
+      - token: DIGGER_possessive
+        kind: person
+        prefix: DIGGER
+        field: possessive
+        label:
+          zh: DIGGER·代词(属)
+        required: true
+      - token: DIGGER_objective
+        kind: person
+        prefix: DIGGER
+        field: objective
+        label:
+          zh: DIGGER·代词(宾)
+        required: false
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: CORPSE_nameFull
+      kind: person
+      prefix: CORPSE
+      field: nameFull
+      label:
+        zh: 尸体·全名
+      required: true
+    - token: CORPSE_nameDef
+      kind: person
+      prefix: CORPSE
+      field: nameDef
+      label:
+        zh: 尸体·简称
+      required: true
+    - token: CORPSE_title
+      kind: person
+      prefix: CORPSE
+      field: title
+      label:
+        zh: 尸体·头衔
+      required: false
+    - token: CORPSE_pronoun
+      kind: person
+      prefix: CORPSE
+      field: pronoun
+      label:
+        zh: 尸体·代词(主)
+      required: true
+    - token: CORPSE_possessive
+      kind: person
+      prefix: CORPSE
+      field: possessive
+      label:
+        zh: 尸体·代词(属)
+      required: true
+    - token: CORPSE_objective
+      kind: person
+      prefix: CORPSE
+      field: objective
+      label:
+        zh: 尸体·代词(宾)
+      required: false
+    - token: DIGGER_nameFull
+      kind: person
+      prefix: DIGGER
+      field: nameFull
+      label:
+        zh: DIGGER·全名
+      required: true
+    - token: DIGGER_nameDef
+      kind: person
+      prefix: DIGGER
+      field: nameDef
+      label:
+        zh: DIGGER·简称
+      required: true
+    - token: DIGGER_title
+      kind: person
+      prefix: DIGGER
+      field: title
+      label:
+        zh: DIGGER·头衔
+      required: false
+    - token: DIGGER_pronoun
+      kind: person
+      prefix: DIGGER
+      field: pronoun
+      label:
+        zh: DIGGER·代词(主)
+      required: true
+    - token: DIGGER_possessive
+      kind: person
+      prefix: DIGGER
+      field: possessive
+      label:
+        zh: DIGGER·代词(属)
+      required: true
+    - token: DIGGER_objective
+      kind: person
+      prefix: DIGGER
+      field: objective
+      label:
+        zh: DIGGER·代词(宾)
+      required: false
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 19
+- id: BuiltSnowman
+  package: core
+  label:
+    zh: 堆雪人
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]堆雪人"
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]在雪地里玩耍"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]做了一个雪球，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]在地上滚出一个巨大的雪球，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]用[Vegetable]让雪人有了粗糙的人脸外观，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]躺在雪地里，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 头上带着[Quantity_adjphrase]风雪帽
+    - keyword: circumstance_phrase
+      weight:
+      zh: 灰暗的天空下着小雪
+    - keyword: circumstance_phrase
+      weight:
+      zh: 而[PAWN_possessive]朋友们建造了一座堡垒
+    - keyword: circumstance_phrase
+      weight:
+      zh: 而[PAWN_possessive]朋友们建造了一个雪人家族
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: 背景中[Color]的极光闪烁。
+    - keyword: desc_sentence
+      weight:
+      zh: 远处[Community]被白雪覆盖。
+    - keyword: desc_sentence
+      weight:
+      zh: 种植着[Vegetable]的田地被雪掩埋，几乎看不到了。
+    - keyword: desc_sentence
+      weight:
+      zh: 被冰雪覆盖的[TerrainFeature]出现在远方。
+  slots:
+    tokens:
+    - Color
+    - Community
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - Quantity_adjphrase
+    - TerrainFeature
+    - Vegetable
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 14
+- id: ExecutedPrisoner
+  package: core
+  label:
+    zh: 处决
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[EXECUTIONER_nameDef]处决[PRISONER_nameDef]"
+    - keyword: tale_noun
+      weight:
+      zh: "[PRISONER_nameDef]被[EXECUTIONER_nameDef]处决"
+    - keyword: tale_noun
+      weight:
+      zh: "[PRISONER_nameDef]的末日"
+    - keyword: tale_noun
+      weight:
+      zh: "[prisoner_nameShortDef]的死刑"
+    image:
+    - keyword: image
+      weight:
+      zh: "[EXECUTIONER_nameFull]正在处决[PRISONER_nameFull]，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[EXECUTIONER_nameFull]正将[PRISONER_nameFull]处以死刑，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[EXECUTIONER_nameFull]正准备处决[PRISONER_nameFull]，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[EXECUTIONER_nameFull]走进牢房，准备处决[PRISONER_nameFull]，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 而[PRISONER_pronoun]在地上翻滚
+    - keyword: circumstance_phrase
+      weight:
+      zh: 而[PRISONER_pronoun]痛苦地扭动
+    - keyword: circumstance_phrase
+      weight:
+      zh: 而[PRISONER_pronoun]恐惧地大声喊叫
+    - keyword: circumstance_phrase
+      weight:
+      zh: 相当专业而效率
+    - keyword: circumstance_phrase
+      weight:
+      zh: 相当粗暴而外行
+    - keyword: circumstance_phrase
+      weight:
+      zh: 明显用力过重
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时带着开心的心情
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时带着征服的笑容
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时[EXECUTIONER_possessive]眼中充满了泪水
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时绝对冷漠的注视着
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时施以额外的痛苦
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时正想着别的什么东西
+    - keyword: circumstance_phrase
+      weight:
+      zh: 以顾全大局
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[EXECUTIONER_nameDef]满头大汗。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[EXECUTIONER_nameDef]在碎碎念。"
+    - keyword: desc_sentence
+      weight:
+      zh: 鲜血溅到[EXECUTIONER_nameDef]脸上。
+    - keyword: desc_sentence
+      weight:
+      zh: "[PRISONER_nameDef]抽搐着扭动着。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PRISONER_nameDef]似乎彻底放弃了。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PRISONER_nameDef]已经闭上了眼睛，似乎在祈祷着什么。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PRISONER_nameDef]看上去满脸不屑。"
+  slots:
+    tokens:
+    - EXECUTIONER_nameDef
+    - EXECUTIONER_nameFull
+    - EXECUTIONER_possessive
+    - PRISONER_nameDef
+    - PRISONER_nameFull
+    - PRISONER_possessive
+    - PRISONER_pronoun
+    - circumstance_group
+    - prisoner_nameShortDef
+    roles:
+    - prefix: EXECUTIONER
+      label:
+        zh: EXECUTIONER
+      fields:
+      - token: EXECUTIONER_nameFull
+        kind: person
+        prefix: EXECUTIONER
+        field: nameFull
+        label:
+          zh: EXECUTIONER·全名
+        required: true
+      - token: EXECUTIONER_nameDef
+        kind: person
+        prefix: EXECUTIONER
+        field: nameDef
+        label:
+          zh: EXECUTIONER·简称
+        required: true
+      - token: EXECUTIONER_title
+        kind: person
+        prefix: EXECUTIONER
+        field: title
+        label:
+          zh: EXECUTIONER·头衔
+        required: false
+      - token: EXECUTIONER_pronoun
+        kind: person
+        prefix: EXECUTIONER
+        field: pronoun
+        label:
+          zh: EXECUTIONER·代词(主)
+        required: true
+      - token: EXECUTIONER_possessive
+        kind: person
+        prefix: EXECUTIONER
+        field: possessive
+        label:
+          zh: EXECUTIONER·代词(属)
+        required: true
+      - token: EXECUTIONER_objective
+        kind: person
+        prefix: EXECUTIONER
+        field: objective
+        label:
+          zh: EXECUTIONER·代词(宾)
+        required: false
+    - prefix: PRISONER
+      label:
+        zh: 囚犯
+      fields:
+      - token: PRISONER_nameFull
+        kind: person
+        prefix: PRISONER
+        field: nameFull
+        label:
+          zh: 囚犯·全名
+        required: true
+      - token: PRISONER_nameDef
+        kind: person
+        prefix: PRISONER
+        field: nameDef
+        label:
+          zh: 囚犯·简称
+        required: true
+      - token: PRISONER_title
+        kind: person
+        prefix: PRISONER
+        field: title
+        label:
+          zh: 囚犯·头衔
+        required: false
+      - token: PRISONER_pronoun
+        kind: person
+        prefix: PRISONER
+        field: pronoun
+        label:
+          zh: 囚犯·代词(主)
+        required: true
+      - token: PRISONER_possessive
+        kind: person
+        prefix: PRISONER
+        field: possessive
+        label:
+          zh: 囚犯·代词(属)
+        required: true
+      - token: PRISONER_objective
+        kind: person
+        prefix: PRISONER
+        field: objective
+        label:
+          zh: 囚犯·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: EXECUTIONER_nameFull
+      kind: person
+      prefix: EXECUTIONER
+      field: nameFull
+      label:
+        zh: EXECUTIONER·全名
+      required: true
+    - token: EXECUTIONER_nameDef
+      kind: person
+      prefix: EXECUTIONER
+      field: nameDef
+      label:
+        zh: EXECUTIONER·简称
+      required: true
+    - token: EXECUTIONER_title
+      kind: person
+      prefix: EXECUTIONER
+      field: title
+      label:
+        zh: EXECUTIONER·头衔
+      required: false
+    - token: EXECUTIONER_pronoun
+      kind: person
+      prefix: EXECUTIONER
+      field: pronoun
+      label:
+        zh: EXECUTIONER·代词(主)
+      required: true
+    - token: EXECUTIONER_possessive
+      kind: person
+      prefix: EXECUTIONER
+      field: possessive
+      label:
+        zh: EXECUTIONER·代词(属)
+      required: true
+    - token: EXECUTIONER_objective
+      kind: person
+      prefix: EXECUTIONER
+      field: objective
+      label:
+        zh: EXECUTIONER·代词(宾)
+      required: false
+    - token: PRISONER_nameFull
+      kind: person
+      prefix: PRISONER
+      field: nameFull
+      label:
+        zh: 囚犯·全名
+      required: true
+    - token: PRISONER_nameDef
+      kind: person
+      prefix: PRISONER
+      field: nameDef
+      label:
+        zh: 囚犯·简称
+      required: true
+    - token: PRISONER_title
+      kind: person
+      prefix: PRISONER
+      field: title
+      label:
+        zh: 囚犯·头衔
+      required: false
+    - token: PRISONER_pronoun
+      kind: person
+      prefix: PRISONER
+      field: pronoun
+      label:
+        zh: 囚犯·代词(主)
+      required: true
+    - token: PRISONER_possessive
+      kind: person
+      prefix: PRISONER
+      field: possessive
+      label:
+        zh: 囚犯·代词(属)
+      required: true
+    - token: PRISONER_objective
+      kind: person
+      prefix: PRISONER
+      field: objective
+      label:
+        zh: 囚犯·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 28
+- id: ManhunterPack
+  package: core
+  label:
+    zh: 大群动物猎杀人类
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - hate_emotion
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: 猎杀人类的动物袭击[PAWN_nameDef]的[Community]
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]所在的[Community]被动物攻击"
+    image:
+    - keyword: image
+      weight:
+      zh: 一群[Animal][circumstance_phrase]
+    - keyword: image
+      weight:
+      zh: "[Quantity_adjphrase][Animal][circumstance_phrase]"
+    - keyword: image
+      weight:
+      zh: 一[AdjectiveLarge][Animal][circumstance_phrase]
+    - keyword: image
+      weight:
+      zh: "[Quantity_adjphrase]黑影[circumstance_phrase]"
+    - keyword: image
+      weight:
+      zh: "[Quantity_adjphrase]兽影[circumstance_phrase]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 正在穿越一片[TerrainFeature]
+    - keyword: circumstance_phrase
+      weight:
+      zh: 将[Community]团团围住
+    - keyword: circumstance_phrase
+      weight:
+      zh: 正在攻击[Quantity_adjphrase][PersonJob]
+    - keyword: circumstance_phrase
+      weight:
+      zh: 在屠杀[Quantity_adjphrase][Animal]
+    - keyword: circumstance_phrase
+      weight:
+      zh: 被[hate_emotion]缠身
+    - keyword: circumstance_phrase
+      weight:
+      zh: 浑身都是[Gore]
+    hate_emotion:
+    - keyword: hate_emotion
+      weight:
+      zh: 仇恨
+    - keyword: hate_emotion
+      weight:
+      zh: 愤怒
+    - keyword: hate_emotion
+      weight:
+      zh: 狂暴
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]在组织反击。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]用[Weapon]进行防御。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]受伤倒地。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]用[PAWN_possessive][Weapon]还击。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]带着[AdjectiveBadass]的神情。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]带着[AdjectiveAngsty]的神情。"
+    - keyword: desc_sentence
+      weight:
+      zh: 地上到处都是[Gore]。
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][PersonJob]逃离该地区。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][Animal]逃离该地区。"
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - AdjectiveBadass
+    - AdjectiveLarge
+    - Animal
+    - Community
+    - Gore
+    - PAWN_nameDef
+    - PAWN_possessive
+    - PersonJob
+    - Quantity_adjphrase
+    - TerrainFeature
+    - Weapon
+    - circumstance_phrase
+    - hate_emotion
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras:
+    - token: hate_emotion
+      kind: text
+      prefix: hate
+      field: hate_emotion
+      label:
+        zh: hate_emotion
+      required: false
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+    - token: hate_emotion
+      kind: text
+      prefix: hate
+      field: hate_emotion
+      label:
+        zh: hate_emotion
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 25
+- id: CompletedLongCraftingProject
+  package: core
+  label:
+    zh: 完成长时间的制作项目
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]完成了[OBJECT_label]的制作"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正在装配[OBJECT_label]内部一个复杂的装置，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正在为[OBJECT_label]的表面抛光，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正在为[OBJECT_label]添加表面细节，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]把自己的名字刻在[OBJECT_label]上，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_possessive]眼中闪烁着光芒"
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时在擦拭头上的汗水
+    - keyword: circumstance_phrase
+      weight:
+      zh: 制作者浑身都是污渍
+    - keyword: circumstance_phrase
+      weight:
+      zh: 面带得意的微笑
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_possessive]脸上带着满意的神情"
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[OBJECT_label]泛着柔和的[Color]光。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[OBJECT_label]精雕细琢。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]看上去毫不费力地举起[OBJECT_label]。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][PersonJob]对作品赞叹不已。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][PersonJob]投来敬畏的目光。"
+  slots:
+    tokens:
+    - Color
+    - OBJECT_label
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - PersonJob
+    - Quantity_adjphrase
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things:
+    - prefix: OBJECT
+      label:
+        zh: 物品
+      fields:
+      - token: OBJECT_label
+        kind: thing
+        prefix: OBJECT
+        field: label
+        label:
+          zh: 物品·名称
+        required: true
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+    - token: OBJECT_label
+      kind: thing
+      prefix: OBJECT
+      field: label
+      label:
+        zh: 物品·名称
+      required: true
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 15
+- id: CompletedLongConstructionProject
+  package: core
+  label:
+    zh: 完成长时间的建造项目
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]完成了[OBJECT_label]的建造"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正在装配[OBJECT_label]内部一个复杂的装置，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正在为[OBJECT_label]的表面抛光，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正在为[OBJECT_label]添加表面细节，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]把自己的名字刻在[OBJECT_label]上，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_possessive]眼中闪烁着光芒"
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时在擦拭[PAWN_possessive]额头的汗水
+    - keyword: circumstance_phrase
+      weight:
+      zh: 建造者浑身都是污渍
+    - keyword: circumstance_phrase
+      weight:
+      zh: 面带得意的微笑
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_possessive]脸上带着满意的神情"
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[OBJECT_label]矗立在[PAWN_nameDef]面前。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[OBJECT_label]泛着柔和的[Color]光。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[OBJECT_label]巧夺天工"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][PersonJob]对[OBJECT_label]赞叹不已。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][PersonJob]投来敬畏的目光。"
+  slots:
+    tokens:
+    - Color
+    - OBJECT_label
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - PersonJob
+    - Quantity_adjphrase
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things:
+    - prefix: OBJECT
+      label:
+        zh: 物品
+      fields:
+      - token: OBJECT_label
+        kind: thing
+        prefix: OBJECT
+        field: label
+        label:
+          zh: 物品·名称
+        required: true
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+    - token: OBJECT_label
+      kind: thing
+      prefix: OBJECT
+      field: label
+      label:
+        zh: 物品·名称
+      required: true
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 15
+- id: MinedValuable
+  package: core
+  label:
+    zh: 开采矿脉
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]开采储量丰富的[MATERIAL_label]矿脉"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]使用开采工具在蕴藏着[MATERIAL_label]的岩壁前工作，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]占据了一大片[MATERIAL_label]矿，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]靠在由[MATERIAL_label]组成的墙上，,[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正在指挥挖掘队开采一条储量丰富的[MATERIAL_label]矿脉，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]正在仔细勘察一条储量丰富的[MATERIAL_label]矿脉，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 任凭汗水流淌
+    - keyword: circumstance_phrase
+      weight:
+      zh: 带着[AdjectiveFriendly]的表情
+    - keyword: circumstance_phrase
+      weight:
+      zh: 带着[AdjectiveFriendly]的表情
+    - keyword: circumstance_phrase
+      weight:
+      zh: 面带得意的微笑
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_possessive]看上去心满意足"
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][ally]提供了帮助。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][Animal]在那里徘徊漫步。"
+    - keyword: desc_sentence
+      weight:
+      zh: 背景中出现的社区是[Community]。
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase]矿脉在可视距离内。"
+    - keyword: desc_sentence
+      weight:
+      zh: 不远处能看到[TerrainFeature]。
+    - keyword: desc_sentence
+      weight:
+      zh: 工作让[PAWN_nameDef]变得浑身汗臭而且脏兮兮的。
+  slots:
+    tokens:
+    - AdjectiveFriendly
+    - Animal
+    - Community
+    - MATERIAL_label
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - Quantity_adjphrase
+    - TerrainFeature
+    - ally
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things:
+    - prefix: MATERIAL
+      label:
+        zh: 材料
+      fields:
+      - token: MATERIAL_label
+        kind: thing
+        prefix: MATERIAL
+        field: label
+        label:
+          zh: 材料·名称
+        required: true
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+    - token: MATERIAL_label
+      kind: thing
+      prefix: MATERIAL
+      field: label
+      label:
+        zh: 材料·名称
+      required: true
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 17

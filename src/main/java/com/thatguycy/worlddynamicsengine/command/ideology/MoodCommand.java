@@ -142,6 +142,19 @@ public final class MoodCommand implements CommandExecutor {
 
     private String sourceName(String source) {
         if (source == null || source.isBlank()) return message("mood_details_source_unknown", "unknown");
+        if (source.startsWith("potion:alchemy_dependency|")) {
+            String[] parts = source.substring("potion:alchemy_dependency|".length()).split("\\|", 2);
+            if (parts.length == 2 && parts[0].matches("\\d{1,3}")) {
+                String stage = switch (parts[1]) {
+                    case "satisfied", "deficient", "craving", "madness" -> parts[1];
+                    default -> null;
+                };
+                if (stage != null) {
+                    return message("mood_details_source_alchemy_dependency",
+                            parts[0], message("alchemy_stage_" + stage));
+                }
+            }
+        }
         if (source.startsWith("ritual_absence|")) {
             return message("mood_details_source_ritual_absence");
         }
@@ -187,6 +200,7 @@ public final class MoodCommand implements CommandExecutor {
             case "humanMeat" -> "mood_details_source_food_human_meat";
             case "relief" -> "mood_details_source_relief";
             case "potion:inebriation" -> "mood_details_source_potion_inebriation";
+            case "potion:alchemy_reinforcement" -> "mood_details_source_potion_alchemy_reinforcement";
             case "consolation" -> "mood_details_source_consolation";
             case "manual" -> "mood_details_source_manual";
             case "doctrine" -> "mood_details_source_doctrine";

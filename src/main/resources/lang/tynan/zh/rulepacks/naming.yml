@@ -1,0 +1,385 @@
+---
+rulepacks:
+  NamerArtCommon:
+    id: NamerArtCommon
+    package: core
+    category: namer
+    keywords:
+    - Artwork
+    - r_art_name
+    - art_name_numeric
+    - maybe_letter
+    - maybe_a
+    - maybe_adjective
+    rulesByKeyword:
+      Artwork:
+      - keyword: Artwork
+        weight:
+        zh: "[Artwork][Trans][ConceptAny]"
+      - keyword: Artwork
+        weight:
+        zh: "[maybe_a][maybe_adjective][Artwork]"
+      r_art_name:
+      - keyword: r_art_name
+        weight: 4.0
+        zh: "[maybe_a][maybe_adjective][ConceptAny]"
+      - keyword: r_art_name
+        weight: 4.0
+        zh: "[maybe_a][maybe_adjective][TerrainFeature]"
+      - keyword: r_art_name
+        weight:
+        zh: "[maybe_a][maybe_adjective][Vegetable]"
+      - keyword: r_art_name
+        weight:
+        zh: "[maybe_a][maybe_adjective][Game]"
+      - keyword: r_art_name
+        weight:
+        zh: "[maybe_a][maybe_adjective][Animal]"
+      - keyword: r_art_name
+        weight:
+        zh: "[maybe_a][maybe_adjective][Gore]"
+      - keyword: r_art_name
+        weight:
+        zh: "[maybe_a][maybe_adjective][NaturalObject]"
+      - keyword: r_art_name
+        weight:
+        zh: "[maybe_a][maybe_adjective][PersonFamily]"
+      - keyword: r_art_name
+        weight:
+        zh: "[maybe_a][maybe_adjective][Enemy]"
+      - keyword: r_art_name
+        weight:
+        zh: "[Artwork] No.[art_name_numeric]"
+      - keyword: r_art_name
+        weight:
+        zh: No.[art_name_numeric]
+      - keyword: r_art_name
+        weight: 2.0
+        zh: "[art_name_numeric]"
+      - keyword: r_art_name
+        weight:
+        zh: "[Artwork][art_name_numeric]"
+      - keyword: r_art_name
+        weight:
+        zh: "[ConceptAny] No.[art_name_numeric]"
+      - keyword: r_art_name
+        weight:
+        zh: "[art_name_numeric][Trans][ANYPAWN_nameIndef]"
+      - keyword: r_art_name
+        weight:
+        zh: "[ANYPAWN_nameIndef]之[Artwork]"
+      - keyword: r_art_name
+        weight:
+        zh: "[maybe_a][ANYPAWN_nameIndef][Trans][Color]"
+      - keyword: r_art_name
+        weight: 6.0
+        zh: "[ANYPAWN_nameIndef]之[PersonalCharacteristic]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ANYPAWN_nameIndef]之[PersonalCharacteristic]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ConceptAny][Trans][ANYPAWN_nameIndef]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[maybe_a][Artwork][Trans][ANYPAWN_nameIndef]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[maybe_letter][Digit][maybe_letter]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[maybe_letter][Digit][Digit][maybe_letter]"
+      art_name_numeric:
+      - keyword: art_name_numeric
+        weight:
+        zh: "[maybe_letter][Digit][Digit][Digit][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        zh: "[maybe_letter][RomanNumeral][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        zh: "[maybe_letter][RomanNumeral][Digit][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        zh: "[maybe_letter][Digit][RomanNumeral][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        zh: "[maybe_letter][Digit][RomanNumeral][Digit][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        zh: "[maybe_letter][RomanNumeral][Digit][RomanNumeral][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        zh: "[maybe_letter][RomanNumeral][Digit][Digit][RomanNumeral][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        zh: ''
+      - keyword: art_name_numeric
+        weight:
+        zh: "[Letter]"
+      maybe_letter:
+      - keyword: maybe_letter
+        weight: 8.0
+        zh: "[Letter][Letter]"
+      - keyword: maybe_letter
+        weight:
+        zh: ''
+      - keyword: maybe_letter
+        weight:
+        zh: 一
+      maybe_a:
+      - keyword: maybe_a
+        weight: 3.0
+        zh: ''
+      - keyword: maybe_a
+        weight:
+        zh: "[AdjectiveAngsty]的"
+      maybe_adjective:
+      - keyword: maybe_adjective
+        weight: 5.0
+        zh: "[AdjectiveBadass]的"
+      - keyword: maybe_adjective
+        weight: 2.0
+        zh: "[Color]的"
+      - keyword: maybe_adjective
+        weight:
+        zh: ''
+      - keyword: maybe_adjective
+        weight:
+        zh: ''
+    ruleCount: 43
+  NamerArtWeapon:
+    id: NamerArtWeapon
+    package: core
+    category: namer
+    keywords:
+    - r_art_name
+    rulesByKeyword:
+      r_art_name:
+      - keyword: r_art_name
+        weight:
+        zh: "[ConceptBadass]"
+      - keyword: r_art_name
+        weight:
+        zh: "[AnimalBadass]"
+      - keyword: r_art_name
+        weight:
+        zh: "[AdjectiveBadass][AnimalBadass]"
+      - keyword: r_art_name
+        weight:
+        zh: "[ColorBadass][AnimalBadass]"
+      - keyword: r_art_name
+        weight:
+        zh: "[ConceptBadass][ColorBadass]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ANYPAWN_nameIndef]之[ConceptBadass]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ANYPAWN_nameIndef]之[AnimalBadass]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ANYPAWN_nameIndef]之[PersonBadass]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ANYPAWN_nameIndef]之[PersonAlly]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ANYPAWN_nameIndef]之[PersonFamily]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ConceptBadass]之[ANYPAWN_nameIndef]"
+      - keyword: r_art_name
+        weight: 3.0
+        zh: "[ColorBadass]之[ANYPAWN_nameIndef]"
+    ruleCount: 12
+  NamerArtCubeSculpture:
+    id: NamerArtCubeSculpture
+    package: anomaly
+    category: namer
+    keywords:
+    - r_art_name
+    - adjectiveCube
+    rulesByKeyword:
+      r_art_name:
+      - keyword: r_art_name
+        weight:
+        zh: "[AdjectiveAny]魔方"
+      - keyword: r_art_name
+        weight:
+        zh: "[adjectiveCube]魔方"
+      - keyword: r_art_name
+        weight:
+        zh: "[ConceptAny]魔方"
+      adjectiveCube:
+      - keyword: adjectiveCube
+        weight:
+        zh: 松垮的
+      - keyword: adjectiveCube
+        weight:
+        zh: 残缺的
+      - keyword: adjectiveCube
+        weight:
+        zh: 巨大的
+      - keyword: adjectiveCube
+        weight:
+        zh: 丑陋的
+      - keyword: adjectiveCube
+        weight:
+        zh: 笨重的
+      - keyword: adjectiveCube
+        weight:
+        zh: 多功能
+      - keyword: adjectiveCube
+        weight:
+        zh: 可爱的
+      - keyword: adjectiveCube
+        weight:
+        zh: 完美的
+      - keyword: adjectiveCube
+        weight:
+        zh: 锐利的
+      - keyword: adjectiveCube
+        weight:
+        zh: 通用的
+      - keyword: adjectiveCube
+        weight:
+        zh: 理智的
+      - keyword: adjectiveCube
+        weight:
+        zh: 细致的
+      - keyword: adjectiveCube
+        weight:
+        zh: 神圣的
+      - keyword: adjectiveCube
+        weight:
+        zh: 扭曲的
+      - keyword: adjectiveCube
+        weight:
+        zh: 歪斜的
+      - keyword: adjectiveCube
+        weight:
+        zh: 泄气的
+      - keyword: adjectiveCube
+        weight:
+        zh: 不稳的
+      - keyword: adjectiveCube
+        weight:
+        zh: 变形的
+      - keyword: adjectiveCube
+        weight:
+        zh: 非对称的
+      - keyword: adjectiveCube
+        weight:
+        zh: 失常的
+      - keyword: adjectiveCube
+        weight:
+        zh: 怪异的
+      - keyword: adjectiveCube
+        weight:
+        zh: 融化的
+      - keyword: adjectiveCube
+        weight:
+        zh: 奇怪的
+      - keyword: adjectiveCube
+        weight:
+        zh: 梦幻的
+      - keyword: adjectiveCube
+        weight:
+        zh: 混乱的
+      - keyword: adjectiveCube
+        weight:
+        zh: 非立方体
+      - keyword: adjectiveCube
+        weight:
+        zh: 飘忽的
+      - keyword: adjectiveCube
+        weight:
+        zh: 歪曲的
+      - keyword: adjectiveCube
+        weight:
+        zh: 神秘的
+      - keyword: adjectiveCube
+        weight:
+        zh: 荒谬的
+      - keyword: adjectiveCube
+        weight:
+        zh: 模糊的
+    ruleCount: 34
+  NamerArtVoidSculpture:
+    id: NamerArtVoidSculpture
+    package: anomaly
+    category: namer
+    keywords:
+    - r_art_name
+    - adjectiveUnsettling
+    rulesByKeyword:
+      r_art_name:
+      - keyword: r_art_name
+        weight:
+        zh: "[AdjectiveAngsty]雕塑"
+      - keyword: r_art_name
+        weight:
+        zh: "[adjectiveUnsettling]雕塑"
+      adjectiveUnsettling:
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 紊乱的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 诡异的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 怪诞的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 恐怖的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 阴魂不散的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 毛骨悚然的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 罪恶的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 骇人的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 令人紧张的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 吓人的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 阴森的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 可怕的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 恐惧的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 震惊的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 怪异的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 异常的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 离奇的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 不可思议的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 奇怪的
+      - keyword: adjectiveUnsettling
+        weight:
+        zh: 超脱尘俗的
+    ruleCount: 22

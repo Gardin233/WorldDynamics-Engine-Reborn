@@ -1,0 +1,394 @@
+---
+tales:
+- id: HeldConcert
+  package: royalty
+  label:
+    zh: 举办音乐会
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[ORGANIZER_nameDef]正在举办一场音乐会"
+    image:
+    - keyword: image
+      weight:
+      zh: "[ORGANIZER_nameFull]正在演奏[ORGANIZER__pronoun]的成名曲，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[ORGANIZER_nameFull]正在邀请现场观众一起演唱"
+    - keyword: image
+      weight:
+      zh: "[ORGANIZER_nameFull]正在演唱一首热门歌曲"
+    - keyword: image
+      weight:
+      zh: "[ORGANIZER_nameFull]正在进行高难度的表演，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 带着强烈的感情
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][PersonJob]在一旁欣赏。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][Animal]在一旁聆听。"
+  slots:
+    tokens:
+    - Animal
+    - ORGANIZER__pronoun
+    - ORGANIZER_nameDef
+    - ORGANIZER_nameFull
+    - PersonJob
+    - Quantity_adjphrase
+    - circumstance_group
+    roles:
+    - prefix: ORGANIZER
+      label:
+        zh: 组织者
+      fields:
+      - token: ORGANIZER_nameFull
+        kind: person
+        prefix: ORGANIZER
+        field: nameFull
+        label:
+          zh: 组织者·全名
+        required: true
+      - token: ORGANIZER_nameDef
+        kind: person
+        prefix: ORGANIZER
+        field: nameDef
+        label:
+          zh: 组织者·简称
+        required: true
+      - token: ORGANIZER_title
+        kind: person
+        prefix: ORGANIZER
+        field: title
+        label:
+          zh: 组织者·头衔
+        required: false
+      - token: ORGANIZER_pronoun
+        kind: person
+        prefix: ORGANIZER
+        field: pronoun
+        label:
+          zh: 组织者·代词(主)
+        required: true
+      - token: ORGANIZER_possessive
+        kind: person
+        prefix: ORGANIZER
+        field: possessive
+        label:
+          zh: 组织者·代词(属)
+        required: true
+      - token: ORGANIZER_objective
+        kind: person
+        prefix: ORGANIZER
+        field: objective
+        label:
+          zh: 组织者·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: ORGANIZER_nameFull
+      kind: person
+      prefix: ORGANIZER
+      field: nameFull
+      label:
+        zh: 组织者·全名
+      required: true
+    - token: ORGANIZER_nameDef
+      kind: person
+      prefix: ORGANIZER
+      field: nameDef
+      label:
+        zh: 组织者·简称
+      required: true
+    - token: ORGANIZER_title
+      kind: person
+      prefix: ORGANIZER
+      field: title
+      label:
+        zh: 组织者·头衔
+      required: false
+    - token: ORGANIZER_pronoun
+      kind: person
+      prefix: ORGANIZER
+      field: pronoun
+      label:
+        zh: 组织者·代词(主)
+      required: true
+    - token: ORGANIZER_possessive
+      kind: person
+      prefix: ORGANIZER
+      field: possessive
+      label:
+        zh: 组织者·代词(属)
+      required: true
+    - token: ORGANIZER_objective
+      kind: person
+      prefix: ORGANIZER
+      field: objective
+      label:
+        zh: 组织者·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 8
+- id: AttendedConcert
+  package: royalty
+  label:
+    zh: 参加音乐会
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[ATTENDER_nameDef]正在参加[ORGANIZER_nameDef]举办的音乐会"
+    - keyword: tale_noun
+      weight:
+      zh: "[ATTENDER_nameDef]在听[ORGANIZER_nameDef]的音乐表演"
+    image:
+    - keyword: image
+      weight:
+      zh: "[ATTENDER_nameFull]静静地听着，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[ATTENDER_nameFull]在欣赏[ORGANIZER_nameFull]的音乐表演，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[ATTENDER_nameFull]随着节奏而动，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[ATTENDER_nameFull]沉浸在音乐中，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 同时伴随着掌声
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][PersonJob]在一旁跳起舞来。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][Animal]专注地听。"
+  slots:
+    tokens:
+    - ATTENDER_nameDef
+    - ATTENDER_nameFull
+    - Animal
+    - ORGANIZER_nameDef
+    - ORGANIZER_nameFull
+    - PersonJob
+    - Quantity_adjphrase
+    - circumstance_group
+    roles:
+    - prefix: ATTENDER
+      label:
+        zh: 参加者
+      fields:
+      - token: ATTENDER_nameFull
+        kind: person
+        prefix: ATTENDER
+        field: nameFull
+        label:
+          zh: 参加者·全名
+        required: true
+      - token: ATTENDER_nameDef
+        kind: person
+        prefix: ATTENDER
+        field: nameDef
+        label:
+          zh: 参加者·简称
+        required: true
+      - token: ATTENDER_title
+        kind: person
+        prefix: ATTENDER
+        field: title
+        label:
+          zh: 参加者·头衔
+        required: false
+      - token: ATTENDER_pronoun
+        kind: person
+        prefix: ATTENDER
+        field: pronoun
+        label:
+          zh: 参加者·代词(主)
+        required: true
+      - token: ATTENDER_possessive
+        kind: person
+        prefix: ATTENDER
+        field: possessive
+        label:
+          zh: 参加者·代词(属)
+        required: true
+      - token: ATTENDER_objective
+        kind: person
+        prefix: ATTENDER
+        field: objective
+        label:
+          zh: 参加者·代词(宾)
+        required: false
+    - prefix: ORGANIZER
+      label:
+        zh: 组织者
+      fields:
+      - token: ORGANIZER_nameFull
+        kind: person
+        prefix: ORGANIZER
+        field: nameFull
+        label:
+          zh: 组织者·全名
+        required: true
+      - token: ORGANIZER_nameDef
+        kind: person
+        prefix: ORGANIZER
+        field: nameDef
+        label:
+          zh: 组织者·简称
+        required: true
+      - token: ORGANIZER_title
+        kind: person
+        prefix: ORGANIZER
+        field: title
+        label:
+          zh: 组织者·头衔
+        required: false
+      - token: ORGANIZER_pronoun
+        kind: person
+        prefix: ORGANIZER
+        field: pronoun
+        label:
+          zh: 组织者·代词(主)
+        required: true
+      - token: ORGANIZER_possessive
+        kind: person
+        prefix: ORGANIZER
+        field: possessive
+        label:
+          zh: 组织者·代词(属)
+        required: true
+      - token: ORGANIZER_objective
+        kind: person
+        prefix: ORGANIZER
+        field: objective
+        label:
+          zh: 组织者·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: ATTENDER_nameFull
+      kind: person
+      prefix: ATTENDER
+      field: nameFull
+      label:
+        zh: 参加者·全名
+      required: true
+    - token: ATTENDER_nameDef
+      kind: person
+      prefix: ATTENDER
+      field: nameDef
+      label:
+        zh: 参加者·简称
+      required: true
+    - token: ATTENDER_title
+      kind: person
+      prefix: ATTENDER
+      field: title
+      label:
+        zh: 参加者·头衔
+      required: false
+    - token: ATTENDER_pronoun
+      kind: person
+      prefix: ATTENDER
+      field: pronoun
+      label:
+        zh: 参加者·代词(主)
+      required: true
+    - token: ATTENDER_possessive
+      kind: person
+      prefix: ATTENDER
+      field: possessive
+      label:
+        zh: 参加者·代词(属)
+      required: true
+    - token: ATTENDER_objective
+      kind: person
+      prefix: ATTENDER
+      field: objective
+      label:
+        zh: 参加者·代词(宾)
+      required: false
+    - token: ORGANIZER_nameFull
+      kind: person
+      prefix: ORGANIZER
+      field: nameFull
+      label:
+        zh: 组织者·全名
+      required: true
+    - token: ORGANIZER_nameDef
+      kind: person
+      prefix: ORGANIZER
+      field: nameDef
+      label:
+        zh: 组织者·简称
+      required: true
+    - token: ORGANIZER_title
+      kind: person
+      prefix: ORGANIZER
+      field: title
+      label:
+        zh: 组织者·头衔
+      required: false
+    - token: ORGANIZER_pronoun
+      kind: person
+      prefix: ORGANIZER
+      field: pronoun
+      label:
+        zh: 组织者·代词(主)
+      required: true
+    - token: ORGANIZER_possessive
+      kind: person
+      prefix: ORGANIZER
+      field: possessive
+      label:
+        zh: 组织者·代词(属)
+      required: true
+    - token: ORGANIZER_objective
+      kind: person
+      prefix: ORGANIZER
+      field: objective
+      label:
+        zh: 组织者·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 9

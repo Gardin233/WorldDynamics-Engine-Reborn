@@ -66,11 +66,11 @@ public final class IdeologyHistoryManager {
     }
 
     public void reload() {
-        File file = new File(plugin.getDataFolder(), "event.yml");
-        if (!file.exists()) plugin.saveResource("event.yml", false);
+        File file = new File(plugin.getDataFolder(), "history.yml");
+        if (!file.exists()) plugin.saveResource("history.yml", false);
         templates = YamlConfiguration.loadConfiguration(file);
         try (Reader reader = new InputStreamReader(
-                Objects.requireNonNull(plugin.getResource("event.yml")), StandardCharsets.UTF_8)) {
+                Objects.requireNonNull(plugin.getResource("history.yml")), StandardCharsets.UTF_8)) {
             YamlConfiguration defaults = YamlConfiguration.loadConfiguration(reader);
             templates.setDefaults(defaults);
         } catch (IOException ex) {

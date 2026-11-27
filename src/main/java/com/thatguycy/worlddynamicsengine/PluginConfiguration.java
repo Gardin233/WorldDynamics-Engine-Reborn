@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -434,6 +435,7 @@ final class PluginConfiguration {
         ensureRallyDefaults(nationConfig, nationConfigFile, "250.00");
         ensureRallyDefaults(townConfig, townConfigFile, "100.00");
         ensureTownHistoryDefaults();
+        ensureTownWealthDefaults();
         organizationConfig = files.load(organizationConfigFile);
         warConfig = files.load(warConfigFile);
         ideologyConfig = files.load(ideologyConfigFile);
@@ -476,6 +478,38 @@ final class PluginConfiguration {
         }
         if (!townConfig.contains("history.world")) {
             townConfig.set("history.world", "world");
+            changed = true;
+        }
+        if (changed) files.save(townConfig, townConfigFile);
+    }
+
+    private void ensureTownWealthDefaults() {
+        boolean changed = false;
+        boolean upgradingWealthFormula = !townConfig.contains("wealth.population-value");
+        if (!townConfig.contains("wealth.enabled")) {
+            townConfig.set("wealth.enabled", true);
+            changed = true;
+        }
+        if (!townConfig.contains("wealth.plot-value")) {
+            townConfig.set("wealth.plot-value", "100.00");
+            changed = true;
+        } else if (upgradingWealthFormula) {
+            String oldPlotValue = townConfig.getString("wealth.plot-value", "0.00");
+            try {
+                if (new BigDecimal(oldPlotValue).compareTo(BigDecimal.ZERO) == 0) {
+                    townConfig.set("wealth.plot-value", "100.00");
+                    changed = true;
+                }
+            } catch (NumberFormatException ignored) {
+                // Keep an administrator's invalid value visible for read-time validation.
+            }
+        }
+        if (!townConfig.contains("wealth.population-value")) {
+            townConfig.set("wealth.population-value", "1000.00");
+            changed = true;
+        }
+        if (!townConfig.contains("wealth.refresh-interval-ticks")) {
+            townConfig.set("wealth.refresh-interval-ticks", 6000L);
             changed = true;
         }
         if (changed) files.save(townConfig, townConfigFile);
@@ -678,27 +712,36 @@ final class PluginConfiguration {
             backgroundConfig.set("forceSelectionOnFirstJoin", false);
             changed = true;
         }
-        changed |= ensureBackgroundStageDefaults("childhood", List.of(
-                createBackgroundDefault("farm_child", "农家孩子",
-                        List.of("%player_name%从小在田埂与作物之间长大。", "对耕作与土地的熟悉早已成为本能。"),
-                        Map.of("auraskills/farming", 1)),
-                createBackgroundDefault("mine_child", "矿镇少年",
-                        List.of("%player_name%在矿道边缘长大，对石头、矿脉和洞穴毫不陌生。", "儿时的生活让%player_name%更早接触了采掘。"),
-                        Map.of("auraskills/mining", 1)),
-                createBackgroundDefault("river_child", "河湾渔童",
-                        List.of("%player_name%在河湾边长大，熟悉潮汐、水流与鱼群。", "抛竿与收线是%player_name%童年的日常。"),
-                        Map.of("auraskills/fishing", 1))
-        ));
-        changed |= ensureBackgroundStageDefaults("adulthood", List.of(
-                createBackgroundDefault("frontier_farmer", "边境垦殖者",
-                        List.of("成年后，%player_name%选择在边境开垦荒地。", "恶劣环境锤炼了%player_name%的劳作技巧。"),
-                        Map.of("auraskills/farming", 1, "auraskills/foraging", 1)),
-                createBackgroundDefault("militia_veteran", "民兵老兵",
-                        List.of("%player_name%曾在地方民兵中服役，熟悉战斗与纪律。", "长期训练让%player_name%比常人更善于应对冲突。"),
-                        Map.of("auraskills/fighting", 1, "auraskills/defense", 1)),
-                createBackgroundDefault("guild_craftsman", "行会匠人",
-                        List.of("%player_name%成年后进入行会，从学徒一步步成长。", "对材料与工艺的把握让%player_name%在制作上更有天赋。"),
-                        Map.of("auraskills/excavation", 1, "auraskills/alchemy", 1))
+        if (!backgroundConfig.contains("content-filter.enabled")) {
+            backgroundConfig.set("content-filter.enabled", true);
+            changed = true;
+        }
+        if (!backgroundConfig.contains("content-filter.blocked-words")) {
+            backgroundConfig.set("content-filter.blocked-words",
+                    List.of("女权", "男权", "性别对立", "纳粹", "皇汉",
+                            "傻逼", "他妈的", "操你妈", "fuck", "shit", "bitch"));
+            changed = true;
+        }
+        changed |= migrateFlatBackgroundDefinitions();
+        changed |= ensureBackgroundDefaults(List.of(
+                createBackgroundDefault("childhood", "farm_child", "农家孩子",
+                        List.of("%player_name%从小在田埂与作物之间长大，对土地与耕作十分熟悉。"),
+                        Map.of("auraskills/farming", 5)),
+                createBackgroundDefault("childhood", "mine_child", "矿镇少年",
+                        List.of("%player_name%在矿道边缘长大，儿时便熟悉石头、矿脉与洞穴。"),
+                        Map.of("auraskills/mining", 5)),
+                createBackgroundDefault("childhood", "river_child", "河湾渔童",
+                        List.of("%player_name%在河湾边长大，抛竿、收线与辨认鱼群是日常。"),
+                        Map.of("auraskills/fishing", 5)),
+                createBackgroundDefault("adulthood", "frontier_farmer", "边境垦殖者",
+                        List.of("%player_name%选择在边境开垦荒地，劳作与野外采集都磨练得十分扎实。"),
+                        Map.of("auraskills/farming", 3, "auraskills/foraging", 2)),
+                createBackgroundDefault("adulthood", "militia_veteran", "民兵老兵",
+                        List.of("%player_name%曾在地方民兵中服役，在战斗与防守训练中积累经验。"),
+                        Map.of("auraskills/fighting", 3, "auraskills/defense", 2)),
+                createBackgroundDefault("adulthood", "guild_craftsman", "行会匠人",
+                        List.of("%player_name%从行会学徒一步步成长，既善于采掘材料，也熟悉炼制工艺。"),
+                        Map.of("auraskills/excavation", 3, "auraskills/alchemy", 2))
         ));
 
         if (changed) {
@@ -706,16 +749,106 @@ final class PluginConfiguration {
         }
     }
 
-    private boolean ensureBackgroundStageDefaults(String stageKey, List<BackgroundDefaultDefinition> defaults) {
-        boolean changed = false;
-        String backgroundsPath = "stages." + stageKey + ".backgrounds";
-        if (!backgroundConfig.isConfigurationSection(backgroundsPath)) {
-            backgroundConfig.createSection(backgroundsPath);
-            changed = true;
+    private boolean migrateFlatBackgroundDefinitions() {
+        ConfigurationSection flatBackgrounds = backgroundConfig.getConfigurationSection("backgrounds");
+        if (flatBackgrounds == null) {
+            return false;
         }
+        boolean changed = false;
+        for (String backgroundId : flatBackgrounds.getKeys(false)) {
+            String source = "backgrounds." + backgroundId;
+            for (String stage : stagesForBackground(backgroundId)) {
+                String target = "stages." + stage + ".backgrounds." + backgroundId;
+                if (!backgroundConfig.isConfigurationSection(target)) {
+                    backgroundConfig.createSection(target);
+                    changed = true;
+                }
+                for (String field : List.of("title", "lore")) {
+                    String sourcePath = source + "." + field;
+                    String targetPath = target + "." + field;
+                    if (backgroundConfig.contains(sourcePath) && !backgroundConfig.contains(targetPath)) {
+                        backgroundConfig.set(targetPath, backgroundConfig.get(sourcePath));
+                        changed = true;
+                    }
+                }
+                String sourcePoints = source + ".skillPoints";
+                String targetPoints = target + ".skillPoints";
+                ConfigurationSection points = backgroundConfig.getConfigurationSection(sourcePoints);
+                if (points != null) {
+                    for (String skillId : points.getKeys(false)) {
+                        String targetSkillPath = targetPoints + "." + skillId;
+                        if (!backgroundConfig.contains(targetSkillPath)) {
+                            backgroundConfig.set(targetSkillPath, points.get(skillId));
+                            changed = true;
+                        }
+                    }
+                } else {
+                    ConfigurationSection legacyBonuses =
+                            backgroundConfig.getConfigurationSection(source + ".skillLevelBonuses");
+                    Map<String, Integer> migratedPoints = distributeFivePoints(legacyBonuses);
+                    for (Map.Entry<String, Integer> entry : migratedPoints.entrySet()) {
+                        String targetSkillPath = targetPoints + "." + entry.getKey();
+                        if (!backgroundConfig.contains(targetSkillPath)) {
+                            backgroundConfig.set(targetSkillPath, entry.getValue());
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+        return changed;
+    }
 
+    private List<String> stagesForBackground(String rawId) {
+        String id = rawId == null ? "" : rawId.trim().toLowerCase(java.util.Locale.ROOT);
+        return switch (id) {
+            case "farm_child", "mine_child", "river_child" -> List.of("childhood");
+            case "frontier_farmer", "militia_veteran", "guild_craftsman" -> List.of("adulthood");
+            default -> List.of("childhood", "adulthood");
+        };
+    }
+
+    private Map<String, Integer> distributeFivePoints(ConfigurationSection legacyBonuses) {
+        if (legacyBonuses == null) {
+            return Map.of();
+        }
+        List<String> skills = legacyBonuses.getKeys(false).stream()
+                .filter(skill -> legacyBonuses.getInt(skill, 0) > 0)
+                .sorted()
+                .toList();
+        if (skills.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, Integer> points = new LinkedHashMap<>();
+        int base = 5 / skills.size();
+        int remainder = 5 % skills.size();
+        for (int index = 0; index < skills.size(); index++) {
+            int allocation = base + (index < remainder ? 1 : 0);
+            if (allocation > 0) {
+                points.put(skills.get(index), allocation);
+            }
+        }
+        return points;
+    }
+
+    private boolean ensureBackgroundDefaults(List<BackgroundDefaultDefinition> defaults) {
+        boolean changed = false;
         for (BackgroundDefaultDefinition definition : defaults) {
+            String stagePath = "stages." + definition.stage();
+            if (!backgroundConfig.isConfigurationSection(stagePath)) {
+                backgroundConfig.createSection(stagePath);
+                changed = true;
+            }
+            String backgroundsPath = stagePath + ".backgrounds";
+            if (!backgroundConfig.isConfigurationSection(backgroundsPath)) {
+                backgroundConfig.createSection(backgroundsPath);
+                changed = true;
+            }
             String basePath = backgroundsPath + "." + definition.id();
+            if (!backgroundConfig.isConfigurationSection(basePath)) {
+                backgroundConfig.createSection(basePath);
+                changed = true;
+            }
             if (!backgroundConfig.contains(basePath + ".title")) {
                 backgroundConfig.set(basePath + ".title", definition.title());
                 changed = true;
@@ -724,10 +857,10 @@ final class PluginConfiguration {
                 backgroundConfig.set(basePath + ".lore", definition.lore());
                 changed = true;
             }
-            for (Map.Entry<String, Integer> entry : definition.skillLevelBonuses().entrySet()) {
-                String bonusPath = basePath + ".skillLevelBonuses." + entry.getKey();
-                if (!backgroundConfig.contains(bonusPath)) {
-                    backgroundConfig.set(bonusPath, entry.getValue());
+            for (Map.Entry<String, Integer> entry : definition.skillPoints().entrySet()) {
+                String pointsPath = basePath + ".skillPoints." + entry.getKey();
+                if (!backgroundConfig.contains(pointsPath)) {
+                    backgroundConfig.set(pointsPath, entry.getValue());
                     changed = true;
                 }
             }
@@ -735,18 +868,21 @@ final class PluginConfiguration {
         return changed;
     }
 
-    private BackgroundDefaultDefinition createBackgroundDefault(String id, String title, List<String> lore, Map<String, Integer> bonuses) {
-        return new BackgroundDefaultDefinition(id, title, lore, bonuses);
+    private BackgroundDefaultDefinition createBackgroundDefault(String stage, String id, String title,
+                                                                 List<String> lore,
+                                                                 Map<String, Integer> skillPoints) {
+        return new BackgroundDefaultDefinition(stage, id, title, lore, skillPoints);
     }
 
 
     /**
      * 封装内置背景默认配置，供首次生成和缺失字段补全使用。
      */
-    private record BackgroundDefaultDefinition(String id,
+    private record BackgroundDefaultDefinition(String stage,
+                                               String id,
                                                String title,
                                                List<String> lore,
-                                               Map<String, Integer> skillLevelBonuses) {
+                                               Map<String, Integer> skillPoints) {
     }
     FileConfiguration getTownConfig() {
         return townConfig;
@@ -800,6 +936,19 @@ final class PluginConfiguration {
 
     FileConfiguration getBackgroundConfig() {
         return backgroundConfig;
+    }
+
+    boolean saveBackgroundConfig() {
+        if (backgroundConfig == null || backgroundConfigFile == null) {
+            return false;
+        }
+        try {
+            backgroundConfig.save(backgroundConfigFile);
+            return true;
+        } catch (Exception exception) {
+            getLogger().warning("Could not save backgrounds.yml: " + exception.getMessage());
+            return false;
+        }
     }
 
     FileConfiguration getDropsConfig() {

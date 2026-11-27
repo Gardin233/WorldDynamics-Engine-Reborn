@@ -1,0 +1,30 @@
+---
+# RimWorld years contain four 15-day quadrums by default.
+calendar:
+  name:
+    zh: 环世界历
+    en: RimWorld Calendar
+  year-range:
+    minimum: 5500
+    maximum: 5505
+  seasons:
+    - id: spring
+      name:
+        zh: 春季（Aprimay）
+        en: Aprimay
+      days: 15
+    - id: summer
+      name:
+        zh: 夏季（Jugust）
+        en: Jugust
+      days: 15
+    - id: autumn
+      name:
+        zh: 秋季（Septober）
+        en: Septober
+      days: 15
+    - id: winter
+      name:
+        zh: 冬季（Decembary）
+        en: Decembary
+      days: 15

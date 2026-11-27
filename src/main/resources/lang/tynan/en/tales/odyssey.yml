@@ -1,0 +1,416 @@
+---
+tales:
+- id: VacuumExposureRevealed
+  package: odyssey
+  label:
+    en: vacuum exposure revealed
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] being exposed to hard vacuum"
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] suffering from vacuum exposure"
+    image:
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] floating away from a ship [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] drifting through space [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] drifting among stars [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] staggering out an airlock [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: while [PAWN_possessive] face slowly turns blue
+    - keyword: circumstance_phrase
+      weight:
+      en: while [PAWN_possessive] saliva begins to boil
+    - keyword: circumstance_phrase
+      weight:
+      en: while [PAWN_possessive] body begins to swell
+    - keyword: circumstance_phrase
+      weight:
+      en: while [PAWN_possessive] skin begins to freeze
+    - keyword: circumstance_phrase
+      weight:
+      en: while silently screaming
+    - keyword: circumstance_phrase
+      weight:
+      en: and beginning to lose consciousness
+    - keyword: circumstance_phrase
+      weight:
+      en: and gasping for air
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef]'s eyes are turning glassy."
+    - keyword: desc_sentence
+      weight:
+      en: An endless darkness surrounds the subject.
+    - keyword: desc_sentence
+      weight:
+      en: The scene appears to take place in space.
+    - keyword: desc_sentence
+      weight:
+      en: Beneath a shattered helmet are lifeless eyes.
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] twisted stars surround the image."
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef] wears a torn vacsuit."
+    - keyword: desc_sentence
+      weight:
+      en: A [Color] asteroid looms large behind the image.
+    - keyword: desc_sentence
+      weight:
+      en: Behind the image is a large [Color] planet.
+  slots:
+    tokens:
+    - Color
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - Quantity_adjphrase
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 21
+- id: OrbitalDebris
+  package: odyssey
+  label:
+    en: orbital debris
+  keywords:
+  - tale_noun
+  - image
+  - airborne_circumstance
+  - ground_circumstance
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: a micrometeorite storm sweeping over [PAWN_nameDef]'s [Community]
+    - keyword: tale_noun
+      weight:
+      en: micrometeorite fragments peppering the area around [PAWN_nameDef]'s [Community]
+    image:
+    - keyword: image
+      weight:
+      en: a cascade of micrometeorites glimmering with [Color] sparks [airborne_circumstance]
+    - keyword: image
+      weight:
+      en: a scattering of brightly-glowing micrometeorites [airborne_circumstance]
+    - keyword: image
+      weight:
+      en: a shower of [Color] sparks as micrometeorites blaze [airborne_circumstance]
+    - keyword: image
+      weight:
+      en: a cluster of smoldering impact marks, [ground_circumstance]
+    - keyword: image
+      weight:
+      en: a [Color] scorched fragment, [ground_circumstance]
+    - keyword: image
+      weight:
+      en: a [Color] scatter of tiny stones, [ground_circumstance]
+    airborne_circumstance:
+    - keyword: airborne_circumstance
+      weight:
+      en: racing across the sky
+    - keyword: airborne_circumstance
+      weight:
+      en: tumbling down in a flurry of light
+    - keyword: airborne_circumstance
+      weight:
+      en: dissipating into shimmering dust as they fall
+    ground_circumstance:
+    - keyword: ground_circumstance
+      weight:
+      en: surrounded by a haze of fine dust
+    - keyword: ground_circumstance
+      weight:
+      en: glowing faintly from residual heat
+    - keyword: ground_circumstance
+      weight:
+      en: embedded in a blanket of cracked ground
+    - keyword: ground_circumstance
+      weight:
+      en: scattered across the landscape
+    - keyword: ground_circumstance
+      weight:
+      en: dotted amidst a field of minor craters
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef] watches the shower in awe."
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef] gazes up in wonder."
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef] is startled by the relentless barrage."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] figures emerge from a nearby [TerrainFeature] to take shelter."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] figures scramble to secure their belongings."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [Animal]s scurry about, seeking cover."
+    - keyword: desc_sentence
+      weight:
+      en: Space is charged with an eerie power.
+  slots:
+    tokens:
+    - Animal
+    - Color
+    - Community
+    - PAWN_nameDef
+    - Quantity_adjphrase
+    - TerrainFeature
+    - airborne_circumstance
+    - ground_circumstance
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras:
+    - token: airborne_circumstance
+      kind: text
+      prefix: airborne
+      field: airborne_circumstance
+      label:
+        en: airborne_circumstance
+      required: false
+    - token: ground_circumstance
+      kind: text
+      prefix: ground
+      field: ground_circumstance
+      label:
+        en: ground_circumstance
+      required: false
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+    - token: airborne_circumstance
+      kind: text
+      prefix: airborne
+      field: airborne_circumstance
+      label:
+        en: airborne_circumstance
+      required: false
+    - token: ground_circumstance
+      kind: text
+      prefix: ground
+      field: ground_circumstance
+      label:
+        en: ground_circumstance
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 23

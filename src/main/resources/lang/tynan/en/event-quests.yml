@@ -1,0 +1,39 @@
+---
+# Quest-style event narration is kept separate from the art-tale corpus.
+eventQuests:
+  mislead_enemies:
+    opening:
+      - weight: 1.0
+        en: "[DATE]: Visitor [PERSON] spreads a creased route map across the table. Fresh marks converge on the roads near [TOWN]."
+      - weight: 1.0
+        en: "[DATE]: [PERSON] keeps glancing back toward the road and says a band of pursuers is closing in on [TOWN]."
+      - weight: 1.0
+        en: "[DATE]: Before giving a name, [PERSON] asks whether [TOWN] has recently sheltered any strangers."
+    problem:
+      - weight: 1.0
+        en: "The pursuers are following a trail left by the visitor. If they keep tracking it, the roads outside town will soon become their route."
+      - weight: 1.0
+        en: "[PERSON] fears the pursuit will drag nearby settlements into the conflict, but has no force to confront it directly."
+      - weight: 1.0
+        en: "The visitor needs to draw the pursuers away from their real target, but lacks a convincing false lead."
+    proposal:
+      - weight: 1.0
+        en: "[PERSON] asks you to lay a false trail that will make the pursuers believe their target has moved near [TOWN]."
+      - weight: 1.0
+        en: "The plan is to use false tracks and a decoy supply cache to draw the pursuers toward the outskirts."
+      - weight: 1.0
+        en: "[PERSON] proposes setting up an obvious decoy camp so the pursuers mistake [TOWN] for their target."
+    risk:
+      - weight: 1.0
+        en: "If you accept, the pursuers will follow the lead at once, bringing a real attack to the town."
+      - weight: 1.0
+        en: "This is no harmless deception: the pursuers will target [TOWN], and the raid will begin immediately."
+      - weight: 1.0
+        en: "Once the plan starts, it cannot be quietly recalled. The residents will need to prepare for a fight."
+    terms:
+      - weight: 1.0
+        en: "In return, [PERSON] promises [REWARD] when the contract begins."
+      - weight: 1.0
+        en: "If you agree, [PERSON] will hand over [REWARD] before the decoy plan begins."
+      - weight: 1.0
+        en: "[PERSON] asks for no trust, only an immediate answer; the offered payment is [REWARD]."

@@ -59,7 +59,21 @@ public final class AdminTabCompleter {
                 plugin.getResidentManager().getAllResidents().forEach(r -> values.add(r.getUsername()));
                 com.palmergames.bukkit.towny.TownyUniverse.getInstance().getResidents().forEach(r -> values.add(r.getName()));
             }
-            case "onlinePlayer" -> org.bukkit.Bukkit.getOnlinePlayers().forEach(player -> values.add(player.getName()));
+            case "onlinePlayer" -> {
+                if (a.length > 4 && a[1].equalsIgnoreCase("event")) {
+                    var town = com.palmergames.bukkit.towny.TownyAPI.getInstance().getTown(a[4]);
+                    if (town != null) {
+                        town.getResidents().stream()
+                                .filter(Objects::nonNull)
+                                .filter(resident -> resident.getUUID() != null)
+                                .map(resident -> org.bukkit.Bukkit.getPlayer(resident.getUUID()))
+                                .filter(Objects::nonNull)
+                                .forEach(player -> values.add(player.getName()));
+                    }
+                } else {
+                    org.bukkit.Bukkit.getOnlinePlayers().forEach(player -> values.add(player.getName()));
+                }
+            }
             case "target" -> {
                 if (a[1].equalsIgnoreCase("ideology") && a.length > 4) {
                     addParameter(values, a[3], a);
@@ -73,8 +87,26 @@ public final class AdminTabCompleter {
             case "id" -> {
                 RoleBackgroundStage stage = RoleBackgroundStage.fromString(a[4]);
                 if (stage != null) values.addAll(plugin.getBackgroundManager().getBackgroundIds(stage));
+                else if (a[4].equalsIgnoreCase("role")) {
+                    plugin.getBackgroundManager().getRoleDefinitions()
+                            .forEach(definition -> values.add(definition.getId()));
+                }
             }
+            case "communityId" -> plugin.getBackgroundManager().getRoleDefinitions().stream()
+                    .filter(definition -> !definition.getAuthor().isBlank())
+                    .forEach(definition -> values.add(definition.getId()));
             case "doctrine" -> plugin.getReligionManager().getRegisteredDoctrines().forEach(d -> values.add(d.getId()));
+            case "eventId" -> {
+                if (plugin.getEventManager() != null) {
+                    values.addAll(plugin.getEventManager().registeredEventIds());
+                }
+            }
+            case "eventIdOrAll" -> {
+                if (plugin.getEventManager() != null) {
+                    values.addAll(plugin.getEventManager().registeredEventIds());
+                }
+                values.add("all");
+            }
             case "effect" -> {
                 if (plugin.getMentalCollapseManager() != null) {
                     values.addAll(plugin.getMentalCollapseManager().getEnabledManualEffectIds());

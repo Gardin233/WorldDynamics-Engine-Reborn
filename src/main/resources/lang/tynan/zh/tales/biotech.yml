@@ -1,0 +1,168 @@
+---
+tales:
+- id: NoxiousHaze
+  package: biotech
+  label:
+    zh: 酸雾
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: 酸雾席卷了[PAWN_nameDef]的[Community]
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]的[Community]附近的气候开始变得充满毒性"
+    image:
+    - keyword: image
+      weight:
+      zh: 不一样的天空，[circumstance_group]
+    - keyword: image
+      weight:
+      zh: 空气变得稠密，且[circumstance_group]
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 看不到任何活物
+    - keyword: circumstance_phrase
+      weight:
+      zh: 正等待着酸雾的消散
+    - keyword: circumstance_phrase
+      weight:
+      zh: 看着动物们逃离
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]在[TerrainFeature]附近藏起来，带着[AdjectiveAngsty]的表情凝视着外面。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]用布包裹着[PAWN_possessive]脸。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase]死亡的[Animal]躺在地上。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase]正迈向死亡的[Animal]躺在地上。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase]窒息的[Animal]躺在地上。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[Quantity_adjphrase][Animal]逃离。"
+  slots:
+    tokens:
+    - AdjectiveAngsty
+    - Animal
+    - Community
+    - PAWN_nameDef
+    - PAWN_possessive
+    - Quantity_adjphrase
+    - TerrainFeature
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 13

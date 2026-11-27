@@ -29,6 +29,7 @@ permissions:
       wde.admin.ideology: true
       wde.admin.background: true
       wde.admin.economy: true
+      wde.admin.event: true
       wde.debug: true
       wde.reload: true
   wde.admin.system:
@@ -57,6 +58,9 @@ permissions:
     default: op
   wde.admin.economy:
     description: Manage organization balances.
+    default: op
+  wde.admin.event:
+    description: Force random events in towns.
     default: op
   wde.debug:
     description: Inspect plugin integrations and balances.

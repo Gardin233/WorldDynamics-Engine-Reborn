@@ -35,6 +35,8 @@ public class WDEtown implements ConfigurationSerializable {
     private String residentTaxType;
     private double residentTaxAmount;
     private Map<String, Boolean> conscripts;
+    private double wealth;
+    private long wealthUpdatedAt;
     private final Map<String, Object> ownershipHistory = new LinkedHashMap<>();
 
     public WDEtown(String townName, String nationName) {
@@ -58,6 +60,8 @@ public class WDEtown implements ConfigurationSerializable {
         this.residentTaxType = "FIXED";
         this.residentTaxAmount = 0.0D;
         this.conscripts = new LinkedHashMap<>();
+        this.wealth = 0.0D;
+        this.wealthUpdatedAt = 0L;
     }
 
     public WDEtown(Map<String, Object> map) {
@@ -99,6 +103,12 @@ public class WDEtown implements ConfigurationSerializable {
         this.residentTaxAmount = legacyPercentageTax ? 0.0D
                 : rawResidentTaxAmount instanceof Number ? ((Number) rawResidentTaxAmount).doubleValue() : 0.0D;
         this.conscripts = readBooleanMap(map.get("conscripts"));
+        Object rawWealth = map.get("wealth");
+        double loadedWealth = rawWealth instanceof Number ? ((Number) rawWealth).doubleValue() : 0.0D;
+        this.wealth = Double.isFinite(loadedWealth) ? Math.max(0.0D, loadedWealth) : 0.0D;
+        Object rawWealthUpdatedAt = map.get("wealthUpdatedAt");
+        this.wealthUpdatedAt = rawWealthUpdatedAt instanceof Number
+                ? Math.max(0L, ((Number) rawWealthUpdatedAt).longValue()) : 0L;
     }
 
     @Override
@@ -124,6 +134,8 @@ public class WDEtown implements ConfigurationSerializable {
         map.put("residentTaxType", residentTaxType);
         map.put("residentTaxAmount", residentTaxAmount);
         map.put("conscripts", conscripts);
+        map.put("wealth", wealth);
+        map.put("wealthUpdatedAt", wealthUpdatedAt);
         map.put("ownershipHistory", new LinkedHashMap<>(ownershipHistory));
         return map;
     }
@@ -302,6 +314,22 @@ public class WDEtown implements ConfigurationSerializable {
 
     public void setResidentTaxAmount(double residentTaxAmount) {
         this.residentTaxAmount = residentTaxAmount;
+    }
+
+    public double getWealth() {
+        return wealth;
+    }
+
+    public void setWealth(double wealth) {
+        this.wealth = Double.isFinite(wealth) ? Math.max(0.0D, wealth) : 0.0D;
+    }
+
+    public long getWealthUpdatedAt() {
+        return wealthUpdatedAt;
+    }
+
+    public void setWealthUpdatedAt(long wealthUpdatedAt) {
+        this.wealthUpdatedAt = Math.max(0L, wealthUpdatedAt);
     }
 
     public Map<String, Boolean> getConscripts() {

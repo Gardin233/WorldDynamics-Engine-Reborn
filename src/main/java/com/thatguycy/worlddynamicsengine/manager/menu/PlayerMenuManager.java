@@ -67,6 +67,7 @@ public class PlayerMenuManager implements Listener, MenuPageContext {
     private final Map<UUID, Map<String, Long>> violationNotices = new HashMap<>();
     private FileConfiguration messages;
     private boolean resetting;
+    private UUID openingBackgroundDialog;
 
     public PlayerMenuManager(WorldDynamicsEngine plugin) {
         this.plugin = plugin;
@@ -1685,6 +1686,28 @@ public class PlayerMenuManager implements Listener, MenuPageContext {
         backgroundMenu.open(player);
     }
 
+    public void openBackgroundConfirmation(Player player, RoleBackgroundStage stage, String backgroundId) {
+        backgroundMenu.openDetail(player, stage, backgroundId, 0);
+    }
+
+    @Override
+    public void showBackgroundDialog(Player player, io.papermc.paper.dialog.Dialog dialog) {
+        // Closing the inventory for a dialog must not trigger the forced-selection reopen.
+        openingBackgroundDialog = player.getUniqueId();
+        try {
+            if (player.getOpenInventory().getTopInventory().getType() != InventoryType.CRAFTING) {
+                player.closeInventory();
+            }
+            player.showDialog(dialog);
+        } finally {
+            openingBackgroundDialog = null;
+        }
+    }
+
+    public boolean openCommunityBackgroundAdminEditor(Player player, String backgroundId) {
+        return backgroundMenu.openCommunityBackgroundAdminEditor(player, backgroundId);
+    }
+
     public void openIdeology(Player player) {
         if (!plugin.religionEnabled) {
             player.sendMessage(text("unavailable"));
@@ -2223,7 +2246,8 @@ public class PlayerMenuManager implements Listener, MenuPageContext {
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
         if (resetting || !(event.getInventory().getHolder() instanceof MenuView)
-                || !(event.getPlayer() instanceof Player player)) return;
+                || !(event.getPlayer() instanceof Player player)
+                || player.getUniqueId().equals(openingBackgroundDialog)) return;
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline() && !nameInputs.containsKey(player.getUniqueId())
                     && !managementInputs.containsKey(player.getUniqueId())

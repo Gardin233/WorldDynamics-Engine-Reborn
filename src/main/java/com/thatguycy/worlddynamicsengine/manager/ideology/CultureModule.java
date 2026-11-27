@@ -145,6 +145,7 @@ public final class CultureModule {
     public void startActionTasks() {
         if (doctrineBuffManager != null) doctrineBuffManager.start();
         if (moodManager != null) moodManager.start();
+        if (potionDoctrineManager != null) potionDoctrineManager.start();
         if (ritualMoodDoctrineManager != null) ritualMoodDoctrineManager.start();
         if (bondingPainDoctrineManager != null) bondingPainDoctrineManager.start();
         if (comfortDoctrineManager != null) comfortDoctrineManager.start();
@@ -200,6 +201,7 @@ public final class CultureModule {
     public void stop() {
         if (nonhumanizationMoodManager != null) nonhumanizationMoodManager.stop();
         if (inspirationManager != null) inspirationManager.stopTasks();
+        if (potionDoctrineManager != null) potionDoctrineManager.stop();
         prepareReload();
     }
 

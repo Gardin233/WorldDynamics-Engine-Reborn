@@ -107,6 +107,46 @@ class WDEresidentMoodTest {
     }
 
     @Test
+    void alchemyDependencyAndSatisfactionDecaySurviveSerialization() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        long now = System.currentTimeMillis();
+
+        assertTrue(resident.consumeAlchemyPotion(now, 30, 30, 10, 20));
+        assertEquals(30, resident.getAlchemyDependencyPercent());
+        assertEquals(100.0, resident.getAlchemySatisfaction());
+        assertEquals(89.4, resident.getAlchemySatisfactionAt(
+                now + 3_600_000L, 10, 20), 0.0001);
+
+        long afterOneHour = now + 3_600_000L;
+        assertTrue(resident.applyAlchemySplashHit(afterOneHour, 25, 10, 20));
+        assertEquals(64.4, resident.getAlchemySatisfaction(), 0.0001);
+
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+        assertEquals(30, restored.getAlchemyDependencyPercent());
+        assertEquals(64.4, restored.getAlchemySatisfaction(), 0.0001);
+        assertEquals(53.8, restored.getAlchemySatisfactionAt(
+                afterOneHour + 3_600_000L, 10, 20), 0.0001);
+
+        WDEresident fullyDependent = new WDEresident(UUID.randomUUID(), "Player");
+        fullyDependent.consumeAlchemyPotion(now, 100, 0, 10, 20);
+        assertEquals(88.0, fullyDependent.getAlchemySatisfactionAt(
+                now + 3_600_000L, 10, 20), 0.0001);
+    }
+
+    @Test
+    void consecutivePotionDrinksPersistAndResetAfterTheirWindow() {
+        WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
+        long now = System.currentTimeMillis();
+        long window = 10 * 60_000L;
+
+        assertEquals(1, resident.recordAlchemyPotionDrink(now, window));
+        assertEquals(2, resident.recordAlchemyPotionDrink(now + window, window));
+        WDEresident restored = WDEresident.deserialize(resident.serialize());
+        assertEquals(3, restored.recordAlchemyPotionDrink(now + 2 * window, window));
+        assertEquals(1, restored.recordAlchemyPotionDrink(now + 3 * window + 1, window));
+    }
+
+    @Test
     void clearingTemporaryMoodChangesKeepsPersistentDoctrineAndOneFreshRebirth() {
         WDEresident resident = new WDEresident(UUID.randomUUID(), "Player");
         long now = System.currentTimeMillis();

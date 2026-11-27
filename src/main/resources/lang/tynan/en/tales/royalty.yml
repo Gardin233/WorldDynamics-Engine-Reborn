@@ -1,0 +1,394 @@
+---
+tales:
+- id: HeldConcert
+  package: royalty
+  label:
+    en: held concert
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[ORGANIZER_nameDef] performing a concert"
+    image:
+    - keyword: image
+      weight:
+      en: "[ORGANIZER_nameFull] playing their signature song [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[ORGANIZER_nameFull] inviting the crowd to sing along"
+    - keyword: image
+      weight:
+      en: "[ORGANIZER_nameFull] playing an inspiring song"
+    - keyword: image
+      weight:
+      en: "[ORGANIZER_nameFull] performing a difficult piece [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: with an intense expression
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [PersonJob]s listen nearby."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [Animal]s listen nearby."
+  slots:
+    tokens:
+    - Animal
+    - ORGANIZER__pronoun
+    - ORGANIZER_nameDef
+    - ORGANIZER_nameFull
+    - PersonJob
+    - Quantity_adjphrase
+    - circumstance_group
+    roles:
+    - prefix: ORGANIZER
+      label:
+        en: Organizer
+      fields:
+      - token: ORGANIZER_nameFull
+        kind: person
+        prefix: ORGANIZER
+        field: nameFull
+        label:
+          en: Organizer nameFull
+        required: true
+      - token: ORGANIZER_nameDef
+        kind: person
+        prefix: ORGANIZER
+        field: nameDef
+        label:
+          en: Organizer nameDef
+        required: true
+      - token: ORGANIZER_title
+        kind: person
+        prefix: ORGANIZER
+        field: title
+        label:
+          en: Organizer title
+        required: false
+      - token: ORGANIZER_pronoun
+        kind: person
+        prefix: ORGANIZER
+        field: pronoun
+        label:
+          en: Organizer pronoun
+        required: true
+      - token: ORGANIZER_possessive
+        kind: person
+        prefix: ORGANIZER
+        field: possessive
+        label:
+          en: Organizer possessive
+        required: true
+      - token: ORGANIZER_objective
+        kind: person
+        prefix: ORGANIZER
+        field: objective
+        label:
+          en: Organizer objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: ORGANIZER_nameFull
+      kind: person
+      prefix: ORGANIZER
+      field: nameFull
+      label:
+        en: Organizer nameFull
+      required: true
+    - token: ORGANIZER_nameDef
+      kind: person
+      prefix: ORGANIZER
+      field: nameDef
+      label:
+        en: Organizer nameDef
+      required: true
+    - token: ORGANIZER_title
+      kind: person
+      prefix: ORGANIZER
+      field: title
+      label:
+        en: Organizer title
+      required: false
+    - token: ORGANIZER_pronoun
+      kind: person
+      prefix: ORGANIZER
+      field: pronoun
+      label:
+        en: Organizer pronoun
+      required: true
+    - token: ORGANIZER_possessive
+      kind: person
+      prefix: ORGANIZER
+      field: possessive
+      label:
+        en: Organizer possessive
+      required: true
+    - token: ORGANIZER_objective
+      kind: person
+      prefix: ORGANIZER
+      field: objective
+      label:
+        en: Organizer objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 8
+- id: AttendedConcert
+  package: royalty
+  label:
+    en: attended concert
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[ATTENDER_nameDef] attending [ORGANIZER_nameDef]'s concert"
+    - keyword: tale_noun
+      weight:
+      en: "[ATTENDER_nameDef] listening to [ORGANIZER_nameDef]'s performance"
+    image:
+    - keyword: image
+      weight:
+      en: "[ATTENDER_nameFull] listening quietly, [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[ATTENDER_nameFull] enjoying [ORGANIZER_nameFull]'s performance [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[ATTENDER_nameFull] swaying to the music [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[ATTENDER_nameFull] absorbed in the sound [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: while clapping
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [PersonJob]s dance along."
+    - keyword: desc_sentence
+      weight:
+      en: "[Quantity_adjphrase] [Animal]s listen attentively."
+  slots:
+    tokens:
+    - ATTENDER_nameDef
+    - ATTENDER_nameFull
+    - Animal
+    - ORGANIZER_nameDef
+    - ORGANIZER_nameFull
+    - PersonJob
+    - Quantity_adjphrase
+    - circumstance_group
+    roles:
+    - prefix: ATTENDER
+      label:
+        en: Attender
+      fields:
+      - token: ATTENDER_nameFull
+        kind: person
+        prefix: ATTENDER
+        field: nameFull
+        label:
+          en: Attender nameFull
+        required: true
+      - token: ATTENDER_nameDef
+        kind: person
+        prefix: ATTENDER
+        field: nameDef
+        label:
+          en: Attender nameDef
+        required: true
+      - token: ATTENDER_title
+        kind: person
+        prefix: ATTENDER
+        field: title
+        label:
+          en: Attender title
+        required: false
+      - token: ATTENDER_pronoun
+        kind: person
+        prefix: ATTENDER
+        field: pronoun
+        label:
+          en: Attender pronoun
+        required: true
+      - token: ATTENDER_possessive
+        kind: person
+        prefix: ATTENDER
+        field: possessive
+        label:
+          en: Attender possessive
+        required: true
+      - token: ATTENDER_objective
+        kind: person
+        prefix: ATTENDER
+        field: objective
+        label:
+          en: Attender objective
+        required: false
+    - prefix: ORGANIZER
+      label:
+        en: Organizer
+      fields:
+      - token: ORGANIZER_nameFull
+        kind: person
+        prefix: ORGANIZER
+        field: nameFull
+        label:
+          en: Organizer nameFull
+        required: true
+      - token: ORGANIZER_nameDef
+        kind: person
+        prefix: ORGANIZER
+        field: nameDef
+        label:
+          en: Organizer nameDef
+        required: true
+      - token: ORGANIZER_title
+        kind: person
+        prefix: ORGANIZER
+        field: title
+        label:
+          en: Organizer title
+        required: false
+      - token: ORGANIZER_pronoun
+        kind: person
+        prefix: ORGANIZER
+        field: pronoun
+        label:
+          en: Organizer pronoun
+        required: true
+      - token: ORGANIZER_possessive
+        kind: person
+        prefix: ORGANIZER
+        field: possessive
+        label:
+          en: Organizer possessive
+        required: true
+      - token: ORGANIZER_objective
+        kind: person
+        prefix: ORGANIZER
+        field: objective
+        label:
+          en: Organizer objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: ATTENDER_nameFull
+      kind: person
+      prefix: ATTENDER
+      field: nameFull
+      label:
+        en: Attender nameFull
+      required: true
+    - token: ATTENDER_nameDef
+      kind: person
+      prefix: ATTENDER
+      field: nameDef
+      label:
+        en: Attender nameDef
+      required: true
+    - token: ATTENDER_title
+      kind: person
+      prefix: ATTENDER
+      field: title
+      label:
+        en: Attender title
+      required: false
+    - token: ATTENDER_pronoun
+      kind: person
+      prefix: ATTENDER
+      field: pronoun
+      label:
+        en: Attender pronoun
+      required: true
+    - token: ATTENDER_possessive
+      kind: person
+      prefix: ATTENDER
+      field: possessive
+      label:
+        en: Attender possessive
+      required: true
+    - token: ATTENDER_objective
+      kind: person
+      prefix: ATTENDER
+      field: objective
+      label:
+        en: Attender objective
+      required: false
+    - token: ORGANIZER_nameFull
+      kind: person
+      prefix: ORGANIZER
+      field: nameFull
+      label:
+        en: Organizer nameFull
+      required: true
+    - token: ORGANIZER_nameDef
+      kind: person
+      prefix: ORGANIZER
+      field: nameDef
+      label:
+        en: Organizer nameDef
+      required: true
+    - token: ORGANIZER_title
+      kind: person
+      prefix: ORGANIZER
+      field: title
+      label:
+        en: Organizer title
+      required: false
+    - token: ORGANIZER_pronoun
+      kind: person
+      prefix: ORGANIZER
+      field: pronoun
+      label:
+        en: Organizer pronoun
+      required: true
+    - token: ORGANIZER_possessive
+      kind: person
+      prefix: ORGANIZER
+      field: possessive
+      label:
+        en: Organizer possessive
+      required: true
+    - token: ORGANIZER_objective
+      kind: person
+      prefix: ORGANIZER
+      field: objective
+      label:
+        en: Organizer objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 9

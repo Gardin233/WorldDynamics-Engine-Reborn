@@ -1,0 +1,1112 @@
+---
+rulepacks:
+  ArtDescription_Furniture:
+    id: ArtDescription_Furniture
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        en: This furniture is engraved with a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: This furniture bears a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: An engraving on this furniture [depicts] [image]. [desc_sentence_group]
+    ruleCount: 3
+  ArtDescription_SarcophagusPlate:
+    id: ArtDescription_SarcophagusPlate
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        en: The sarcophagus is engraved with a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: The sarcophagus bears a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: The sarcophagus is engraved with a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: An engraving on this sarcophagus [depicts] [image]. [desc_sentence_group]
+    ruleCount: 4
+  ArtDescription_Sculpture:
+    id: ArtDescription_Sculpture
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    - sculpture
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        en: This [sculpture] [depicts] [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: This [sculpture] bears a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: On this [sculpture] is a [depiction] of [image]. [desc_sentence_group]
+      sculpture:
+      - keyword: sculpture
+        weight:
+        en: sculpture
+      - keyword: sculpture
+        weight:
+        en: work
+      - keyword: sculpture
+        weight:
+        en: piece
+      - keyword: sculpture
+        weight:
+        en: carving
+    ruleCount: 7
+  ArtDescription_WeaponGun:
+    id: ArtDescription_WeaponGun
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        en: This weapon is engraved with a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: This weapon bears a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: An engraving on this weapon [depicts] [image]. [desc_sentence_group]
+    ruleCount: 3
+  ArtDescription_WeaponMelee:
+    id: ArtDescription_WeaponMelee
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        en: This weapon is engraved with a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: This weapon bears a [depiction] of [image]. [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        en: An engraving on this weapon [depicts] [image]. [desc_sentence_group]
+    ruleCount: 3
+  ArtDescription_CubeSculpture:
+    id: ArtDescription_CubeSculpture
+    package: anomaly
+    category: carrier
+    keywords:
+    - r_art_description
+    - cube_style_group
+    - cubeDescSentence
+    - cubeWork
+    - aCube
+    - cubeLocation
+    - cubeDepicts
+    - aPawn
+    - pawnsPlural
+    - worshippingTheCube
+    - worshipsTheCube
+    - cubeExtraSentence
+    - cubeEmotion
+    rulesByKeyword:
+      r_art_description:
+      - keyword: r_art_description
+        weight:
+        en: This [cubeWork] [cubeDepicts] [aCube]. [cube_style_group]
+      cube_style_group:
+      - keyword: cube_style_group
+        weight: 2.0
+        en: "[cubeDescSentence]. [cubeExtraSentence]."
+      - keyword: cube_style_group
+        weight: 3.0
+        en: "[cubeDescSentence]."
+      - keyword: cube_style_group
+        weight:
+        en: ''
+      cubeDescSentence:
+      - keyword: cubeDescSentence
+        weight: 3.0
+        en: "[cubeLocation], [aPawn] [worshipsTheCube]"
+      - keyword: cubeDescSentence
+        weight: 3.0
+        en: "[cubeLocation], [pawnsPlural] are [worshippingTheCube]"
+      - keyword: cubeDescSentence
+        weight:
+        en: The [cubeWork] invites the viewer to begin [worshippingTheCube]
+      - keyword: cubeDescSentence
+        weight:
+        en: Figures [worshippingTheCube] from the center of this [cubeWork]
+      cubeWork:
+      - keyword: cubeWork
+        weight:
+        en: work
+      - keyword: cubeWork
+        weight:
+        en: sculpture
+      - keyword: cubeWork
+        weight:
+        en: artwork
+      - keyword: cubeWork
+        weight:
+        en: piece
+      aCube:
+      - keyword: aCube
+        weight:
+        en: an abstract cube
+      - keyword: aCube
+        weight:
+        en: a perfect cube
+      - keyword: aCube
+        weight:
+        en: a wonky cube
+      - keyword: aCube
+        weight:
+        en: a stylised cube
+      - keyword: aCube
+        weight:
+        en: a multiplying cube
+      - keyword: aCube
+        weight:
+        en: a crude cube
+      - keyword: aCube
+        weight:
+        en: a distorted cube
+      - keyword: aCube
+        weight:
+        en: a terrifying cube
+      - keyword: aCube
+        weight:
+        en: a dark cube
+      cubeLocation:
+      - keyword: cubeLocation
+        weight:
+        en: near the center
+      - keyword: cubeLocation
+        weight:
+        en: on each cube face
+      - keyword: cubeLocation
+        weight:
+        en: at the face centers
+      - keyword: cubeLocation
+        weight:
+        en: on top of the main figure
+      - keyword: cubeLocation
+        weight:
+        en: under the main figure
+      - keyword: cubeLocation
+        weight:
+        en: behind the main figure
+      - keyword: cubeLocation
+        weight:
+        en: near the edges
+      - keyword: cubeLocation
+        weight:
+        en: along the edges
+      - keyword: cubeLocation
+        weight:
+        en: along the edges
+      cubeDepicts:
+      - keyword: cubeDepicts
+        weight:
+        en: depicts
+      - keyword: cubeDepicts
+        weight:
+        en: shows
+      - keyword: cubeDepicts
+        weight:
+        en: displays
+      - keyword: cubeDepicts
+        weight:
+        en: portrays
+      aPawn:
+      - keyword: aPawn
+        weight:
+        en: a self-portrait of the artist
+      - keyword: aPawn
+        weight:
+        en: a thrumbo
+      - keyword: aPawn
+        weight:
+        en: an emaciated human figure with too many eyes
+      - keyword: aPawn
+        weight:
+        en: one of your colonists
+      - keyword: aPawn
+        weight:
+        en: a neanderthal
+      - keyword: aPawn
+        weight:
+        en: a glitterworld leader
+      - keyword: aPawn
+        weight:
+        en: an indistinct figure
+      - keyword: aPawn
+        weight:
+        en: a tribal shaman
+      - keyword: aPawn
+        weight:
+        en: a hooded sanguophage
+      - keyword: aPawn
+        weight:
+        en: a medieval princess
+      - keyword: aPawn
+        weight:
+        en: the leader of a distant [Community]
+      - keyword: aPawn
+        weight:
+        en: a [Weapon]-wielding woman
+      - keyword: aPawn
+        weight:
+        en: a robed procession
+      pawnsPlural:
+      - keyword: pawnsPlural
+        weight:
+        en: your colonists
+      - keyword: pawnsPlural
+        weight:
+        en: a group of raiders
+      - keyword: pawnsPlural
+        weight:
+        en: a tribal congregation
+      - keyword: pawnsPlural
+        weight:
+        en: a mechanoid swarm
+      - keyword: pawnsPlural
+        weight:
+        en: a pirate gang
+      - keyword: pawnsPlural
+        weight:
+        en: rustic farmers
+      - keyword: pawnsPlural
+        weight:
+        en: a [AnimalGroup] of [Animal]s
+      - keyword: pawnsPlural
+        weight:
+        en: a group from a nearby [Community]
+      - keyword: pawnsPlural
+        weight:
+        en: "[Quantity_adjphrase] people"
+      worshippingTheCube:
+      - keyword: worshippingTheCube
+        weight:
+        en: worshipping the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: bowing to cube
+      - keyword: worshippingTheCube
+        weight:
+        en: kneeling before cube
+      - keyword: worshippingTheCube
+        weight:
+        en: circling the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: praising the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: trembling in awe of the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: pleading with the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: crying before the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: playing with the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: befriending the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: observing the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: obsessing over the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: sacrificing to the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: making offerings to the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: railing against the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: respecting the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: burying the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: placing the cube on a pedestal
+      - keyword: worshippingTheCube
+        weight:
+        en: copying the cube
+      - keyword: worshippingTheCube
+        weight:
+        en: taking the cube to another world
+      worshipsTheCube:
+      - keyword: worshipsTheCube
+        weight:
+        en: worships the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: bows to the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: kneels before the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: circles the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: praises the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: trembles in awe of the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: pleads with the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: cries before the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: plays with the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: befriends the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: observes the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: obsesses over the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: sacrifices to the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: makes offerings to the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: rails against the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: attacks the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: buries the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: places the cube on a pedestal
+      - keyword: worshipsTheCube
+        weight:
+        en: copies the cube
+      - keyword: worshipsTheCube
+        weight:
+        en: takes the cube to another world
+      cubeExtraSentence:
+      - keyword: cubeExtraSentence
+        weight:
+        en: The cube seems [cubeEmotion] by this
+      - keyword: cubeExtraSentence
+        weight:
+        en: "[pawnsPlural] are approaching to do the same"
+      - keyword: cubeExtraSentence
+        weight:
+        en: "[aPawn] approaches to do the same"
+      - keyword: cubeExtraSentence
+        weight:
+        en: "[aPawn] gazes mournfully at the scene"
+      - keyword: cubeExtraSentence
+        weight:
+        en: "[pawnsPlural] are trying to steal the cube"
+      - keyword: cubeExtraSentence
+        weight:
+        en: The cube seems to shimmer softly
+      cubeEmotion:
+      - keyword: cubeEmotion
+        weight:
+        en: unfazed
+      - keyword: cubeEmotion
+        weight:
+        en: pleased
+      - keyword: cubeEmotion
+        weight:
+        en: upset
+      - keyword: cubeEmotion
+        weight:
+        en: unmoved
+      - keyword: cubeEmotion
+        weight:
+        en: enraged
+      - keyword: cubeEmotion
+        weight:
+        en: charmed
+      - keyword: cubeEmotion
+        weight:
+        en: aggravated
+    ruleCount: 109
+  ArtDescription_VoidSculpture:
+    id: ArtDescription_VoidSculpture
+    package: anomaly
+    category: carrier
+    keywords:
+    - r_art_description
+    - voidStrange
+    - voidVerbphrase
+    - voidDesc
+    rulesByKeyword:
+      r_art_description:
+      - keyword: r_art_description
+        weight:
+        en: This [voidStrange] sculpture [voidVerbphrase]. [voidDesc]
+      voidStrange:
+      - keyword: voidStrange
+        weight:
+        en: strange
+      - keyword: voidStrange
+        weight:
+        en: disturbing
+      - keyword: voidStrange
+        weight:
+        en: unsettling
+      - keyword: voidStrange
+        weight:
+        en: frightening
+      - keyword: voidStrange
+        weight:
+        en: twisted
+      - keyword: voidStrange
+        weight:
+        en: misshapen
+      - keyword: voidStrange
+        weight:
+        en: inhuman
+      - keyword: voidStrange
+        weight:
+        en: weird
+      voidVerbphrase:
+      - keyword: voidVerbphrase
+        weight:
+        en: curls in a disturbing shape
+      - keyword: voidVerbphrase
+        weight:
+        en: twists as though trying to harm the viewer
+      - keyword: voidVerbphrase
+        weight:
+        en: seems to shift under the viewer's gaze
+      - keyword: voidVerbphrase
+        weight:
+        en: emanates a sense of rage
+      - keyword: voidVerbphrase
+        weight:
+        en: emanates a sense of depression and sadness
+      - keyword: voidVerbphrase
+        weight:
+        en: provokes feelings of dread and self-doubt
+      - keyword: voidVerbphrase
+        weight:
+        en: expands randomly in different directions in fits and starts
+      - keyword: voidVerbphrase
+        weight:
+        en: seems to quiver until you look straight at it
+      - keyword: voidVerbphrase
+        weight:
+        en: almost looks like it is breathing
+      - keyword: voidVerbphrase
+        weight:
+        en: doesn't resemble any living creature
+      - keyword: voidVerbphrase
+        weight:
+        en: appears to be a metaphor for suffering
+      voidDesc:
+      - keyword: voidDesc
+        weight:
+        en: Dozens of finger-like appendages painfully grip a central figure.
+      - keyword: voidDesc
+        weight:
+        en: Globes of material crush and squeeze each other into stretched-out shapes.
+      - keyword: voidDesc
+        weight:
+        en: Bladelike segments are bent together to resemble a face screaming in terror.
+      - keyword: voidDesc
+        weight:
+        en: Arm-like protrusions squeeze each other, as though trying to destroy themselves.
+      - keyword: voidDesc
+        weight:
+        en: Needles protruding from the surface look ready to shoot out and skewer anyone who moves nearby.
+      - keyword: voidDesc
+        weight:
+        en: The surface whorls and roils, shifting from organic-like texture to machinelike edges and blades.
+      - keyword: voidDesc
+        weight:
+        en: It looks as though it has sheared itself into pieces with great force, yet somehow still hangs together.
+      - keyword: voidDesc
+        weight:
+        en: A hand-like appendage waits as though ready to reach out and attack.
+      - keyword: voidDesc
+        weight:
+        en: A pair of figures each seem to penetrate and torture the other with curled, jagged fingers.
+      - keyword: voidDesc
+        weight:
+        en: A complex shape emerges from the mouth of a screaming face.
+      - keyword: voidDesc
+        weight:
+        en: An abstracted shape resembling an animal appears to rip off one of its own limbs.
+      - keyword: voidDesc
+        weight:
+        en: Hundreds of tiny abstract figure-like objects swarm over a large distorted globe.
+    ruleCount: 32
+  ArtDescription_Statue:
+    id: ArtDescription_Statue
+    package: odyssey
+    category: carrier
+    keywords:
+    - r_statue_description
+    - statueSubjectDesc
+    - maybeOtherHand
+    - otherHand
+    - maybeNoNose
+    - maybeInsult
+    - statueFaceDesc
+    - facialLook
+    - facialFeature
+    - style_group_statue
+    - artextra_clause_statue
+    - carvedAdverb
+    - carvedVerb
+    - statueAdj
+    - statueDepicts
+    - side_position_statue
+    - statueBodyPart
+    - prop
+    rulesByKeyword:
+      r_statue_description:
+      - keyword: r_statue_description
+        weight:
+        en: This statue [statueDepicts] [SUBJECT_nameFull] [statueSubjectDesc]. [statueFaceDesc] [style_group_statue]
+      - keyword: r_statue_description
+        weight:
+        en: A [statueAdj] statue depicting [SUBJECT_nameFull] [statueSubjectDesc]. [statueFaceDesc] [style_group_statue]
+      - keyword: r_statue_description
+        weight:
+        en: A [carvedAdverb] [carvedVerb] statue of [SUBJECT_nameFull]. It [statueDepicts] [SUBJECT_indefinite] [statueSubjectDesc]. [statueFaceDesc] [style_group_statue]
+      - keyword: r_statue_description
+        weight:
+        en: A statue showing [SUBJECT_nameFull] [statueSubjectDesc]. [statueFaceDesc] [style_group_statue]
+      - keyword: r_statue_description
+        weight:
+        en: A [statueAdj] statue of [SUBJECT_nameFull]. [statueFaceDesc] [style_group_statue]
+      statueSubjectDesc:
+      - keyword: statueSubjectDesc
+        weight:
+        en: standing upright holding a [prop] with both hands
+      - keyword: statueSubjectDesc
+        weight:
+        en: standing tall and gazing nobly into the distance
+      - keyword: statueSubjectDesc
+        weight:
+        en: thrusting a fist towards the sky
+      - keyword: statueSubjectDesc
+        weight:
+        en: reaching upward, grasping for something unseen
+      - keyword: statueSubjectDesc
+        weight:
+        en: leaning to the side as if about to topple[maybeInsult]
+      - keyword: statueSubjectDesc
+        weight:
+        en: standing on one-foot[maybeInsult]
+      - keyword: statueSubjectDesc
+        weight:
+        en: bowing deeply
+      - keyword: statueSubjectDesc
+        weight:
+        en: bracing against the wind
+      - keyword: statueSubjectDesc
+        weight:
+        en: kneeling in prayer
+      - keyword: statueSubjectDesc
+        weight:
+        en: with hands raised as if in prayer
+      - keyword: statueSubjectDesc
+        weight:
+        en: with hands pressed together in gratitude
+      - keyword: statueSubjectDesc
+        weight:
+        en: running at top speed
+      - keyword: statueSubjectDesc
+        weight:
+        en: with arms open, looking towards the sky
+      - keyword: statueSubjectDesc
+        weight:
+        en: with hands resting on hips
+      - keyword: statueSubjectDesc
+        weight:
+        en: with arms raised in triumph
+      - keyword: statueSubjectDesc
+        weight:
+        en: holding a [prop] in one hand[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        en: saluting with one hand[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        en: pointing towards the horizon[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        en: extending a hand in welcome[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        en: pointing at the horizon with one hand[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        en: dancing seductively
+      - keyword: statueSubjectDesc
+        weight:
+        en: relaxing in an alluring fashion
+      - keyword: statueSubjectDesc
+        weight:
+        en: getting ready to fight
+      - keyword: statueSubjectDesc
+        weight:
+        en: leaping into the air, frozen mid-jump
+      - keyword: statueSubjectDesc
+        weight:
+        en: casting a fish net into unseen waters
+      - keyword: statueSubjectDesc
+        weight:
+        en: eating a luxurious meal
+      - keyword: statueSubjectDesc
+        weight:
+        en: mid-struggle, breaking free from chains
+      - keyword: statueSubjectDesc
+        weight:
+        en: whispering a silent secret
+      - keyword: statueSubjectDesc
+        weight:
+        en: gazing up at the stars, eyes filled with wonder
+      - keyword: statueSubjectDesc
+        weight:
+        en: throwing an unseen spear
+      - keyword: statueSubjectDesc
+        weight:
+        en: tearing a piece of paper in an act of defiance
+      - keyword: statueSubjectDesc
+        weight:
+        en: wading through deep waters
+      - keyword: statueSubjectDesc
+        weight:
+        en: holding a large [prop] in both hands
+      - keyword: statueSubjectDesc
+        weight:
+        en: with no teeth[maybeInsult]
+      - keyword: statueSubjectDesc
+        weight:
+        en: squinting into the sun[maybeInsult]
+      - keyword: statueSubjectDesc
+        weight:
+        en: smelling a bouquet of flowers[maybeNoNose]
+      maybeOtherHand:
+      - keyword: maybeOtherHand
+        weight:
+        en: ". [otherHand]"
+      - keyword: maybeOtherHand
+        weight:
+        en: ''
+      otherHand:
+      - keyword: otherHand
+        weight:
+        en: The statue's other hand holds a [prop]
+      - keyword: otherHand
+        weight:
+        en: The statue's other hand rests on its hip
+      - keyword: otherHand
+        weight:
+        en: The statue's other hand is making an obscene gesture
+      - keyword: otherHand
+        weight:
+        en: The statue's other hand is missing[maybeInsult]
+      maybeNoNose:
+      - keyword: maybeNoNose
+        weight:
+        en: ". The statue has no nose[maybeInsult]"
+      - keyword: maybeNoNose
+        weight:
+        en: ''
+      maybeInsult:
+      - keyword: maybeInsult
+        weight:
+        en: ". This is a clear insult"
+      - keyword: maybeInsult
+        weight:
+        en: ". It is unclear if this is a slight by the artist or a simple mistake"
+      - keyword: maybeInsult
+        weight:
+        en: ". This suggests the artist is insulting the subject"
+      - keyword: maybeInsult
+        weight: 3.0
+        en: ''
+      statueFaceDesc:
+      - keyword: statueFaceDesc
+        weight: 2.0
+        en: The statue's face has a look of [facialLook].
+      - keyword: statueFaceDesc
+        weight: 2.0
+        en: "[facialLook] can be seen in [SUBJECT_indefinite]'s face."
+      - keyword: statueFaceDesc
+        weight:
+        en: "[SUBJECT_indefinite] has a look of [facialLook]."
+      - keyword: statueFaceDesc
+        weight:
+        en: "[SUBJECT_indefinite]'s face [depicts] [facialLook]."
+      - keyword: statueFaceDesc
+        weight:
+        en: "[SUBJECT_indefinite] has a wise and thoughtful countenance."
+      - keyword: statueFaceDesc
+        weight:
+        en: "[SUBJECT_indefinite] is crying out, mouth agape in a silent scream."
+      - keyword: statueFaceDesc
+        weight:
+        en: "[SUBJECT_indefinite] looks mournfully into the distance."
+      - keyword: statueFaceDesc
+        weight:
+        en: The statue [depicts] [SUBJECT_indefinite] with a signature look of determination.
+      - keyword: statueFaceDesc
+        weight:
+        en: The statue [depicts] [SUBJECT_indefinite] laughing maniacally.
+      - keyword: statueFaceDesc
+        weight:
+        en: "[SUBJECT_indefinite] has [facialFeature]."
+      - keyword: statueFaceDesc
+        weight:
+        en: The statue has [facialFeature].
+      - keyword: statueFaceDesc
+        weight:
+        en: Notably, the statue has [facialFeature].
+      facialLook:
+      - keyword: facialLook
+        weight:
+        en: true joy
+      - keyword: facialLook
+        weight:
+        en: pure terror
+      - keyword: facialLook
+        weight:
+        en: pure ecstasy
+      - keyword: facialLook
+        weight:
+        en: pure bliss
+      - keyword: facialLook
+        weight:
+        en: shock and embarrassment
+      - keyword: facialLook
+        weight:
+        en: amusement
+      - keyword: facialLook
+        weight:
+        en: untold grief
+      - keyword: facialLook
+        weight:
+        en: deep contemplation
+      - keyword: facialLook
+        weight:
+        en: confusion
+      - keyword: facialLook
+        weight:
+        en: pride and contentment
+      - keyword: facialLook
+        weight:
+        en: amusement
+      - keyword: facialLook
+        weight:
+        en: disgust
+      - keyword: facialLook
+        weight:
+        en: defiance
+      facialFeature:
+      - keyword: facialFeature
+        weight:
+        en: a playful smirk
+      - keyword: facialFeature
+        weight:
+        en: a furrowed brow
+      - keyword: facialFeature
+        weight:
+        en: a raised eyebrow, as if questioning the artist
+      - keyword: facialFeature
+        weight:
+        en: a long tongue sticking out
+      - keyword: facialFeature
+        weight:
+        en: a face twisted in anguish
+      - keyword: facialFeature
+        weight:
+        en: eyes that appear to twinkle
+      - keyword: facialFeature
+        weight:
+        en: both eyes closed, as if in peace
+      - keyword: facialFeature
+        weight:
+        en: cheeks puffed as if blowing air
+      - keyword: facialFeature
+        weight:
+        en: beady eyes and snarling lips
+      style_group_statue:
+      - keyword: style_group_statue
+        weight:
+        en: "[artextra_clause_statue]. [style_clause]."
+      - keyword: style_group_statue
+        weight:
+        en: "[style_clause]. [artextra_clause_statue]."
+      - keyword: style_group_statue
+        weight:
+        en: "[style_clause]."
+      - keyword: style_group_statue
+        weight:
+        en: "[artextra_clause_statue]."
+      - keyword: style_group_statue
+        weight:
+        en: ''
+      artextra_clause_statue:
+      - keyword: artextra_clause_statue
+        weight:
+        en: the pedestal of the statue is bordered by [subimageplural]
+      - keyword: artextra_clause_statue
+        weight:
+        en: carved into the subject's skin are [subimageplural]
+      - keyword: artextra_clause_statue
+        weight:
+        en: several smaller carvings surround the statue. Each resembles [subimagesingle]
+      - keyword: artextra_clause_statue
+        weight:
+        en: the statue's legs are obscured by [subimageplural]
+      - keyword: artextra_clause_statue
+        weight:
+        en: "[carvedVerb] into the statue's face is an image of [subimageany]"
+      - keyword: artextra_clause_statue
+        weight:
+        en: "[SUBJECT_indefinite] stands in the middle of a [Community]"
+      - keyword: artextra_clause_statue
+        weight:
+        en: the statue's base appears to be a [TerrainFeature]
+      - keyword: artextra_clause_statue
+        weight:
+        en: "[SUBJECT_indefinite] appears to be rising out of a [TerrainFeature]"
+      - keyword: artextra_clause_statue
+        weight:
+        en: a small [Character] appears [side_position_statue]
+      - keyword: artextra_clause_statue
+        weight:
+        en: a [pawn_adj] [Character] appears [side_position_statue]
+      - keyword: artextra_clause_statue
+        weight:
+        en: "[Quantity_adjphrase] [Character]s appear [side_position_statue]"
+      - keyword: artextra_clause_statue
+        weight:
+        en: "[Quantity_adjphrase] [pawn_adj] [Character]s appear [side_position_statue]"
+      - keyword: artextra_clause_statue
+        weight:
+        en: a [Animal] is carved [side_position_statue]
+      - keyword: artextra_clause_statue
+        weight:
+        en: from a distance, the [composition] composition of the statue reveals the outline of [subimageany]
+      - keyword: artextra_clause_statue
+        weight:
+        en: the statue holds a [Animal] under one arm
+      - keyword: artextra_clause_statue
+        weight:
+        en: the statue is holding [Quantity_adjphrase] [pawn_adj] [Character]s
+      - keyword: artextra_clause_statue
+        weight:
+        en: "[SUBJECT_indefinite]'s [statueBodyPart] is split open. Within you can see [subimageplural]"
+      carvedAdverb:
+      - keyword: carvedAdverb
+        weight:
+        en: carefully
+      - keyword: carvedAdverb
+        weight:
+        en: quickly
+      - keyword: carvedAdverb
+        weight:
+        en: roughly
+      - keyword: carvedAdverb
+        weight:
+        en: meticulously
+      - keyword: carvedAdverb
+        weight:
+        en: meticulously
+      carvedVerb:
+      - keyword: carvedVerb
+        weight:
+        en: carved
+      - keyword: carvedVerb
+        weight:
+        en: sculpted
+      - keyword: carvedVerb
+        weight:
+        en: chiseled
+      statueAdj:
+      - keyword: statueAdj
+        weight:
+        en: larger-than-life
+      - keyword: statueAdj
+        weight:
+        en: towering
+      - keyword: statueAdj
+        weight:
+        en: grand
+      - keyword: statueAdj
+        weight:
+        en: large
+      - keyword: statueAdj
+        weight:
+        en: lifelike
+      - keyword: statueAdj
+        weight:
+        en: solemn
+      - keyword: statueAdj
+        weight:
+        en: dignified
+      - keyword: statueAdj
+        weight:
+        en: solemn
+      - keyword: statueAdj
+        weight:
+        en: noble
+      - keyword: statueAdj
+        weight:
+        en: serene
+      - keyword: statueAdj
+        weight:
+        en: crumbling
+      - keyword: statueAdj
+        weight:
+        en: modest
+      - keyword: statueAdj
+        weight:
+        en: revealing
+      - keyword: statueAdj
+        weight:
+        en: crude
+      - keyword: statueAdj
+        weight:
+        en: titillating
+      - keyword: statueAdj
+        weight:
+        en: provocative
+      - keyword: statueAdj
+        weight:
+        en: suggestive
+      - keyword: statueAdj
+        weight:
+        en: grotesque
+      - keyword: statueAdj
+        weight:
+        en: frightful
+      - keyword: statueAdj
+        weight:
+        en: majestic
+      statueDepicts:
+      - keyword: statueDepicts
+        weight:
+        en: depicts
+      - keyword: statueDepicts
+        weight:
+        en: shows
+      - keyword: statueDepicts
+        weight:
+        en: portrays
+      side_position_statue:
+      - keyword: side_position_statue
+        weight:
+        en: at the base
+      - keyword: side_position_statue
+        weight:
+        en: on the pedestal beside [SUBJECT_indefinite]
+      - keyword: side_position_statue
+        weight:
+        en: under [SUBJECT_indefinite]'s heel
+      - keyword: side_position_statue
+        weight:
+        en: in [SUBJECT_indefinite]'s arms
+      - keyword: side_position_statue
+        weight:
+        en: atop [SUBJECT_indefinite]'s head
+      - keyword: side_position_statue
+        weight:
+        en: on [SUBJECT_indefinite]'s shoulders
+      - keyword: side_position_statue
+        weight:
+        en: behind the central statue
+      - keyword: side_position_statue
+        weight:
+        en: in a hollow carved into the figure's [statueBodyPart]
+      - keyword: side_position_statue
+        weight:
+        en: in [SUBJECT_indefinite]'s palm
+      - keyword: side_position_statue
+        weight:
+        en: bursting from [SUBJECT_indefinite]'s [statueBodyPart]
+      - keyword: side_position_statue
+        weight:
+        en: emerging from [SUBJECT_indefinite]'s mouth
+      - keyword: side_position_statue
+        weight:
+        en: on [SUBJECT_indefinite]'s back
+      statueBodyPart:
+      - keyword: statueBodyPart
+        weight:
+        en: chest
+      - keyword: statueBodyPart
+        weight:
+        en: stomach
+      - keyword: statueBodyPart
+        weight:
+        en: back
+      - keyword: statueBodyPart
+        weight:
+        en: head
+      - keyword: statueBodyPart
+        weight:
+        en: eye
+      prop:
+      - keyword: prop
+        weight:
+        en: book
+      - keyword: prop
+        weight:
+        en: sword
+      - keyword: prop
+        weight:
+        en: spear
+      - keyword: prop
+        weight:
+        en: gun
+      - keyword: prop
+        weight:
+        en: psychic relic
+      - keyword: prop
+        weight:
+        en: human heart
+    ruleCount: 163

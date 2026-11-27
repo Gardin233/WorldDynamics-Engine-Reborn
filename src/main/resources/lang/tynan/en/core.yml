@@ -1,0 +1,132 @@
+---
+meta:
+  title: TynanArt Test · 官方数据源重建
+  titleEn: TynanArt Test · Official-data rebuild
+  generatedAt: '2026-08-07T03:23:05Z'
+  scheme: C
+  version: 0.3.0-test
+carriers:
+- id: sculpture
+  label:
+    en: Sculpture
+  rulePackId: ArtDescription_Sculpture
+  available: true
+- id: furniture
+  label:
+    en: Furniture
+  rulePackId: ArtDescription_Furniture
+  available: true
+- id: weapon_melee
+  label:
+    en: Melee weapon
+  rulePackId: ArtDescription_WeaponMelee
+  available: true
+- id: weapon_gun
+  label:
+    en: Ranged weapon
+  rulePackId: ArtDescription_WeaponGun
+  available: true
+- id: sarcophagus
+  label:
+    en: Sarcophagus
+  rulePackId: ArtDescription_SarcophagusPlate
+  available: true
+- id: statue
+  label:
+    en: Statue
+  rulePackId: ArtDescription_Statue
+  available: true
+- id: cube_sculpture
+  label:
+    en: Cube sculpture
+  rulePackId: ArtDescription_CubeSculpture
+  available: true
+- id: void_sculpture
+  label:
+    en: Void sculpture
+  rulePackId: ArtDescription_VoidSculpture
+  available: true
+systemRulePackIds:
+  hasTaleRoot: ArtDescriptionRoot_HasTale
+  talelessRoot: ArtDescriptionRoot_Taleless
+  style: ArtDescriptionUtility_Global
+  talelessImages: TalelessImages
+  globalUtility: GlobalUtility
+utilityAliases:
+  Character:
+  - PersonJob
+  - Animal
+  - Enemy
+  - Mechanoid
+  ConceptAny:
+  - ConceptPositive
+  - ConceptBadass
+  - ConceptAngsty
+  AdjectiveAny:
+  - AdjectiveBadass
+  - AdjectiveAngsty
+  - AdjectiveFriendly
+  - AdjectiveNatural
+  subimageany: []
+pronouns:
+- id: he
+  label:
+    en: he/his/him
+  en:
+    pronoun: he
+    possessive: his
+    objective: him
+- id: she
+  label:
+    en: she/her/her
+  en:
+    pronoun: she
+    possessive: her
+    objective: her
+- id: they
+  label:
+    en: they/their/them
+  en:
+    pronoun: they
+    possessive: their
+    objective: them
+qualities:
+  en:
+  - awful
+  - poor
+  - normal
+  - good
+  - excellent
+  - masterwork
+  - legendary
+pipeline:
+- id: entry
+  title:
+    en: Entry
+  detail:
+    en: CompArt → TaleTextGenerator, root keyword r_art_description.
+- id: branch
+  title:
+    en: HasTale / Taleless
+  detail:
+    en: 'With tale: 80% HasTale; else TalelessImages.'
+- id: carrier
+  title:
+    en: Carrier opener
+  detail:
+    en: descriptionMaker provides physical_description_root.
+- id: event
+  title:
+    en: Event phrases
+  detail:
+    en: tale_noun / image / circumstance_phrase / desc_sentence.
+- id: style
+  title:
+    en: Style + word pools
+  detail:
+    en: ArtDescriptionUtility_Global + GlobalUtility pools.
+- id: context
+  title:
+    en: Context sentence
+  detail:
+    en: context_sentence binds tale_noun and DATE.

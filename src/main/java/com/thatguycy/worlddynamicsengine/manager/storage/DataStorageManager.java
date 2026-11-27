@@ -173,6 +173,23 @@ public class DataStorageManager {
     }
 
     public synchronized void saveEntity(String category, String key, ConfigurationSerializable value) {
+        saveEntityPayload(category, key, serialize(value));
+    }
+
+    /**
+     * Serializes an entity on the caller's thread so the resulting payload can be written asynchronously.
+     */
+    public String prepareEntityPayload(ConfigurationSerializable value) {
+        if (value == null) {
+            throw new IllegalArgumentException("An entity value is required.");
+        }
+        return serialize(value);
+    }
+
+    public synchronized void saveEntityPayload(String category, String key, String payload) {
+        if (category == null || category.isBlank() || key == null || key.isBlank() || payload == null) {
+            throw new IllegalArgumentException("A storage category, key, and payload are required.");
+        }
         String sql = "INSERT INTO " + TABLE_NAME + " (category, entity_key, payload, updated_at) VALUES (?, ?, ?, ?)"
                 + (storageType == StorageType.MYSQL
                 ? " ON DUPLICATE KEY UPDATE payload = VALUES(payload), updated_at = VALUES(updated_at)"
@@ -181,7 +198,7 @@ public class DataStorageManager {
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, category);
             statement.setString(2, key);
-            statement.setString(3, serialize(value));
+            statement.setString(3, payload);
             statement.setLong(4, System.currentTimeMillis());
             statement.executeUpdate();
         } catch (Exception ex) {

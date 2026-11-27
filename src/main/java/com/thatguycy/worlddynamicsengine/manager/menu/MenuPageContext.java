@@ -5,6 +5,7 @@ import com.thatguycy.worlddynamicsengine.manager.background.BackgroundManager;
 import com.thatguycy.worlddynamicsengine.model.WDEresident;
 import java.util.List;
 import java.util.function.IntConsumer;
+import io.papermc.paper.dialog.Dialog;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -21,5 +22,6 @@ interface MenuPageContext {
     void back(MenuView menu, Runnable action);
     void confirm(Player player, String title, List<String> lore, Runnable cancel, Runnable apply);
     void success(Player player);
+    void showBackgroundDialog(Player player, Dialog dialog);
     void openHome(Player player);
 }

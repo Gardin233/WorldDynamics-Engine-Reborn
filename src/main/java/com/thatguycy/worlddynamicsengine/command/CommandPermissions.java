@@ -9,7 +9,7 @@ import org.bukkit.command.CommandSender;
  */
 public final class CommandPermissions {
     public static final List<String> ADMIN_MODULES = List.of(
-            "system", "nation", "town", "org", "war", "ideology", "background", "economy");
+            "system", "nation", "town", "org", "war", "ideology", "background", "economy", "event");
 
     private CommandPermissions() {}
 

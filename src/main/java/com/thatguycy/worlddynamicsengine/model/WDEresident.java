@@ -1,5 +1,6 @@
 package com.thatguycy.worlddynamicsengine.model;
 
+import com.thatguycy.worlddynamicsengine.model.background.RoleBackgroundStage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,6 +30,16 @@ public class WDEresident implements ConfigurationSerializable {
     private boolean religionChosen;
     private String childhoodBackgroundId;
     private String adulthoodBackgroundId;
+    private String childhoodBackgroundTitle;
+    private String adulthoodBackgroundTitle;
+    private String childhoodBackgroundStory;
+    private String adulthoodBackgroundStory;
+    private Map<String, Integer> childhoodBackgroundSkillPoints;
+    private Map<String, Integer> adulthoodBackgroundSkillPoints;
+    private String roleBackgroundId;
+    private String roleBackgroundTitle;
+    private String roleBackgroundStory;
+    private Map<String, Integer> roleBackgroundSkillPoints;
     private String focusedWarKey;
     private int mood;
     private long lastInspirationCheckAt;
@@ -36,6 +47,11 @@ public class WDEresident implements ConfigurationSerializable {
     private boolean comfortSleepTracking;
     private long lastRitualParticipationAt;
     private long stretchInspirationExpiresAt;
+    private int alchemyDependencyPercent;
+    private double alchemySatisfaction;
+    private long alchemySatisfactionUpdatedAt;
+    private int consecutivePotionDrinks;
+    private long lastPotionDrinkAt;
     private final List<MoodChange> moodChanges = new ArrayList<>();
     private final Map<String, Integer> persistentMoodChanges = new LinkedHashMap<>();
     private final Map<String, Integer> inspirationCharges = new LinkedHashMap<>();
@@ -63,6 +79,16 @@ public class WDEresident implements ConfigurationSerializable {
         this.religionChosen = false;
         this.childhoodBackgroundId = "";
         this.adulthoodBackgroundId = "";
+        this.childhoodBackgroundTitle = "";
+        this.adulthoodBackgroundTitle = "";
+        this.childhoodBackgroundStory = "";
+        this.adulthoodBackgroundStory = "";
+        this.childhoodBackgroundSkillPoints = new LinkedHashMap<>();
+        this.adulthoodBackgroundSkillPoints = new LinkedHashMap<>();
+        this.roleBackgroundId = "";
+        this.roleBackgroundTitle = "";
+        this.roleBackgroundStory = "";
+        this.roleBackgroundSkillPoints = new LinkedHashMap<>();
         this.focusedWarKey = "";
         this.mood = 50;
         this.lastInspirationCheckAt = System.currentTimeMillis();
@@ -70,6 +96,11 @@ public class WDEresident implements ConfigurationSerializable {
         this.comfortSleepTracking = false;
         this.lastRitualParticipationAt = System.currentTimeMillis();
         this.stretchInspirationExpiresAt = 0L;
+        this.alchemyDependencyPercent = 0;
+        this.alchemySatisfaction = 100.0;
+        this.alchemySatisfactionUpdatedAt = System.currentTimeMillis();
+        this.consecutivePotionDrinks = 0;
+        this.lastPotionDrinkAt = 0L;
         this.activeCollapseId = "";
         this.activeCollapseExpiresAt = 0L;
         this.appliedBackgroundBonusIds = new HashSet<>();
@@ -95,6 +126,16 @@ public class WDEresident implements ConfigurationSerializable {
                 : !isNoneReligion(this.religionName);
         this.childhoodBackgroundId = normalizeStringValue(map.get("childhoodBackgroundId"));
         this.adulthoodBackgroundId = normalizeStringValue(map.get("adulthoodBackgroundId"));
+        this.childhoodBackgroundTitle = normalizeStringValue(map.get("childhoodBackgroundTitle"));
+        this.adulthoodBackgroundTitle = normalizeStringValue(map.get("adulthoodBackgroundTitle"));
+        this.childhoodBackgroundStory = normalizeStringValue(map.get("childhoodBackgroundStory"));
+        this.adulthoodBackgroundStory = normalizeStringValue(map.get("adulthoodBackgroundStory"));
+        this.childhoodBackgroundSkillPoints = readIntegerMap(map.get("childhoodBackgroundSkillPoints"));
+        this.adulthoodBackgroundSkillPoints = readIntegerMap(map.get("adulthoodBackgroundSkillPoints"));
+        this.roleBackgroundId = normalizeStringValue(map.get("roleBackgroundId"));
+        this.roleBackgroundTitle = normalizeStringValue(map.get("roleBackgroundTitle"));
+        this.roleBackgroundStory = normalizeStringValue(map.get("roleBackgroundStory"));
+        this.roleBackgroundSkillPoints = readIntegerMap(map.get("roleBackgroundSkillPoints"));
         this.focusedWarKey = normalizeStringValue(map.get("focusedWarKey"));
         Object rawLastInspirationCheckAt = map.get("lastInspirationCheckAt");
         this.lastInspirationCheckAt = rawLastInspirationCheckAt instanceof Number number
@@ -110,6 +151,22 @@ public class WDEresident implements ConfigurationSerializable {
                 && number.longValue() > 0L ? number.longValue() : System.currentTimeMillis();
         Object rawStretchInspirationExpiresAt = map.get("stretchInspirationExpiresAt");
         this.stretchInspirationExpiresAt = rawStretchInspirationExpiresAt instanceof Number number
+                ? Math.max(0L, number.longValue()) : 0L;
+        Object rawAlchemyDependency = map.get("alchemyDependencyPercent");
+        this.alchemyDependencyPercent = rawAlchemyDependency instanceof Number number
+                ? Math.max(0, Math.min(100, number.intValue())) : 0;
+        Object rawAlchemySatisfaction = map.get("alchemySatisfaction");
+        this.alchemySatisfaction = rawAlchemySatisfaction instanceof Number number
+                ? Math.max(0.0, Math.min(100.0, number.doubleValue())) : 100.0;
+        Object rawAlchemySatisfactionUpdatedAt = map.get("alchemySatisfactionUpdatedAt");
+        this.alchemySatisfactionUpdatedAt =
+                rawAlchemySatisfactionUpdatedAt instanceof Number number && number.longValue() > 0L
+                        ? number.longValue() : System.currentTimeMillis();
+        Object rawConsecutivePotionDrinks = map.get("consecutivePotionDrinks");
+        this.consecutivePotionDrinks = rawConsecutivePotionDrinks instanceof Number number
+                ? Math.max(0, number.intValue()) : 0;
+        Object rawLastPotionDrinkAt = map.get("lastPotionDrinkAt");
+        this.lastPotionDrinkAt = rawLastPotionDrinkAt instanceof Number number
                 ? Math.max(0L, number.longValue()) : 0L;
         Object rawMood = map.get("mood");
         this.mood = clampMood(rawMood instanceof Number number ? number.intValue() : 50);
@@ -134,7 +191,7 @@ public class WDEresident implements ConfigurationSerializable {
         if (rawPersistentMoodChanges instanceof Map<?, ?> changes) {
             for (Map.Entry<?, ?> entry : changes.entrySet()) {
                 String source = normalizeStringValue(entry.getKey());
-                if (!(entry.getValue() instanceof Number delta) || source.isBlank() || delta.intValue() == 0) {
+                if (!(entry.getValue() instanceof Number delta) || source.isBlank()) {
                     continue;
                 }
                 persistentMoodChanges.put(source, clampMoodDelta(delta.intValue()));
@@ -181,6 +238,16 @@ public class WDEresident implements ConfigurationSerializable {
         map.put("religionChosen", religionChosen);
         map.put("childhoodBackgroundId", childhoodBackgroundId);
         map.put("adulthoodBackgroundId", adulthoodBackgroundId);
+        map.put("childhoodBackgroundTitle", childhoodBackgroundTitle);
+        map.put("adulthoodBackgroundTitle", adulthoodBackgroundTitle);
+        map.put("childhoodBackgroundStory", childhoodBackgroundStory);
+        map.put("adulthoodBackgroundStory", adulthoodBackgroundStory);
+        map.put("childhoodBackgroundSkillPoints", new LinkedHashMap<>(childhoodBackgroundSkillPoints));
+        map.put("adulthoodBackgroundSkillPoints", new LinkedHashMap<>(adulthoodBackgroundSkillPoints));
+        map.put("roleBackgroundId", roleBackgroundId);
+        map.put("roleBackgroundTitle", roleBackgroundTitle);
+        map.put("roleBackgroundStory", roleBackgroundStory);
+        map.put("roleBackgroundSkillPoints", new LinkedHashMap<>(roleBackgroundSkillPoints));
         map.put("focusedWarKey", focusedWarKey);
         map.put("mood", mood);
         map.put("lastInspirationCheckAt", lastInspirationCheckAt);
@@ -188,6 +255,11 @@ public class WDEresident implements ConfigurationSerializable {
         map.put("comfortSleepTracking", comfortSleepTracking);
         map.put("lastRitualParticipationAt", lastRitualParticipationAt);
         map.put("stretchInspirationExpiresAt", stretchInspirationExpiresAt);
+        map.put("alchemyDependencyPercent", alchemyDependencyPercent);
+        map.put("alchemySatisfaction", alchemySatisfaction);
+        map.put("alchemySatisfactionUpdatedAt", alchemySatisfactionUpdatedAt);
+        map.put("consecutivePotionDrinks", consecutivePotionDrinks);
+        map.put("lastPotionDrinkAt", lastPotionDrinkAt);
         List<Map<String, Object>> serializedMoodChanges = new ArrayList<>();
         for (MoodChange change : moodChanges) {
             serializedMoodChanges.add(Map.of("source", change.source(), "delta", change.delta(),
@@ -319,6 +391,88 @@ public class WDEresident implements ConfigurationSerializable {
         this.adulthoodBackgroundId = normalizeStringValue(adulthoodBackgroundId);
     }
 
+    public String getBackgroundTitle(RoleBackgroundStage stage) {
+        return stage == RoleBackgroundStage.CHILDHOOD
+                ? childhoodBackgroundTitle : stage == RoleBackgroundStage.ADULTHOOD
+                ? adulthoodBackgroundTitle : "";
+    }
+
+    public void setBackgroundTitle(RoleBackgroundStage stage, String title) {
+        if (stage == RoleBackgroundStage.CHILDHOOD) {
+            childhoodBackgroundTitle = normalizeStringValue(title);
+        } else if (stage == RoleBackgroundStage.ADULTHOOD) {
+            adulthoodBackgroundTitle = normalizeStringValue(title);
+        }
+    }
+
+    public String getBackgroundStory(RoleBackgroundStage stage) {
+        return stage == RoleBackgroundStage.CHILDHOOD
+                ? childhoodBackgroundStory : stage == RoleBackgroundStage.ADULTHOOD
+                ? adulthoodBackgroundStory : "";
+    }
+
+    public void setBackgroundStory(RoleBackgroundStage stage, String story) {
+        if (stage == RoleBackgroundStage.CHILDHOOD) {
+            childhoodBackgroundStory = normalizeStringValue(story);
+        } else if (stage == RoleBackgroundStage.ADULTHOOD) {
+            adulthoodBackgroundStory = normalizeStringValue(story);
+        }
+    }
+
+    public Map<String, Integer> getBackgroundSkillPoints(RoleBackgroundStage stage) {
+        if (stage == RoleBackgroundStage.CHILDHOOD) {
+            return new LinkedHashMap<>(childhoodBackgroundSkillPoints);
+        }
+        if (stage == RoleBackgroundStage.ADULTHOOD) {
+            return new LinkedHashMap<>(adulthoodBackgroundSkillPoints);
+        }
+        return new LinkedHashMap<>();
+    }
+
+    public void setBackgroundSkillPoints(RoleBackgroundStage stage, Map<String, Integer> skillPoints) {
+        if (stage == RoleBackgroundStage.CHILDHOOD) {
+            childhoodBackgroundSkillPoints = copyIntegerMap(skillPoints);
+        } else if (stage == RoleBackgroundStage.ADULTHOOD) {
+            adulthoodBackgroundSkillPoints = copyIntegerMap(skillPoints);
+        }
+    }
+
+    public String getRoleBackgroundId() {
+        return roleBackgroundId;
+    }
+
+    public void setRoleBackgroundId(String roleBackgroundId) {
+        this.roleBackgroundId = normalizeStringValue(roleBackgroundId);
+    }
+
+    public String getRoleBackgroundTitle() {
+        return roleBackgroundTitle;
+    }
+
+    public void setRoleBackgroundTitle(String roleBackgroundTitle) {
+        this.roleBackgroundTitle = normalizeStringValue(roleBackgroundTitle);
+    }
+
+    public String getRoleBackgroundStory() {
+        return roleBackgroundStory;
+    }
+
+    public void setRoleBackgroundStory(String roleBackgroundStory) {
+        this.roleBackgroundStory = normalizeStringValue(roleBackgroundStory);
+    }
+
+    public Map<String, Integer> getRoleBackgroundSkillPoints() {
+        return new LinkedHashMap<>(roleBackgroundSkillPoints);
+    }
+
+    public void setRoleBackgroundSkillPoints(Map<String, Integer> skillPoints) {
+        roleBackgroundSkillPoints = copyIntegerMap(skillPoints);
+    }
+
+    public boolean hasSelectedRoleBackground() {
+        return !roleBackgroundId.isBlank();
+    }
+
     public Set<String> getAppliedBackgroundBonusIds() {
         return appliedBackgroundBonusIds;
     }
@@ -432,6 +586,75 @@ public class WDEresident implements ConfigurationSerializable {
         return stretchInspirationExpiresAt;
     }
 
+    public int getAlchemyDependencyPercent() {
+        return alchemyDependencyPercent;
+    }
+
+    public double getAlchemySatisfaction() {
+        return alchemySatisfaction;
+    }
+
+    public int recordAlchemyPotionDrink(long now, long streakWindowMillis) {
+        if (isDehumanized()) return 0;
+        boolean consecutive = lastPotionDrinkAt > 0L
+                && now >= lastPotionDrinkAt
+                && now - lastPotionDrinkAt <= Math.max(0L, streakWindowMillis);
+        if (consecutive) {
+            if (consecutivePotionDrinks < Integer.MAX_VALUE) consecutivePotionDrinks++;
+        } else {
+            consecutivePotionDrinks = 1;
+        }
+        lastPotionDrinkAt = Math.max(1L, now);
+        return consecutivePotionDrinks;
+    }
+
+    public double getAlchemySatisfactionAt(long now, double decayPerHour,
+                                          double maxDependencyAccelerationPercent) {
+        if (alchemyDependencyPercent <= 0 || now <= alchemySatisfactionUpdatedAt) {
+            return alchemySatisfaction;
+        }
+        double dependencyAcceleration = 1.0
+                + (alchemyDependencyPercent / 100.0)
+                * (Math.max(0.0, maxDependencyAccelerationPercent) / 100.0);
+        double elapsedHours = (now - alchemySatisfactionUpdatedAt) / 3_600_000.0;
+        return Math.max(0.0, alchemySatisfaction
+                - elapsedHours * Math.max(0.0, decayPerHour) * dependencyAcceleration);
+    }
+
+    public boolean consumeAlchemyPotion(long now, int dependencyGain, double satisfactionGain,
+                                        double decayPerHour, double maxDependencyAccelerationPercent) {
+        if (isDehumanized()) return false;
+        double decayedSatisfaction = getAlchemySatisfactionAt(
+                now, decayPerHour, maxDependencyAccelerationPercent);
+        int previousDependency = alchemyDependencyPercent;
+        double previousSatisfaction = alchemySatisfaction;
+        alchemyDependencyPercent = Math.min(100, alchemyDependencyPercent + Math.max(0, dependencyGain));
+        alchemySatisfaction = Math.min(100.0,
+                decayedSatisfaction + Math.max(0.0, satisfactionGain));
+        alchemySatisfactionUpdatedAt = Math.max(1L, now);
+        return previousDependency != alchemyDependencyPercent
+                || Double.compare(previousSatisfaction, alchemySatisfaction) != 0;
+    }
+
+    public boolean applyAlchemySplashHit(long now, double satisfactionLoss,
+                                         double decayPerHour, double maxDependencyAccelerationPercent) {
+        if (isDehumanized() || alchemyDependencyPercent <= 0) return false;
+        double decayedSatisfaction = getAlchemySatisfactionAt(
+                now, decayPerHour, maxDependencyAccelerationPercent);
+        double previousSatisfaction = alchemySatisfaction;
+        alchemySatisfaction = Math.max(0.0, decayedSatisfaction - Math.max(0.0, satisfactionLoss));
+        alchemySatisfactionUpdatedAt = Math.max(1L, now);
+        return Double.compare(previousSatisfaction, alchemySatisfaction) != 0;
+    }
+
+    public void resetAlchemyDependency(long now) {
+        alchemyDependencyPercent = 0;
+        alchemySatisfaction = 100.0;
+        alchemySatisfactionUpdatedAt = Math.max(1L, now);
+        consecutivePotionDrinks = 0;
+        lastPotionDrinkAt = 0L;
+    }
+
     public void setStretchInspirationExpiresAt(long expiresAt) {
         stretchInspirationExpiresAt = Math.max(0L, expiresAt);
     }
@@ -470,7 +693,7 @@ public class WDEresident implements ConfigurationSerializable {
         if (normalizedPrefix.isBlank()) return false;
         String normalizedSource = normalizeStringValue(source);
         int boundedDelta = clampMoodDelta(delta);
-        if (!normalizedSource.startsWith(normalizedPrefix) || boundedDelta == 0) normalizedSource = "";
+        if (!normalizedSource.startsWith(normalizedPrefix)) normalizedSource = "";
         String legacyPrefix = normalizedPrefix.startsWith("doctrine|")
                 && normalizedPrefix.endsWith("|") && normalizedPrefix.length() > "doctrine||".length()
                 ? "doctrine:" + normalizedPrefix.substring("doctrine|".length(), normalizedPrefix.length() - 1) + ":"
@@ -627,6 +850,32 @@ public class WDEresident implements ConfigurationSerializable {
                     values.add(String.valueOf(entry));
                 }
             }
+        }
+        return values;
+    }
+
+    private Map<String, Integer> readIntegerMap(Object rawValue) {
+        Map<String, Integer> values = new LinkedHashMap<>();
+        if (rawValue instanceof Map<?, ?> rawMap) {
+            rawMap.forEach((key, value) -> {
+                String normalizedKey = normalizeStringValue(key);
+                if (value instanceof Number number && !normalizedKey.isBlank()) {
+                    values.put(normalizedKey, number.intValue());
+                }
+            });
+        }
+        return values;
+    }
+
+    private Map<String, Integer> copyIntegerMap(Map<String, Integer> source) {
+        Map<String, Integer> values = new LinkedHashMap<>();
+        if (source != null) {
+            source.forEach((key, value) -> {
+                String normalizedKey = normalizeStringValue(key);
+                if (!normalizedKey.isBlank() && value != null) {
+                    values.put(normalizedKey, value);
+                }
+            });
         }
         return values;
     }

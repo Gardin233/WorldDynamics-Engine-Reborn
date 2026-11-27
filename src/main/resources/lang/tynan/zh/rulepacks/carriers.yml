@@ -1,0 +1,1112 @@
+---
+rulepacks:
+  ArtDescription_Furniture:
+    id: ArtDescription_Furniture
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        zh: 这件家具上雕刻的内容[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 这件家具上雕刻的内容向我们[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 在这件家具上雕刻的内容[depicts]的是[image]。[desc_sentence_group]
+    ruleCount: 3
+  ArtDescription_SarcophagusPlate:
+    id: ArtDescription_SarcophagusPlate
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        zh: 这件棺材上雕刻的内容[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 这件棺材上雕刻的内容向我们[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 这件棺材上雕刻的内容[depiction]了[image]。 [desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 在这件棺材上雕刻的内容[depicts]的是[image]。[desc_sentence_group]
+    ruleCount: 4
+  ArtDescription_Sculpture:
+    id: ArtDescription_Sculpture
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    - sculpture
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        zh: 这件[sculpture][depicts]的是[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 这件[sculpture]向我们[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 在这件[sculpture]上[depiction]了[image]。[desc_sentence_group]
+      sculpture:
+      - keyword: sculpture
+        weight:
+        zh: 雕塑
+      - keyword: sculpture
+        weight:
+        zh: 作品
+      - keyword: sculpture
+        weight:
+        zh: 艺术品
+      - keyword: sculpture
+        weight:
+        zh: 雕像
+    ruleCount: 7
+  ArtDescription_WeaponGun:
+    id: ArtDescription_WeaponGun
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        zh: 这件武器雕刻的内容[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 这件武器雕刻的内容向我们[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 在这件武器上雕刻的内容[depicts]的是[image]。[desc_sentence_group]
+    ruleCount: 3
+  ArtDescription_WeaponMelee:
+    id: ArtDescription_WeaponMelee
+    package: core
+    category: carrier
+    keywords:
+    - physical_description_root
+    rulesByKeyword:
+      physical_description_root:
+      - keyword: physical_description_root
+        weight:
+        zh: 这件武器上雕刻的内容[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 这件武器上雕刻的内容向我们[depiction]了[image]。[desc_sentence_group]
+      - keyword: physical_description_root
+        weight:
+        zh: 在这件武器上雕刻的内容[depicts]的是[image]。[desc_sentence_group]
+    ruleCount: 3
+  ArtDescription_CubeSculpture:
+    id: ArtDescription_CubeSculpture
+    package: anomaly
+    category: carrier
+    keywords:
+    - r_art_description
+    - cube_style_group
+    - cubeDescSentence
+    - cubeWork
+    - aCube
+    - cubeLocation
+    - cubeDepicts
+    - aPawn
+    - pawnsPlural
+    - worshippingTheCube
+    - worshipsTheCube
+    - cubeExtraSentence
+    - cubeEmotion
+    rulesByKeyword:
+      r_art_description:
+      - keyword: r_art_description
+        weight:
+        zh: 这个[cubeWork][cubeDepicts][aCube]。[cube_style_group]
+      cube_style_group:
+      - keyword: cube_style_group
+        weight: 2.0
+        zh: "[cubeDescSentence]。[cubeExtraSentence]。"
+      - keyword: cube_style_group
+        weight: 3.0
+        zh: "[cubeDescSentence]。"
+      - keyword: cube_style_group
+        weight:
+        zh: ''
+      cubeDescSentence:
+      - keyword: cubeDescSentence
+        weight: 3.0
+        zh: "[cubeLocation]，[aPawn]正在[worshipsTheCube]"
+      - keyword: cubeDescSentence
+        weight: 3.0
+        zh: "[cubeLocation]，[pawnsPlural]正在[worshippingTheCube]"
+      - keyword: cubeDescSentence
+        weight:
+        zh: "[cubeWork]邀请参观者[worshippingTheCube]"
+      - keyword: cubeDescSentence
+        weight:
+        zh: "[worshippingTheCube]的图案组成了[cubeWork]的中心"
+      cubeWork:
+      - keyword: cubeWork
+        weight:
+        zh: 作品
+      - keyword: cubeWork
+        weight:
+        zh: 雕塑
+      - keyword: cubeWork
+        weight:
+        zh: 艺术品
+      - keyword: cubeWork
+        weight:
+        zh: 作品
+      aCube:
+      - keyword: aCube
+        weight:
+        zh: 抽象的魔方
+      - keyword: aCube
+        weight:
+        zh: 完美的魔方
+      - keyword: aCube
+        weight:
+        zh: 不稳的魔方
+      - keyword: aCube
+        weight:
+        zh: 有风格的魔方
+      - keyword: aCube
+        weight:
+        zh: 多面体
+      - keyword: aCube
+        weight:
+        zh: 简陋的魔方
+      - keyword: aCube
+        weight:
+        zh: 扭曲的魔方
+      - keyword: aCube
+        weight:
+        zh: 可怕的魔方
+      - keyword: aCube
+        weight:
+        zh: 黑暗的魔方
+      cubeLocation:
+      - keyword: cubeLocation
+        weight:
+        zh: 接近中心的位置
+      - keyword: cubeLocation
+        weight:
+        zh: 在每一面
+      - keyword: cubeLocation
+        weight:
+        zh: 在每面的中心
+      - keyword: cubeLocation
+        weight:
+        zh: 在主图案上面
+      - keyword: cubeLocation
+        weight:
+        zh: 在主图案下面
+      - keyword: cubeLocation
+        weight:
+        zh: 在主图案后面
+      - keyword: cubeLocation
+        weight:
+        zh: 在每边附近
+      - keyword: cubeLocation
+        weight:
+        zh: 在每边上
+      - keyword: cubeLocation
+        weight:
+        zh: 在每边上
+      cubeDepicts:
+      - keyword: cubeDepicts
+        weight:
+        zh: 描绘了
+      - keyword: cubeDepicts
+        weight:
+        zh: 展示了
+      - keyword: cubeDepicts
+        weight:
+        zh: 展现了
+      - keyword: cubeDepicts
+        weight:
+        zh: 描写了
+      aPawn:
+      - keyword: aPawn
+        weight:
+        zh: 作者的自画像
+      - keyword: aPawn
+        weight:
+        zh: 一只敲击兽
+      - keyword: aPawn
+        weight:
+        zh: 长着很多眼睛的瘦削之人
+      - keyword: aPawn
+        weight:
+        zh: 你的一位殖民者
+      - keyword: aPawn
+        weight:
+        zh: 一名尼人
+      - keyword: aPawn
+        weight:
+        zh: 一位闪光世界领袖
+      - keyword: aPawn
+        weight:
+        zh: 模糊的身影
+      - keyword: aPawn
+        weight:
+        zh: 一位部落萨满
+      - keyword: aPawn
+        weight:
+        zh: 一名戴着兜帽的血族
+      - keyword: aPawn
+        weight:
+        zh: 一名封建公主
+      - keyword: aPawn
+        weight:
+        zh: 远方[Community]的领袖
+      - keyword: aPawn
+        weight:
+        zh: 一名挥舞着[Weapon]的女性
+      - keyword: aPawn
+        weight:
+        zh: 穿着长袍的一行人
+      pawnsPlural:
+      - keyword: pawnsPlural
+        weight:
+        zh: 你的殖民者
+      - keyword: pawnsPlural
+        weight:
+        zh: 一群土匪
+      - keyword: pawnsPlural
+        weight:
+        zh: 部落集会
+      - keyword: pawnsPlural
+        weight:
+        zh: 机械虫群
+      - keyword: pawnsPlural
+        weight:
+        zh: 海盗帮派
+      - keyword: pawnsPlural
+        weight:
+        zh: 民俗农场主
+      - keyword: pawnsPlural
+        weight:
+        zh: 一群[Animal]
+      - keyword: pawnsPlural
+        weight:
+        zh: 来自[Community]的一群人
+      - keyword: pawnsPlural
+        weight:
+        zh: "[Quantity_adjphrase]个人"
+      worshippingTheCube:
+      - keyword: worshippingTheCube
+        weight:
+        zh: 崇拜魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 向魔方鞠躬
+      - keyword: worshippingTheCube
+        weight:
+        zh: 跪拜魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 环绕魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 赞颂魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 敬畏魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 恳求魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 向魔方哭诉
+      - keyword: worshippingTheCube
+        weight:
+        zh: 玩弄魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 与魔方交友
+      - keyword: worshippingTheCube
+        weight:
+        zh: 观察魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 沉溺于魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 为魔方献祭
+      - keyword: worshippingTheCube
+        weight:
+        zh: 向魔方献上贡品
+      - keyword: worshippingTheCube
+        weight:
+        zh: 反对魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 尊重魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 掩埋魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 将魔方放上基座
+      - keyword: worshippingTheCube
+        weight:
+        zh: 复制魔方
+      - keyword: worshippingTheCube
+        weight:
+        zh: 将魔方带去另一个世界
+      worshipsTheCube:
+      - keyword: worshipsTheCube
+        weight:
+        zh: 崇拜魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 向魔方鞠躬
+      - keyword: worshipsTheCube
+        weight:
+        zh: 跪拜魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 环绕魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 赞颂魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 敬畏魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 恳求魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 向魔方哭诉
+      - keyword: worshipsTheCube
+        weight:
+        zh: 玩弄魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 与魔方交友
+      - keyword: worshipsTheCube
+        weight:
+        zh: 观察魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 沉溺于魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 为魔方献祭
+      - keyword: worshipsTheCube
+        weight:
+        zh: 向魔方献上贡品
+      - keyword: worshipsTheCube
+        weight:
+        zh: 反对魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 攻击魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 掩埋魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 将魔方放上基座
+      - keyword: worshipsTheCube
+        weight:
+        zh: 复制魔方
+      - keyword: worshipsTheCube
+        weight:
+        zh: 将魔方带去另一个世界
+      cubeExtraSentence:
+      - keyword: cubeExtraSentence
+        weight:
+        zh: 魔方因此举而[cubeEmotion]
+      - keyword: cubeExtraSentence
+        weight:
+        zh: "[pawnsPlural]也靠了过来做同样的事"
+      - keyword: cubeExtraSentence
+        weight:
+        zh: "[aPawn]也靠了过来做同样的事"
+      - keyword: cubeExtraSentence
+        weight:
+        zh: "[aPawn]悲哀地看着一切"
+      - keyword: cubeExtraSentence
+        weight:
+        zh: "[pawnsPlural]试图窃取魔方"
+      - keyword: cubeExtraSentence
+        weight:
+        zh: 魔方似乎闪烁着柔和的光芒
+      cubeEmotion:
+      - keyword: cubeEmotion
+        weight:
+        zh: 陷入无序
+      - keyword: cubeEmotion
+        weight:
+        zh: 感到快乐
+      - keyword: cubeEmotion
+        weight:
+        zh: 十分伤心
+      - keyword: cubeEmotion
+        weight:
+        zh: 不为所动
+      - keyword: cubeEmotion
+        weight:
+        zh: 极为愤怒
+      - keyword: cubeEmotion
+        weight:
+        zh: 非常喜悦
+      - keyword: cubeEmotion
+        weight:
+        zh: 受到刺激
+    ruleCount: 109
+  ArtDescription_VoidSculpture:
+    id: ArtDescription_VoidSculpture
+    package: anomaly
+    category: carrier
+    keywords:
+    - r_art_description
+    - voidStrange
+    - voidVerbphrase
+    - voidDesc
+    rulesByKeyword:
+      r_art_description:
+      - keyword: r_art_description
+        weight:
+        zh: 这座[voidStrange]雕塑[voidVerbphrase]。[voidDesc]
+      voidStrange:
+      - keyword: voidStrange
+        weight:
+        zh: 奇怪的
+      - keyword: voidStrange
+        weight:
+        zh: 诡异的
+      - keyword: voidStrange
+        weight:
+        zh: 紊乱的
+      - keyword: voidStrange
+        weight:
+        zh: 恐惧的
+      - keyword: voidStrange
+        weight:
+        zh: 扭曲的
+      - keyword: voidStrange
+        weight:
+        zh: 残缺的
+      - keyword: voidStrange
+        weight:
+        zh: 非人类
+      - keyword: voidStrange
+        weight:
+        zh: 离奇的
+      voidVerbphrase:
+      - keyword: voidVerbphrase
+        weight:
+        zh: 卷曲成令人不安的形状
+      - keyword: voidVerbphrase
+        weight:
+        zh: 扭曲起来，仿佛试图去伤害周围的人
+      - keyword: voidVerbphrase
+        weight:
+        zh: 似乎在注视下发生了变化
+      - keyword: voidVerbphrase
+        weight:
+        zh: 散发出一丝愤怒
+      - keyword: voidVerbphrase
+        weight:
+        zh: 散发出一丝悲哀与绝望
+      - keyword: voidVerbphrase
+        weight:
+        zh: 引发了人们的恐惧和自我怀疑
+      - keyword: voidVerbphrase
+        weight:
+        zh: 随机地向不同方向延展
+      - keyword: voidVerbphrase
+        weight:
+        zh: 似乎在颤抖，直视它才会停止
+      - keyword: voidVerbphrase
+        weight:
+        zh: 仿佛像在呼吸一般
+      - keyword: voidVerbphrase
+        weight:
+        zh: 不像任何生物
+      - keyword: voidVerbphrase
+        weight:
+        zh: 似乎是痛苦的隐喻
+      voidDesc:
+      - keyword: voidDesc
+        weight:
+        zh: 数十根手指般的附肢痛苦地抓着中间的图案。
+      - keyword: voidDesc
+        weight:
+        zh: 球状材料相互挤压，形成拉伸的形状。
+      - keyword: voidDesc
+        weight:
+        zh: 利刃般的部件弯曲交缠，就像一张惊恐尖叫的脸。
+      - keyword: voidDesc
+        weight:
+        zh: 手臂一样的突起物相互挤压，似乎想要摧毁自己。
+      - keyword: voidDesc
+        weight:
+        zh: 从表面伸出的针刺看起来随时准备射出，将附近移动的任何人扎个对穿。
+      - keyword: voidDesc
+        weight:
+        zh: 表面呈现出旋涡状和卷曲状，从有机物般的纹理转变为机器般锋利的边缘。
+      - keyword: voidDesc
+        weight:
+        zh: 它看起来就像被巨大的力量撕成了碎片，但不知何故，它仍然藕断丝连。
+      - keyword: voidDesc
+        weight:
+        zh: 一只手状的附着物等待着，似乎随时准备开始攻击。
+      - keyword: voidDesc
+        weight:
+        zh: 一对图案似乎都在用弯曲、锯齿状的手指穿透并折磨着对方。
+      - keyword: voidDesc
+        weight:
+        zh: 一张尖叫的脸上浮现出一个复杂的形状。
+      - keyword: voidDesc
+        weight:
+        zh: 类似动物的抽象图案似乎要扯下自己的一条肢体。
+      - keyword: voidDesc
+        weight:
+        zh: 在扭曲的大球上，成百上千个抽象的小图案蜂拥而至。
+    ruleCount: 32
+  ArtDescription_Statue:
+    id: ArtDescription_Statue
+    package: odyssey
+    category: carrier
+    keywords:
+    - r_statue_description
+    - statueSubjectDesc
+    - maybeOtherHand
+    - otherHand
+    - maybeNoNose
+    - maybeInsult
+    - statueFaceDesc
+    - facialLook
+    - facialFeature
+    - style_group_statue
+    - artextra_clause_statue
+    - carvedAdverb
+    - carvedVerb
+    - statueAdj
+    - statueDepicts
+    - side_position_statue
+    - statueBodyPart
+    - prop
+    rulesByKeyword:
+      r_statue_description:
+      - keyword: r_statue_description
+        weight:
+        zh: 这座雕像[statueDepicts] [SUBJECT_nameFull] [statueSubjectDesc]。[statueFaceDesc][style_group_statue]
+      - keyword: r_statue_description
+        weight:
+        zh: 一座[statueAdj]的雕像，描绘了 [SUBJECT_nameFull] [statueSubjectDesc]。[statueFaceDesc][style_group_statue]
+      - keyword: r_statue_description
+        weight:
+        zh: 一座[carvedAdverb][carvedVerb]而成的 [SUBJECT_nameFull] 雕像。它[statueDepicts][SUBJECT_indefinite][statueSubjectDesc]。[statueFaceDesc][style_group_statue]
+      - keyword: r_statue_description
+        weight:
+        zh: 一座展现 [SUBJECT_nameFull] [statueSubjectDesc]的雕像。[statueFaceDesc][style_group_statue]
+      - keyword: r_statue_description
+        weight:
+        zh: 一座[statueAdj]的 [SUBJECT_nameFull] 雕像。[statueFaceDesc][style_group_statue]
+      statueSubjectDesc:
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 双手紧握[prop]正直站立
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 高昂站立，高贵地凝视远方
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 挥拳朝天空
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 向上伸展，仿佛抓住看不见的东西
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 向一侧倾斜，仿佛快要倒下[maybeInsult]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 单脚站立[maybeInsult]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 深深鞠躬
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 迎风而立
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 跪地祈祷
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 双手举起，仿佛在祈祷
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 双手合十，表达感激
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 全速奔跑
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 张开双臂，仰望天空
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 双手叉腰
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 双臂高举，显得胜利
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 单手持有[prop][maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 用一只手敬礼[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 指向地平线[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 伸手欢迎[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 用一只手指向地平线[maybeOtherHand]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 性感舞蹈中
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 以诱人的姿态放松
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 准备战斗
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 跳跃在空中，定格在半空
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 将渔网抛向隐形水域
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 享用丰盛美食
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 挣脱锁链的过程中
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 低语无声的秘密
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 仰望星空，双眼充满惊奇
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 投掷着看不见的长矛
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 撕碎纸张，以示反抗
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 涉入深水之中
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 双手紧握大型[prop]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 没有牙齿[maybeInsult]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 眯眼望向太阳[maybeInsult]
+      - keyword: statueSubjectDesc
+        weight:
+        zh: 闻着一束花[maybeNoNose]
+      maybeOtherHand:
+      - keyword: maybeOtherHand
+        weight:
+        zh: "。[otherHand]"
+      - keyword: maybeOtherHand
+        weight:
+        zh: ''
+      otherHand:
+      - keyword: otherHand
+        weight:
+        zh: 雕像的另一只手拿着[prop]
+      - keyword: otherHand
+        weight:
+        zh: 雕像的另一只手搭在臀部
+      - keyword: otherHand
+        weight:
+        zh: 雕像的另一只手做出猥亵的手势
+      - keyword: otherHand
+        weight:
+        zh: 雕像的另一只手缺失了[maybeInsult]
+      maybeNoNose:
+      - keyword: maybeNoNose
+        weight:
+        zh: "。雕像没有鼻子[maybeInsult]"
+      - keyword: maybeNoNose
+        weight:
+        zh: ''
+      maybeInsult:
+      - keyword: maybeInsult
+        weight:
+        zh: "。这显然是一种侮辱"
+      - keyword: maybeInsult
+        weight:
+        zh: "。无法判断这是艺术家的嘲讽还是失误"
+      - keyword: maybeInsult
+        weight:
+        zh: "。这意味着艺术家在侮辱对象"
+      - keyword: maybeInsult
+        weight: 3.0
+        zh: ''
+      statueFaceDesc:
+      - keyword: statueFaceDesc
+        weight: 2.0
+        zh: 雕像脸上带有[facialLook]的表情。
+      - keyword: statueFaceDesc
+        weight: 2.0
+        zh: "[SUBJECT_indefinite]的脸上可以看到[facialLook]。"
+      - keyword: statueFaceDesc
+        weight:
+        zh: "[SUBJECT_indefinite]带着[facialLook]的神情。"
+      - keyword: statueFaceDesc
+        weight:
+        zh: "[SUBJECT_indefinite]的脸[depicts][facialLook]。"
+      - keyword: statueFaceDesc
+        weight:
+        zh: "[SUBJECT_indefinite]有着睿智而深思的神情。"
+      - keyword: statueFaceDesc
+        weight:
+        zh: "[SUBJECT_indefinite]大声呼喊，张口无声尖叫。"
+      - keyword: statueFaceDesc
+        weight:
+        zh: "[SUBJECT_indefinite]哀伤地望向远方。"
+      - keyword: statueFaceDesc
+        weight:
+        zh: 雕像[depicts][SUBJECT_indefinite]展现出坚定的神情。
+      - keyword: statueFaceDesc
+        weight:
+        zh: 雕像[depicts][SUBJECT_indefinite]疯狂地大笑。
+      - keyword: statueFaceDesc
+        weight:
+        zh: "[SUBJECT_indefinite]拥有[facialFeature]。"
+      - keyword: statueFaceDesc
+        weight:
+        zh: 雕像具有[facialFeature]。
+      - keyword: statueFaceDesc
+        weight:
+        zh: 值得一提的是雕像具有[facialFeature]。
+      facialLook:
+      - keyword: facialLook
+        weight:
+        zh: 真正的喜悦
+      - keyword: facialLook
+        weight:
+        zh: 极度的恐惧
+      - keyword: facialLook
+        weight:
+        zh: 极乐
+      - keyword: facialLook
+        weight:
+        zh: 极致的幸福
+      - keyword: facialLook
+        weight:
+        zh: 震惊与尴尬
+      - keyword: facialLook
+        weight:
+        zh: 愉快
+      - keyword: facialLook
+        weight:
+        zh: 无尽的悲伤
+      - keyword: facialLook
+        weight:
+        zh: 深沉的思索
+      - keyword: facialLook
+        weight:
+        zh: 困惑
+      - keyword: facialLook
+        weight:
+        zh: 自豪与满足
+      - keyword: facialLook
+        weight:
+        zh: 愉快
+      - keyword: facialLook
+        weight:
+        zh: 厌恶
+      - keyword: facialLook
+        weight:
+        zh: 反抗
+      facialFeature:
+      - keyword: facialFeature
+        weight:
+        zh: 顽皮的笑容
+      - keyword: facialFeature
+        weight:
+        zh: 皱着的眉头
+      - keyword: facialFeature
+        weight:
+        zh: 高高扬起的眉毛，仿佛在质问艺术家
+      - keyword: facialFeature
+        weight:
+        zh: 吐出长舌头
+      - keyword: facialFeature
+        weight:
+        zh: 面容扭曲，痛苦万分
+      - keyword: facialFeature
+        weight:
+        zh: 眸子闪烁着光芒
+      - keyword: facialFeature
+        weight:
+        zh: 双眼紧闭，仿佛安详入睡
+      - keyword: facialFeature
+        weight:
+        zh: 鼓起的脸颊，好像在吹气
+      - keyword: facialFeature
+        weight:
+        zh: 珠状双眼和咧嘴的嘴唇
+      style_group_statue:
+      - keyword: style_group_statue
+        weight:
+        zh: "[artextra_clause_statue]。[style_clause]。"
+      - keyword: style_group_statue
+        weight:
+        zh: "[style_clause]。[artextra_clause_statue]。"
+      - keyword: style_group_statue
+        weight:
+        zh: "[style_clause]。"
+      - keyword: style_group_statue
+        weight:
+        zh: "[artextra_clause_statue]。"
+      - keyword: style_group_statue
+        weight:
+        zh: ''
+      artextra_clause_statue:
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 雕像基座周围环绕着[subimageplural]
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 雕刻在对象皮肤上的是[subimageplural]
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 几处较小的雕刻环绕雕像。每处都像[subimagesingle]
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 雕像的双腿被[subimageplural]遮挡
+      - keyword: artextra_clause_statue
+        weight:
+        zh: "[carvedVerb]在雕像脸上的是[subimageany]的画面"
+      - keyword: artextra_clause_statue
+        weight:
+        zh: "[SUBJECT_indefinite]站在[Community]中央"
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 雕像底座呈现为[TerrainFeature]模样
+      - keyword: artextra_clause_statue
+        weight:
+        zh: "[SUBJECT_indefinite]仿佛从[TerrainFeature]中升起"
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 一只小型[Character][side_position_statue]
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 一只[pawn_adj][Character][side_position_statue]
+      - keyword: artextra_clause_statue
+        weight:
+        zh: "[Quantity_adjphrase][Character][side_position_statue]"
+      - keyword: artextra_clause_statue
+        weight:
+        zh: "[Quantity_adjphrase][pawn_adj][Character][side_position_statue]"
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 一只[Animal]被雕刻[side_position_statue]
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 从远处观望，雕像[composition]的布局中显现出[subimageany]的轮廓
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 雕像夹着一只[Animal]
+      - keyword: artextra_clause_statue
+        weight:
+        zh: 雕像怀抱着[Quantity_adjphrase][pawn_adj][Character]
+      - keyword: artextra_clause_statue
+        weight:
+        zh: "[SUBJECT_indefinite]的[statueBodyPart]被剖开，内部可见[subimageplural]"
+      carvedAdverb:
+      - keyword: carvedAdverb
+        weight:
+        zh: 细致地
+      - keyword: carvedAdverb
+        weight:
+        zh: 迅速地
+      - keyword: carvedAdverb
+        weight:
+        zh: 粗略地
+      - keyword: carvedAdverb
+        weight:
+        zh: 一丝不苟地
+      - keyword: carvedAdverb
+        weight:
+        zh: 一丝不苟地
+      carvedVerb:
+      - keyword: carvedVerb
+        weight:
+        zh: 雕刻而成
+      - keyword: carvedVerb
+        weight:
+        zh: 雕塑
+      - keyword: carvedVerb
+        weight:
+        zh: 琢刻
+      statueAdj:
+      - keyword: statueAdj
+        weight:
+        zh: 巨型
+      - keyword: statueAdj
+        weight:
+        zh: 高耸
+      - keyword: statueAdj
+        weight:
+        zh: 宏伟
+      - keyword: statueAdj
+        weight:
+        zh: 大型
+      - keyword: statueAdj
+        weight:
+        zh: 栩栩如生
+      - keyword: statueAdj
+        weight:
+        zh: 庄重
+      - keyword: statueAdj
+        weight:
+        zh: 威严
+      - keyword: statueAdj
+        weight:
+        zh: 庄重
+      - keyword: statueAdj
+        weight:
+        zh: 高贵
+      - keyword: statueAdj
+        weight:
+        zh: 安详
+      - keyword: statueAdj
+        weight:
+        zh: 残破
+      - keyword: statueAdj
+        weight:
+        zh: 朴素
+      - keyword: statueAdj
+        weight:
+        zh: 暴露
+      - keyword: statueAdj
+        weight:
+        zh: 粗糙
+      - keyword: statueAdj
+        weight:
+        zh: 撩人
+      - keyword: statueAdj
+        weight:
+        zh: 挑逗
+      - keyword: statueAdj
+        weight:
+        zh: 暗示
+      - keyword: statueAdj
+        weight:
+        zh: 怪诞
+      - keyword: statueAdj
+        weight:
+        zh: 可怖
+      - keyword: statueAdj
+        weight:
+        zh: 庄严
+      statueDepicts:
+      - keyword: statueDepicts
+        weight:
+        zh: 描绘了
+      - keyword: statueDepicts
+        weight:
+        zh: 展现了
+      - keyword: statueDepicts
+        weight:
+        zh: 刻画了
+      side_position_statue:
+      - keyword: side_position_statue
+        weight:
+        zh: 在基座
+      - keyword: side_position_statue
+        weight:
+        zh: 在[SUBJECT_indefinite]身旁的底座上
+      - keyword: side_position_statue
+        weight:
+        zh: 在[SUBJECT_indefinite]的脚跟下
+      - keyword: side_position_statue
+        weight:
+        zh: 在[SUBJECT_indefinite]的怀里
+      - keyword: side_position_statue
+        weight:
+        zh: 在[SUBJECT_indefinite]的头顶上
+      - keyword: side_position_statue
+        weight:
+        zh: 在[SUBJECT_indefinite]的肩膀上
+      - keyword: side_position_statue
+        weight:
+        zh: 在中央雕像的后方
+      - keyword: side_position_statue
+        weight:
+        zh: 在雕像的[statueBodyPart]上开凿的空洞内
+      - keyword: side_position_statue
+        weight:
+        zh: 在[SUBJECT_indefinite]的手掌中
+      - keyword: side_position_statue
+        weight:
+        zh: 从[SUBJECT_indefinite]的[statueBodyPart]中爆发而出
+      - keyword: side_position_statue
+        weight:
+        zh: 从[SUBJECT_indefinite]的嘴里冒出
+      - keyword: side_position_statue
+        weight:
+        zh: 在[SUBJECT_indefinite]的背部
+      statueBodyPart:
+      - keyword: statueBodyPart
+        weight:
+        zh: 胸部
+      - keyword: statueBodyPart
+        weight:
+        zh: 腹部
+      - keyword: statueBodyPart
+        weight:
+        zh: 背部
+      - keyword: statueBodyPart
+        weight:
+        zh: 头部
+      - keyword: statueBodyPart
+        weight:
+        zh: 眼睛
+      prop:
+      - keyword: prop
+        weight:
+        zh: 书本
+      - keyword: prop
+        weight:
+        zh: 剑
+      - keyword: prop
+        weight:
+        zh: 长矛
+      - keyword: prop
+        weight:
+        zh: 枪械
+      - keyword: prop
+        weight:
+        zh: 心灵遗物
+      - keyword: prop
+        weight:
+        zh: 人类心脏
+    ruleCount: 163

@@ -1,0 +1,230 @@
+# Global scheduling belongs to EventManager; event sections only configure selected event behavior.
+generation:
+  enabled: true
+  # Event checks run every five minutes (20 ticks per second).
+  check-interval-ticks: 6000
+  chance-per-town-check: 0.05
+  # Applied after chance-per-town-check succeeds; every draw is independent.
+  no-event-chance: 0.25
+  # Available variable: wealth (town wealth). Supports arithmetic, parentheses, min/max/floor/ceil/abs.
+  # Strength events share this formula and online-population scaling.
+  # Each event applies its private multiplier, rounded up, before spawning.
+  strength-formula: "floor(wealth / 10000)"
+  maximum-strength-points: 100
+  # Weights are centrally selected by EventManager; zero disables that event type.
+  event-weights:
+    raiding: 1.0
+    refugees: 1.0
+    nether_invasion: 1.0
+    wandering_livestock: 1.0
+    maddened_animals: 1.0
+    phantom_migration: 1.0
+    mislead_enemies: 1.0
+
+# Raid-specific execution settings. Only attack events use a town-wealth threshold.
+raiding:
+  minimum-town-wealth: 10000.0
+  strength:
+    # Point cost for spawning one mob of each type.
+    mob-costs:
+      PILLAGER: 1
+      VINDICATOR: 2
+      WITCH: 4
+      EVOKER: 8
+      ILLUSIONER: 8
+      RAVAGER: 10
+  maximum-mobs-per-raid: 40
+  spawn:
+    # Search adjacent unclaimed Towny plots along the town's claimed border.
+    attempts-per-mob: 12
+  messages:
+    started: "§c城镇 %town% 遭到劫掠！外围出现了 %count% 名灾厄村民（强度点数：%points%）。全体参战玩家都死亡过且城镇无人在线时，劫掠才会成功结算。"
+    ended: "§c劫掠成功结算，原目标损失了 5% 的货币。"
+    cancelled: "§7劫掠结束，劫掠者未能达成目标。"
+    money-lost: "§c劫掠成功，损失了 %amount%（余额的 5%）。"
+
+# Refugees arrive as a compact group in the wilderness near the town.
+refugees:
+  maximum-level: 5
+  # Set a weight to 0 to disable that profession.
+  profession-weights:
+    ARMORER: 1.0
+    BUTCHER: 1.0
+    CARTOGRAPHER: 1.0
+    CLERIC: 1.0
+    FARMER: 1.0
+    FISHERMAN: 1.0
+    FLETCHER: 1.0
+    LEATHERWORKER: 1.0
+    LIBRARIAN: 1.0
+    MASON: 1.0
+    SHEPHERD: 1.0
+    TOOLSMITH: 1.0
+    WEAPONSMITH: 1.0
+  # Levels above maximum-level are ignored. Set a weight to 0 to disable that level.
+  level-weights:
+    1: 1.0
+    2: 1.0
+    3: 1.0
+    4: 1.0
+    5: 1.0
+  spawn:
+    minimum-radius: 32
+    maximum-radius: 64
+    location-attempts: 40
+    attempts-per-villager: 20
+    group-radius: 4
+  messages:
+    arrived: "§e一群可怜的村民来到了 %town% 附近（%count% 人），他们正在城镇外围等待安置。"
+
+# The invasion ends when any obsidian block in the portal frame is broken.
+nether-invasion:
+  minimum-town-wealth: 10000.0
+  duration-minutes: 60
+  protection-radius: 5
+  maximum-initial-mobs: 12
+  # Set a weight to 0 to disable a mob type.
+  mob-weights:
+    BLAZE: 3.0
+    GHAST: 1.0
+    HOGLIN: 2.0
+    MAGMA_CUBE: 3.0
+    PIGLIN_BRUTE: 2.0
+    WITHER_SKELETON: 3.0
+    ZOGLIN: 1.0
+  spawn:
+    minimum-radius: 32
+    maximum-radius: 64
+    site-attempts: 40
+    minimum-mob-radius: 4
+    maximum-mob-radius: 10
+    mob-attempts: 20
+  reinforcement:
+    # Stronger invasions move from the maximum interval toward the minimum interval.
+    minimum-interval-minutes: 2
+    maximum-interval-minutes: 5
+    strength-reference-points: 100
+    # 0 means unlimited; otherwise additional spawns pause at this living-mob count.
+    maximum-active-mobs: 30
+  messages:
+    started: "§4%town% 城镇外围出现了下界入侵！%count% 只敌对生物已从传送门涌出（强度：%points%）。破坏任意一块黑曜石门框即可结束入侵。"
+    destroyed: "§a%town% 外围的地狱门框架已被破坏，下界入侵结束。"
+    building-blocked: "§c下界入侵期间，不能在地狱门周围放置方块。"
+    raid-success: "§4%town% 的镇民已全部遭到劫掠，下界入侵成功，原目标损失 5% 余额。"
+    expired: "§7%town% 外围的下界入侵持续时间已到，地狱门与入侵生物消失。"
+
+# A one-shot arrival event: these animals remain as normal passive mobs.
+wandering-livestock:
+  minimum-count: 3
+  maximum-count: 5
+  animal-weights:
+    CAMEL: 0.5
+    CHICKEN: 1.0
+    COW: 2.0
+    DONKEY: 0.5
+    GOAT: 1.0
+    HORSE: 1.0
+    LLAMA: 0.5
+    MOOSHROOM: 0.5
+    MULE: 0.5
+    PANDA: 0.25
+    PIG: 2.0
+    RABBIT: 0.5
+    SHEEP: 2.0
+  animal-names:
+    CAMEL: 骆驼
+    CHICKEN: 鸡
+    COW: 牛
+    DONKEY: 驴
+    GOAT: 山羊
+    HORSE: 马
+    LLAMA: 羊驼
+    MOOSHROOM: 哞菇
+    MULE: 骡
+    PANDA: 熊猫
+    PIG: 猪
+    RABBIT: 兔子
+    SHEEP: 羊
+  spawn:
+    # Search adjacent unclaimed Towny plots along the town's claimed border.
+    center-attempts: 40
+    group-radius: 5
+    attempts-per-animal: 20
+  messages:
+    arrived: "§e一群流浪的%animal%来到了 %town% 附近（%count% 只）。"
+
+# These animals retain their vanilla models but actively pursue nearby players.
+maddened-animals:
+  minimum-town-wealth: 10000.0
+  maximum-initial-animals: 20
+  duration-minutes: 15
+  animal-weights:
+    CHICKEN: 2.0
+    COW: 2.0
+    GOAT: 1.0
+    HORSE: 0.5
+    MOOSHROOM: 0.5
+    MULE: 0.5
+    PANDA: 1.0
+    PIG: 2.0
+    RABBIT: 0.5
+    SHEEP: 2.0
+  animal-names:
+    CHICKEN: 鸡
+    COW: 牛
+    GOAT: 山羊
+    HORSE: 马
+    MOOSHROOM: 哞菇
+    MULE: 骡
+    PANDA: 熊猫
+    PIG: 猪
+    RABBIT: 兔子
+    SHEEP: 羊
+  spawn:
+    # Search adjacent unclaimed Towny plots along the town's claimed border.
+    center-attempts: 40
+    group-radius: 5
+    attempts-per-animal: 20
+  attack:
+    target-range: 96.0
+    range: 1.8
+    path-speed: 1.1
+    damage: 2.0
+    update-interval-ticks: 10
+    cooldown-ticks: 20
+  messages:
+    arrived: "§c一群发狂的%animal%来到 %town% 附近（%count% 只），它们会在 %minutes% 分钟后消失！"
+    expired: "§a%town% 附近的发狂动物已持续 %minutes% 分钟，现在平息并死亡了。"
+
+# Phantoms migrate over claimed town plots where the sky is unobstructed.
+phantom-migration:
+  minimum-phantoms: 3
+  maximum-phantoms: 40
+  minimum-height-above-ground: 10
+  spawn:
+    attempts-per-phantom: 20
+  messages:
+    arrived: "§5一大群幻翼把 %town% 当作歇脚点了！城镇上空出现了 %count% 只幻翼（强度：%points%）。"
+
+# Random text events are only considered while the town mayor is online.
+random-text-events:
+  mislead-enemies:
+    duration-seconds: 300
+    strength:
+      minimum-multiplier: 0.75
+      maximum-multiplier: 1.25
+    rewards:
+      money:
+        minimum: 100.0
+        maximum: 500.0
+      items:
+        # All survival-obtainable vanilla items enter the default pool.
+        # Add custom CraftEngine item IDs here to include them in the pool.
+        additional-materials: []
+        craft-engine-items: []
+    messages:
+      title: "§6来自 %name% 的求助"
+      body: "§7%name% 来到 %town% 镇长面前，请求协助误导追兵。\n\n§f%story%\n\n§e接取后会立刻引来一次灾厄村民袭击（强度点数：%points%）。\n§a报酬：%reward_money% 货币与一件随机物品（%reward_item%）"
+      accept: "§a接取"
+      decline: "§c拒绝"
+      expired: "§7这项提议已过期。"

@@ -77,8 +77,10 @@ public class BackgroundCommand implements CommandExecutor {
             return true;
         }
 
+        Player viewer = sender instanceof Player player ? player : null;
         for (RoleBackgroundDefinition definition : definitions) {
-            sender.sendMessage(TextColors.YELLOW + "- " + definition.getId() + TextColors.WHITE + " : " + definition.getTitle());
+            sender.sendMessage(TextColors.YELLOW + "- " + definition.getId() + TextColors.WHITE + " : "
+                    + backgroundManager.resolveText(viewer, definition.getTitle()));
         }
         return true;
     }
@@ -101,12 +103,14 @@ public class BackgroundCommand implements CommandExecutor {
             return true;
         }
 
-        sender.sendMessage(TextColors.GOLD + msg("background_info_header", definition.getTitle()));
+        Player viewer = sender instanceof Player player ? player : null;
+        String title = backgroundManager.resolveText(viewer, definition.getTitle());
+        sender.sendMessage(TextColors.GOLD + msg("background_info_header", title));
         sender.sendMessage(TextColors.YELLOW + msg("background_info_stage") + TextColors.WHITE + msg(stage.getLocaleKey()));
         sender.sendMessage(TextColors.YELLOW + msg("background_info_id") + TextColors.WHITE + definition.getId());
-        sender.sendMessage(TextColors.YELLOW + msg("background_info_title") + TextColors.WHITE + definition.getTitle());
+        sender.sendMessage(TextColors.YELLOW + msg("background_info_title") + TextColors.WHITE + title);
         sender.sendMessage(TextColors.YELLOW + msg("background_info_lore"));
-        List<String> resolvedLore = backgroundManager.resolveLore(sender instanceof Player player ? player : null, definition);
+        List<String> resolvedLore = backgroundManager.resolveLore(viewer, definition);
         if (resolvedLore.isEmpty()) {
             sender.sendMessage(TextColors.GRAY + msg("common_none"));
         } else {
@@ -120,7 +124,8 @@ public class BackgroundCommand implements CommandExecutor {
             sender.sendMessage(TextColors.GRAY + msg("common_none"));
         } else {
             for (Map.Entry<String, Integer> entry : definition.getSkillLevelBonuses().entrySet()) {
-                sender.sendMessage(TextColors.GRAY + msg("background_info_skill_bonus_entry", entry.getKey(), entry.getValue()));
+                sender.sendMessage(TextColors.GRAY + msg("background_info_skill_bonus_entry",
+                        backgroundManager.getAuraSkillDisplayName(viewer, entry.getKey()), entry.getValue()));
             }
         }
         return true;
@@ -134,8 +139,8 @@ public class BackgroundCommand implements CommandExecutor {
 
         WDEresident resident = residentManager.getOrCreateResident(player.getUniqueId(), player.getName());
         sender.sendMessage(TextColors.GOLD + msg("background_status_header"));
-        sendStageStatus(sender, resident, RoleBackgroundStage.CHILDHOOD);
-        sendStageStatus(sender, resident, RoleBackgroundStage.ADULTHOOD);
+        sendStageStatus(player, resident, RoleBackgroundStage.CHILDHOOD);
+        sendStageStatus(player, resident, RoleBackgroundStage.ADULTHOOD);
 
         RoleBackgroundStage nextPendingStage = backgroundManager.getNextPendingStage(resident);
         if (nextPendingStage == null) {
@@ -146,15 +151,16 @@ public class BackgroundCommand implements CommandExecutor {
         return true;
     }
 
-    private void sendStageStatus(CommandSender sender, WDEresident resident, RoleBackgroundStage stage) {
+    private void sendStageStatus(Player sender, WDEresident resident, RoleBackgroundStage stage) {
         String selectedId = backgroundManager.getSelectedBackgroundId(resident, stage);
         if (selectedId.isBlank()) {
             sender.sendMessage(TextColors.YELLOW + msg("background_status_stage_line", msg(stage.getLocaleKey()), msg("common_none")));
             return;
         }
 
-        RoleBackgroundDefinition definition = backgroundManager.getDefinition(stage, selectedId);
-        String display = definition == null ? selectedId : definition.getTitle() + " (" + definition.getId() + ")";
+        String title = resident.getBackgroundTitle(stage);
+        String display = title.isBlank() ? selectedId
+                : backgroundManager.resolveText(sender, title) + " (" + selectedId + ")";
         sender.sendMessage(TextColors.YELLOW + msg("background_status_stage_line", msg(stage.getLocaleKey()), display));
     }
 
@@ -197,16 +203,7 @@ public class BackgroundCommand implements CommandExecutor {
             return true;
         }
 
-        BackgroundManager.SelectionApplyResult result = backgroundManager.selectBackground(player, stage, definition);
-        sender.sendMessage(TextColors.GREEN + msg("background_choose_success", msg(stage.getLocaleKey()), definition.getTitle()));
-        if (result.bonusesPending()) {
-            sender.sendMessage(TextColors.YELLOW + msg("background_choose_bonus_pending"));
-        }
-        if (result.nextPendingStage() != null) {
-            sender.sendMessage(TextColors.YELLOW + msg("background_choose_next_stage", msg(result.nextPendingStage().getLocaleKey())));
-        } else {
-            sender.sendMessage(TextColors.GREEN + msg("background_choose_all_completed"));
-        }
+        plugin.getPlayerMenuManager().openBackgroundConfirmation(player, stage, definition.getId());
         return true;
     }
 

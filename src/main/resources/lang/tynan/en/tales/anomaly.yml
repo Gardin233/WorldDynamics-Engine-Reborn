@@ -1,0 +1,1060 @@
+---
+tales:
+- id: PerformedPsychicRitual
+  package: anomaly
+  label:
+    en: performed a psychic ritual
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] leading a psychic ritual"
+    image:
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] channeling energy that dances around [PAWN_objective] as [PAWN_pronoun] weaves a potent psychic ritual, [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] reciting dark incantations and tapping into mysterious forces to perform a psychic ritual, [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] focusing [PAWN_possessive] gaze as [PAWN_pronoun] performs a psychic ritual, [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] tracing intricate symbols in the air, harnessing hidden energies to manifest a psychic ritual, [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: while focusing intently on the tome in front of [PAWN_objective]
+    - keyword: circumstance_phrase
+      weight:
+      en: with focused determination, showcasing [PAWN_possessive] mastery of the psychic arts
+    - keyword: circumstance_phrase
+      weight:
+      en: with a cruel smile
+    - keyword: circumstance_phrase
+      weight:
+      en: while [PAWN_possessive] voice fights to be heard over the roar of energy
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: The chanters can be seen [side_position] lending their support.
+    - keyword: desc_sentence
+      weight:
+      en: The air shimmers as [PAWN_nameDef] completes the psychic ritual.
+    - keyword: desc_sentence
+      weight:
+      en: The monolith shimmers in the background.
+    - keyword: desc_sentence
+      weight:
+      en: The surrounding candles flicker and sputter in the swirling energy.
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_objective
+    - PAWN_possessive
+    - PAWN_pronoun
+    - circumstance_group
+    - side_position
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 13
+- id: ClosedTheVoid
+  package: anomaly
+  label:
+    en: closed the void node
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] closing the void node."
+    image:
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] sealing the connection to the void, ensuring the safety of the colony [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] standing defiantly before the void node, determined to protect the colony [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: amidst crackling energy
+    - keyword: circumstance_phrase
+      weight:
+      en: as the void node emits a haunting glow
+    - keyword: circumstance_phrase
+      weight:
+      en: while the void whispers in the background
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: The gray metal presses in from all sides.
+    - keyword: desc_sentence
+      weight:
+      en: The other colonists are shown [side_position], anxiously awaiting [PAWN_nameDef]'s return.
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef]'s face betrays that [PAWN_pronoun] is agonising over the choice before [PAWN_objective]."
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_objective
+    - PAWN_pronoun
+    - circumstance_group
+    - side_position
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 9
+- id: UnnaturalDarkness
+  package: anomaly
+  label:
+    en: unnatural darkness
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] confronts the unnatural darkness"
+    image:
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] standing in awe as the world is consumed by an impenetrable darkness [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] surrounded by black pillars falling from the sky which blanket the land in darkness [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] struggling to find [PAWN_possessive] way through the suffocating darkness, noctols hounding at [PAWN_possessive] heels, [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] watching the world get swallowed by an abyss of shadows [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: amidst by [PAWN_possessive] friends' desperate attempts to return to the safety of the light
+    - keyword: circumstance_phrase
+      weight:
+      en: with piercing screams echoing all around
+    - keyword: circumstance_phrase
+      weight:
+      en: the light seemingly barely able to hold it back
+    - keyword: circumstance_phrase
+      weight:
+      en: as [PAWN_pronoun] offers pleas for salvation
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: Not even the faintest flickering of lights in the distance is visible.
+    - keyword: desc_sentence
+      weight:
+      en: The situation seems utterly hopeless.
+    - keyword: desc_sentence
+      weight:
+      en: Groups of shadowy creatures are visible at the edge of the darkness.
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef] tries to find a glimmer of hope amidst the encroaching darkness."
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - PAWN_pronoun
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 13
+- id: EmbracedTheVoid
+  package: anomaly
+  label:
+    en: embraced the void
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] embracing the void"
+    image:
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] harnessing the forbidden knowledge of the void, transcending mortal limitations, [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] surrendering to the allure of the void [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] giving in to the sinister whispers of the void [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: as tendrils of dark energy coil around [PAWN_possessive] limbs
+    - keyword: circumstance_phrase
+      weight:
+      en: amidst a swirling vortex of energy
+    - keyword: circumstance_phrase
+      weight:
+      en: with an unsettling smile
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef] radiates an aura of ominous power, a testament to [PAWN_possessive] pact with the void."
+    - keyword: desc_sentence
+      weight:
+      en: "[PAWN_nameDef]'s eyes begin to gleam with an otherworldly glow."
+    - keyword: desc_sentence
+      weight:
+      en: The other colonists are shown [side_position], questioning the wisdom of [PAWN_nameDef]'s choice.
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - circumstance_group
+    - side_position
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 10
+- id: DeathPall
+  package: anomaly
+  label:
+    en: death pall
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[PAWN_nameDef] facing the encroaching death pall"
+    image:
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] gazing in horror as the death pall blankets the land, resurrecting the dead [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] clutching [PAWN_possessive] weapon tightly, as the death pall descends, raising the dead [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] trembling with unease, witnessing the arrival of the death pall, its influence giving life to the lifeless [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[PAWN_nameFull] watching in horror as the death pall envelops [PAWN_possessive] peaceful home, turning it into a battleground against the dead [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: and drowning out [PAWN_possessive] desperate prayers for safety
+    - keyword: circumstance_phrase
+      weight:
+      en: with the scent of decay and despair filling the air
+    - keyword: circumstance_phrase
+      weight:
+      en: and trapping [PAWN_objective] in a horde of shamblers
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: In the centre of the death pall, [PAWN_nameDef] prepares for battle.
+    - keyword: desc_sentence
+      weight:
+      en: The encroachment of the death pall fills [PAWN_nameDef]'s friends with terror.
+    - keyword: desc_sentence
+      weight:
+      en: Shivers run down [PAWN_nameDef]'s spine as the death pall's influence continues to spread.
+    - keyword: desc_sentence
+      weight:
+      en: The weight of despair settles upon [PAWN_nameDef], testing [PAWN_possessive] resolve in the face of the macabre.
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_objective
+    - PAWN_possessive
+    - PAWN_pronoun
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        en: Pawn
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          en: Pawn nameFull
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          en: Pawn nameDef
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          en: Pawn title
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          en: Pawn pronoun
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          en: Pawn possessive
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          en: Pawn objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        en: Pawn nameFull
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        en: Pawn nameDef
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        en: Pawn title
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        en: Pawn pronoun
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        en: Pawn possessive
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        en: Pawn objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 12
+- id: StudiedEntity
+  package: anomaly
+  label:
+    en: studied an entity
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      en: "[STUDIER_nameDef] studying [ENTITY_nameIndef]"
+    image:
+    - keyword: image
+      weight:
+      en: "[STUDIER_nameFull] carefully examining [ENTITY_nameDef] [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[STUDIER_nameFull] conducting experiments, seeking to understand the secrets of [ENTITY_nameDef], [circumstance_group]"
+    - keyword: image
+      weight:
+      en: "[STUDIER_nameFull] striving to comprehend the nature of [ENTITY_nameDef] [circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      en: with barely concealed disgust in [STUDIER_possessive] eyes
+    - keyword: circumstance_phrase
+      weight:
+      en: while scribbling in a notebook
+    - keyword: circumstance_phrase
+      weight:
+      en: while consulting an ancient tome
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      en: The steady work of bioferrite harvesters can be seen in the background.
+    - keyword: desc_sentence
+      weight:
+      en: The colonist's deep fascination with [ENTITY_nameDef] is evident.
+    - keyword: desc_sentence
+      weight:
+      en: "[STUDIER_nameDef] is completely absorbed in [STUDIER_possessive] study of [ENTITY_nameDef], striving to unlock its secrets."
+    - keyword: desc_sentence
+      weight:
+      en: "[ENTITY_nameDef] is only just held in the place by the ceaseless work of electro-inhibitors."
+    - keyword: desc_sentence
+      weight:
+      en: "[ENTITY_nameDef] does not appear to react to [STUDIER_nameDef]'s efforts."
+  slots:
+    tokens:
+    - ENTITY_nameDef
+    - ENTITY_nameIndef
+    - STUDIER_nameDef
+    - STUDIER_nameFull
+    - STUDIER_possessive
+    - circumstance_group
+    roles:
+    - prefix: ENTITY
+      label:
+        en: ENTITY
+      fields:
+      - token: ENTITY_nameFull
+        kind: person
+        prefix: ENTITY
+        field: nameFull
+        label:
+          en: ENTITY nameFull
+        required: true
+      - token: ENTITY_nameDef
+        kind: person
+        prefix: ENTITY
+        field: nameDef
+        label:
+          en: ENTITY nameDef
+        required: true
+      - token: ENTITY_title
+        kind: person
+        prefix: ENTITY
+        field: title
+        label:
+          en: ENTITY title
+        required: false
+      - token: ENTITY_pronoun
+        kind: person
+        prefix: ENTITY
+        field: pronoun
+        label:
+          en: ENTITY pronoun
+        required: true
+      - token: ENTITY_possessive
+        kind: person
+        prefix: ENTITY
+        field: possessive
+        label:
+          en: ENTITY possessive
+        required: true
+      - token: ENTITY_objective
+        kind: person
+        prefix: ENTITY
+        field: objective
+        label:
+          en: ENTITY objective
+        required: false
+      - token: ENTITY_nameIndef
+        kind: person
+        prefix: ENTITY
+        field: nameIndef
+        label:
+          en: ENTITY nameIndef
+        required: false
+    - prefix: STUDIER
+      label:
+        en: STUDIER
+      fields:
+      - token: STUDIER_nameFull
+        kind: person
+        prefix: STUDIER
+        field: nameFull
+        label:
+          en: STUDIER nameFull
+        required: true
+      - token: STUDIER_nameDef
+        kind: person
+        prefix: STUDIER
+        field: nameDef
+        label:
+          en: STUDIER nameDef
+        required: true
+      - token: STUDIER_title
+        kind: person
+        prefix: STUDIER
+        field: title
+        label:
+          en: STUDIER title
+        required: false
+      - token: STUDIER_pronoun
+        kind: person
+        prefix: STUDIER
+        field: pronoun
+        label:
+          en: STUDIER pronoun
+        required: true
+      - token: STUDIER_possessive
+        kind: person
+        prefix: STUDIER
+        field: possessive
+        label:
+          en: STUDIER possessive
+        required: true
+      - token: STUDIER_objective
+        kind: person
+        prefix: STUDIER
+        field: objective
+        label:
+          en: STUDIER objective
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: ENTITY_nameFull
+      kind: person
+      prefix: ENTITY
+      field: nameFull
+      label:
+        en: ENTITY nameFull
+      required: true
+    - token: ENTITY_nameDef
+      kind: person
+      prefix: ENTITY
+      field: nameDef
+      label:
+        en: ENTITY nameDef
+      required: true
+    - token: ENTITY_title
+      kind: person
+      prefix: ENTITY
+      field: title
+      label:
+        en: ENTITY title
+      required: false
+    - token: ENTITY_pronoun
+      kind: person
+      prefix: ENTITY
+      field: pronoun
+      label:
+        en: ENTITY pronoun
+      required: true
+    - token: ENTITY_possessive
+      kind: person
+      prefix: ENTITY
+      field: possessive
+      label:
+        en: ENTITY possessive
+      required: true
+    - token: ENTITY_objective
+      kind: person
+      prefix: ENTITY
+      field: objective
+      label:
+        en: ENTITY objective
+      required: false
+    - token: ENTITY_nameIndef
+      kind: person
+      prefix: ENTITY
+      field: nameIndef
+      label:
+        en: ENTITY nameIndef
+      required: false
+    - token: STUDIER_nameFull
+      kind: person
+      prefix: STUDIER
+      field: nameFull
+      label:
+        en: STUDIER nameFull
+      required: true
+    - token: STUDIER_nameDef
+      kind: person
+      prefix: STUDIER
+      field: nameDef
+      label:
+        en: STUDIER nameDef
+      required: true
+    - token: STUDIER_title
+      kind: person
+      prefix: STUDIER
+      field: title
+      label:
+        en: STUDIER title
+      required: false
+    - token: STUDIER_pronoun
+      kind: person
+      prefix: STUDIER
+      field: pronoun
+      label:
+        en: STUDIER pronoun
+      required: true
+    - token: STUDIER_possessive
+      kind: person
+      prefix: STUDIER
+      field: possessive
+      label:
+        en: STUDIER possessive
+      required: true
+    - token: STUDIER_objective
+      kind: person
+      prefix: STUDIER
+      field: objective
+      label:
+        en: STUDIER objective
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 12

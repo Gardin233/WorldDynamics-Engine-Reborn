@@ -1,0 +1,132 @@
+---
+meta:
+  title: TynanArt Test · 官方数据源重建
+  titleEn: TynanArt Test · Official-data rebuild
+  generatedAt: '2026-08-07T03:23:05Z'
+  scheme: C
+  version: 0.3.0-test
+carriers:
+- id: sculpture
+  label:
+    zh: 雕塑
+  rulePackId: ArtDescription_Sculpture
+  available: true
+- id: furniture
+  label:
+    zh: 家具
+  rulePackId: ArtDescription_Furniture
+  available: true
+- id: weapon_melee
+  label:
+    zh: 近战武器
+  rulePackId: ArtDescription_WeaponMelee
+  available: true
+- id: weapon_gun
+  label:
+    zh: 远程武器
+  rulePackId: ArtDescription_WeaponGun
+  available: true
+- id: sarcophagus
+  label:
+    zh: 棺材
+  rulePackId: ArtDescription_SarcophagusPlate
+  available: true
+- id: statue
+  label:
+    zh: 雕像
+  rulePackId: ArtDescription_Statue
+  available: true
+- id: cube_sculpture
+  label:
+    zh: 立方雕塑
+  rulePackId: ArtDescription_CubeSculpture
+  available: true
+- id: void_sculpture
+  label:
+    zh: 虚空雕塑
+  rulePackId: ArtDescription_VoidSculpture
+  available: true
+systemRulePackIds:
+  hasTaleRoot: ArtDescriptionRoot_HasTale
+  talelessRoot: ArtDescriptionRoot_Taleless
+  style: ArtDescriptionUtility_Global
+  talelessImages: TalelessImages
+  globalUtility: GlobalUtility
+utilityAliases:
+  Character:
+  - PersonJob
+  - Animal
+  - Enemy
+  - Mechanoid
+  ConceptAny:
+  - ConceptPositive
+  - ConceptBadass
+  - ConceptAngsty
+  AdjectiveAny:
+  - AdjectiveBadass
+  - AdjectiveAngsty
+  - AdjectiveFriendly
+  - AdjectiveNatural
+  subimageany: []
+pronouns:
+- id: he
+  label:
+    zh: 他/他的/他
+  zh:
+    pronoun: 他
+    possessive: 他的
+    objective: 他
+- id: she
+  label:
+    zh: 她/她的/她
+  zh:
+    pronoun: 她
+    possessive: 她的
+    objective: 她
+- id: they
+  label:
+    zh: TA/TA的/TA
+  zh:
+    pronoun: TA
+    possessive: TA的
+    objective: TA
+qualities:
+  zh:
+  - 拙劣
+  - 低劣
+  - 普通
+  - 良好
+  - 优秀
+  - 杰出
+  - 传说
+pipeline:
+- id: entry
+  title:
+    zh: 入口
+  detail:
+    zh: CompArt → TaleTextGenerator，根关键词 r_art_description。
+- id: branch
+  title:
+    zh: 有故事 / 无故事
+  detail:
+    zh: 有 tale 时 80% 走 HasTale，否则 TalelessImages。
+- id: carrier
+  title:
+    zh: 载体开场
+  detail:
+    zh: descriptionMaker 提供 physical_description_root。
+- id: event
+  title:
+    zh: 事件语句
+  detail:
+    zh: tale_noun / image / circumstance_phrase / desc_sentence。
+- id: style
+  title:
+    zh: 全局风格与词池
+  detail:
+    zh: ArtDescriptionUtility_Global + GlobalUtility 词池展开。
+- id: context
+  title:
+    zh: 背景收束句
+  detail:
+    zh: context_sentence 连接 tale_noun 与 DATE。

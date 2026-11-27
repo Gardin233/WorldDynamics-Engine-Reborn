@@ -1,0 +1,1191 @@
+---
+wordPools:
+  Animal:
+    en:
+    - muffalo
+    - boomrat
+    - megascarab
+    - cobra
+    - deer
+    - boar
+    - squirrel
+    - iguana
+    - aardvark
+    - alligator
+    - alpaca
+    - ant
+    - anteater
+    - antelope
+    - ape
+    - armadillo
+    - donkey
+    - baboon
+    - badger
+    - barracuda
+    - bat
+    - bear
+    - beaver
+    - bee
+    - bison
+    - buffalo
+    - camel
+    - caribou
+    - cat
+    - caterpillar
+    - cheetah
+    - chicken
+    - chimpanzee
+    - chinchilla
+    - clam
+    - cockroach
+    - cod
+    - condor
+    - coyote
+    - crab
+    - crane
+    - crocodile
+    - crow
+    - dinosaur
+    - dog
+    - dolphin
+    - donkey
+    - dove
+    - eagle
+    - echidna
+    - eel
+    - elephant
+    - elk
+    - emu
+    - falcon
+    - ferret
+    - finch
+    - flamingo
+    - fox
+    - frog
+    - gazelle
+    - gerbil
+    - panda
+    - giraffe
+    - gnat
+    - goat
+    - goose
+    - gorilla
+    - goshawk
+    - grasshopper
+    - grouse
+    - hamster
+    - hare
+    - hawk
+    - hedgehog
+    - heron
+    - herring
+    - hippo
+    - hornet
+    - horse
+    - human
+    - hummingbird
+    - hyena
+    - ibis
+    - jackal
+    - jaguar
+    - jay
+    - bluejay
+    - kangaroo
+    - koala
+    - komodo
+    - lemur
+    - leopard
+    - lion
+    - llama
+    - lobster
+    - locust
+    - lyrebird
+    - magpie
+    - mallard
+    - duck
+    - manatee
+    - mandrill
+    - mantis
+    - meerkat
+    - mink
+    - mole
+    - mongoose
+    - monkey
+    - moose
+    - mouse
+    - mosquito
+    - mule
+    - narwhal
+    - newt
+    - octopus
+    - okapi
+    - opossum
+    - ostrich
+    - otter
+    - owl
+    - oyster
+    - panther
+    - parrot
+    - partridge
+    - pelican
+    - penguin
+    - pheasant
+    - pig
+    - pigeon
+    - porcupine
+    - porpoise
+    - quail
+    - rabbit
+    - raccoon
+    - ram
+    - rat
+    - raven
+    - reindeer
+    - rhino
+    - salamander
+    - salmon
+    - sardine
+    - scorpion
+    - seahorse
+    - seal
+    - shark
+    - shrew
+    - skunk
+    - snail
+    - snake
+    - sparrow
+    - spider
+    - squid
+    - stingray
+    - stinkbug
+    - stork
+    - swan
+    - tapir
+    - tarsier
+    - tiger
+    - toad
+    - trout
+    - turkey
+    - turtle
+    - viper
+    - vole
+    - vulture
+    - walrus
+    - wasp
+    - weasel
+    - whale
+    - wolverine
+    - wombat
+    - woodpecker
+    - worm
+    - yak
+    - zebra
+  AnimalBadass:
+    en:
+    - alligator
+    - ape
+    - armadillo
+    - barracuda
+    - beaver
+    - bat
+    - bear
+    - buffalo
+    - camel
+    - cheetah
+    - cobra
+    - cockroach
+    - coyote
+    - crab
+    - crocodile
+    - crow
+    - dinosaur
+    - raptor
+    - dog
+    - donkey
+    - dragonfly
+    - dragon
+    - eagle
+    - falcon
+    - fox
+    - frog
+    - gorilla
+    - grasshopper
+    - hawk
+    - hornet
+    - hyena
+    - jackal
+    - jaguar
+    - kangaroo
+    - komodo
+    - leopard
+    - lion
+    - lobster
+    - locust
+    - mantis
+    - mole
+    - monkey
+    - mosquito
+    - owl
+    - panther
+    - pig
+    - porcupine
+    - raccoon
+    - rat
+    - raven
+    - rhino
+    - salamander
+    - scorpion
+    - shark
+    - skunk
+    - snake
+    - spider
+    - squid
+    - tiger
+    - toad
+    - trout
+    - turtle
+    - viper
+    - vulture
+    - wasp
+    - weasel
+    - whale
+    - wolf
+    - wolverine
+    - worm
+  AnimalGroup:
+    en:
+    - pack
+    - pack
+    - pack
+    - group
+    - group
+    - group
+    - horde
+    - gaggle
+    - multitude
+  Apparel:
+    en:
+    - shirt
+    - button-down shirt
+    - formal shirt
+    - jacket
+    - raincoat
+    - formal suit
+    - evening gown
+    - parka
+    - duster
+    - space suit
+    - power armor suit
+    - bow tie
+    - necktie
+    - belt
+    - jock strap
+    - hat
+    - bowler hat
+    - baseball cap
+    - tuque
+    - top hat
+    - shoe
+    - boot
+    - sandal
+  Artwork:
+    en:
+    - artwork
+    - art
+    - work
+    - item
+    - piece
+    - oeuvre
+    - expression
+    - attempt
+    - untitled
+    - titled
+    - shape
+    - form
+    - image
+    - shot
+    - picture
+    - portrait
+    - still
+    - poem
+    - lullaby
+    - song
+    - tune
+    - rhythm
+    - beat
+    - codex
+    - book
+    - cuboid
+    - circloid
+    - parabolic
+    - cubic
+    - curvelike
+    - curve
+    - mirror
+    - day
+    - vomit
+    - sweat
+    - shadow
+    - freedom
+    - vision
+    - love
+    - divinity
+    - wisdom
+    - shame
+    - death
+    - darkness
+  BodyPart:
+    en:
+    - head
+    - eye
+    - nose
+    - mouth
+    - tooth
+    - fang
+    - cheek
+    - chin
+    - lip
+    - ear
+    - neck
+    - body
+    - chest
+    - shoulder
+    - arm
+    - elbow
+    - wrist
+    - hand
+    - palm
+    - finger
+    - claw
+    - talon
+    - wing
+    - hip
+    - leg
+    - knee
+    - ankle
+    - foot
+    - heel
+    - toe
+    - paw
+  Color:
+    en:
+    - red
+    - blue
+    - green
+    - purple
+    - black
+    - white
+    - gray
+    - orange
+  ColorBadass:
+    en:
+    - red
+    - black
+    - gray
+    - ash
+    - dark
+    - shadow
+    - night
+  Community:
+    en:
+    - village
+    - village
+    - town
+    - town
+    - township
+    - hamlet
+    - district
+    - city
+    - settlement
+    - encampment
+    - campsite
+  ConceptAngsty:
+    en:
+    - sadness
+    - despair
+    - loss
+    - depression
+    - emptiness
+    - solitude
+    - distance
+    - thought
+    - contemplation
+    - loneliness
+    - isolation
+    - seclusion
+    - silence
+    - confinement
+    - detachment
+    - lonesomeness
+    - quietude
+    - decay
+    - desolation
+    - destruction
+    - devastation
+    - exhaustion
+    - defeat
+    - failure
+    - cataclysm
+    - death
+    - poverty
+    - desire
+    - need
+    - debt
+    - hardship
+    - helplessness
+    - scarcity
+    - starvation
+    - thirst
+    - hunger
+    - difficulty
+    - challenge
+    - pain
+  ConceptBadass:
+    en:
+    - suffering
+    - victory
+    - murder
+    - death
+    - thrusting
+    - power
+    - force
+    - godlessness
+    - god
+    - pain
+    - triumph
+    - blood
+    - cash
+    - vengeance
+    - revenge
+    - agony
+    - fever
+    - illness
+    - injury
+    - torment
+    - anguish
+    - misery
+    - persecution
+    - torture
+    - suffering
+    - tyranny
+    - oppression
+    - cruelty
+    - terrorism
+    - terror
+    - chaos
+    - trouble
+    - unrest
+    - anarchy
+    - combat
+    - violence
+    - war
+    - bloodshed
+    - hostility
+    - strife
+    - struggle
+  ConceptPositive:
+    en:
+    - hope
+    - love
+    - strength
+    - struggle
+    - family
+    - loyalty
+    - fun
+    - bliss
+    - plenty
+    - growth
+    - happiness
+    - togetherness
+    - community
+    - affection
+    - intimacy
+    - fellowship
+    - friendship
+    - goodwill
+    - devotion
+    - harmony
+    - solidarity
+    - compassion
+    - mercy
+    - patience
+    - sympathy
+    - honesty
+    - kindness
+    - grace
+    - decency
+    - elegance
+    - camraderie
+    - brotherhood
+    - safety
+  Enemy:
+    en:
+    - bandit
+    - criminal
+    - raider
+    - outlaw
+    - pirate
+    - robber
+    - brigand
+    - crook
+    - rogue
+    - burglar
+    - mugger
+    - terrorist
+    - barbarian
+    - cannibal
+    - devil
+    - demon
+    - beast
+    - monster
+    - vampire
+    - fiend
+    - goblin
+    - imp
+    - dragon
+  Game:
+    en:
+    - poker
+    - chess
+    - cards
+    - backgammon
+    - dice
+    - craps
+    - roulette
+    - blackjack
+  Gore:
+    en:
+    - blood
+    - gore
+    - guts
+    - viscera
+    - innards
+    - entrails
+    - intestines
+  Mechanoid:
+    en:
+    - scyther
+    - lancer
+    - centipede
+    - mechanoid
+    - robot
+    - automaton
+    - drone
+    - combat drone
+    - serving bot
+    - utility bot
+    - sexbot
+    - guard bot
+    - machine persona avatar
+    - archotech projection
+  NaturalObject:
+    en:
+    - rock
+    - stone
+    - boulder
+    - tree
+    - shrub
+    - pond
+    - pool
+    - lake
+    - hill
+    - cave
+    - stump
+    - shell
+    - feather
+    - seed
+    - trunk
+    - fruit
+    - needle
+    - beetle
+    - bug
+    - hoof
+    - claw
+    - tail
+    - hide
+    - skin
+    - horn
+    - tooth
+    - wing
+    - wood
+  PersonAlly:
+    en:
+    - friend
+    - supporter
+    - partner
+    - buddy
+    - companion
+    - cohort
+    - comrade
+    - sidekick
+    - defender
+    - assistant
+    - follower
+  PersonBadass:
+    en:
+    - killer
+    - murderer
+    - butcher
+    - hunter
+    - slayer
+    - exterminator
+    - deadbeat
+    - convict
+    - criminal
+    - crook
+    - lawbreaker
+    - offender
+    - thug
+    - gangster
+    - soldier
+    - assassin
+    - banger
+    - deplorable
+    - outlaw
+    - jailbird
+    - desperado
+    - deuce
+    - hustler
+    - malefactor
+    - sinner
+    - transgressor
+    - trespasser
+    - betrayer
+    - pirate
+    - shanker
+    - slicer
+    - cutter
+    - splitter
+    - facebeater
+    - stabber
+    - sniper
+    - crusher
+    - slicer
+    - shooter
+    - merchant
+    - owner
+    - reaper
+    - executioner
+    - cannibal
+    - violator
+    - defiler
+    - despoiler
+    - attacker
+    - ravager
+    - champion
+    - victor
+    - winner
+    - dominator
+    - conqueror
+    - vanquisher
+    - samurai
+    - hero
+  PersonFamily:
+    en:
+    - mother
+    - son
+    - father
+    - brother
+    - uncle
+    - nephew
+    - aunt
+  PersonJob:
+    en:
+    - farmer
+    - villager
+    - miller
+    - smith
+    - brewer
+    - weaver
+    - cook
+    - beggar
+    - town guard
+    - town councilor
+    - baker
+    - tailor
+    - elder
+    - gunsmith
+    - blacksmith
+    - fletcher
+    - thresher
+    - thatcher
+    - carpenter
+    - trader
+    - surgeon
+    - doctor
+    - explorer
+    - adventurer
+    - drunkard
+    - priest
+    - cleric
+    - smuggler
+    - comedian
+    - teacher
+    - acrobat
+    - clown
+    - actor
+    - artist
+    - boxer
+    - chemist
+    - dancer
+    - fortune teller
+    - gardener
+    - maid
+    - hypnotist
+    - jeweler
+    - poet
+    - cowboy
+    - singer
+    - philosopher
+    - gunslinger
+    - sheriff
+    - archaeologist
+    - hacker
+    - planetologist
+    - politician
+    - historian
+    - writer
+    - engineer
+    - dentist
+    - lawyer
+    - chief
+    - warrior
+    - archer
+    - witch doctor
+    - shaman
+  PersonalCharacteristic:
+    en:
+    - clothes
+    - clothing choices
+    - fashion knowledge
+    - stylishness
+    - looks
+    - appearance
+    - height
+    - weight
+    - hair
+    - hairstyle
+    - facial hair
+    - leg hair
+    - face
+    - eyes
+    - nose
+    - ears
+    - jawline
+    - forehead
+    - hands
+    - body
+    - muscles
+    - voice
+    - way of speaking
+    - accent
+    - shooting skills
+    - melee fighting skills
+    - social skills
+    - plant growing skills
+    - medical skill
+    - animal taming ability
+    - cooking skill
+    - construction skill
+    - mining skill
+    - artistic skills
+    - crafting skills
+    - intellectual skills
+    - skills
+    - abilities
+    - intelligence
+    - judgment
+    - brainpower
+    - emotional stability
+    - self-control
+    - usefulness
+    - attitude
+    - way of walking
+    - way of thinking
+    - fighting methods
+    - learning ability
+    - diet
+    - eating habits
+    - food preferences
+    - relationship status
+    - age
+    - value as a human
+    - sense of responsibility
+    - sense of duty
+    - honor
+    - honesty
+    - courageousness
+    - opinions
+    - beliefs
+    - ideas
+    - hopes and dreams
+    - ambitions
+    - personal habits
+    - personal hygiene
+    - hardiness
+    - personality
+    - class
+    - culture
+    - recreational preferences
+    - punctuality
+    - generosity
+    - bravery
+    - loyalty
+    - honesty
+    - kindness
+    - eloquence
+    - broad-mindedness
+    - charm
+    - sincerity
+    - open-mindedness
+    - origins
+    - parents
+    - grandparents
+    - friends
+    - family
+    - family background
+    - lovers
+  TerrainFeature:
+    en:
+    - plain
+    - expanse
+    - grassland
+    - plateau
+    - prairie
+    - desert
+    - field
+    - forest
+    - tree
+    - thicket
+    - bramble
+    - boulder
+    - rock
+    - quarry
+    - stone
+    - mountain
+    - hill
+    - mesa
+    - cliff
+    - bluff
+    - crag
+    - ridge
+    - valley
+    - canyon
+    - gorge
+    - oasis
+    - meadow
+    - cave
+    - river
+    - stream
+    - creek
+    - brook
+    - delta
+    - inlet
+    - sound
+    - cove
+    - lake
+    - ocean
+    - pond
+    - basin
+    - lagoon
+    - pit
+    - swamp
+    - tarpit
+    - mire
+  TreeType:
+    en:
+    - oak
+    - poplar
+    - pine
+    - teak
+    - cecropia
+    - palm
+    - bamboo
+    - ash
+    - aspen
+    - beech
+    - birch
+    - cherry
+    - chestnut
+    - cottonwood
+    - elm
+    - fir
+    - hemlock
+    - hickory
+    - larch
+    - maple
+    - cedar
+    - spruce
+    - walnut
+    - willow
+  Vegetable:
+    en:
+    - carrot
+    - onion
+    - turnip
+    - gourd
+    - pumpkin
+    - cauliflower
+    - bell pepper
+    - pepper
+    - mushroom
+    - pea
+    - artichoke
+    - eggplant
+    - lentil
+    - cabbage
+    - beet
+    - corn cob
+    - yam
+    - zucchini
+  Weapon:
+    en:
+    - dagger
+    - blade
+    - shiv
+    - razor
+    - scythe
+    - sickle
+    - sword
+    - sabre
+    - rapier
+    - claymore
+    - scimitar
+    - spear
+    - pike
+    - ikwa
+    - lance
+    - bayonet
+    - javelin
+    - axe
+    - tomahawk
+    - hatchet
+    - whip
+    - saw
+    - club
+    - hammer
+    - sledgehammer
+    - mace
+    - knuckleduster
+    - gauntlet
+    - dart
+    - arrow
+    - crossbow
+    - bow
+    - gun
+    - pistol
+    - rifle
+    - shotgun
+    - revolver
+    - cannon
+    - mortar
+    - howitzer
+    - bomb
+    - nuke
+    - landmine
+    - grenade
+    - missile
+    - rocket
+  AdjectiveAngsty:
+    en:
+    - sad
+    - despairing
+    - depressed
+    - empty
+    - solitary
+    - distant
+    - contemplative
+    - mindful
+    - lonely
+    - isolated
+    - silent
+    - detached
+    - lonesome
+    - quiet
+    - desolated
+    - destroyed
+    - devastated
+    - exhausted
+    - defeated
+    - dead
+    - desirous
+    - seductive
+    - needy
+    - indebted
+    - hard
+    - helpless
+    - scarce
+    - thirsty
+    - hungry
+  AdjectiveBadass:
+    en:
+    - notorious
+    - deadly
+    - deep
+    - poison
+    - jagged
+    - loyal
+    - unstoppable
+    - animal
+    - bloody
+    - stonefaced
+    - ghostface
+    - suicidal
+    - manic
+    - crazy
+    - wild
+    - burning
+    - murderous
+    - fearful
+    - terrifying
+    - smoky
+    - nutty
+    - killer
+    - dark
+    - furious
+    - angry
+    - savage
+    - blank
+    - emotionless
+    - mindless
+    - awesome
+    - epic
+    - murderous
+    - supreme
+    - extreme
+    - mad
+    - sharp
+    - bladed
+  Direction:
+    en:
+    - north
+    - northeast
+    - east
+    - southeast
+    - south
+    - southwest
+    - west
+    - northwest
+    - northern
+    - northeastern
+    - eastern
+    - southeastern
+    - southern
+    - southwestern
+    - western
+    - northwestern
+  AdjectiveFriendly:
+    en:
+    - friendly
+    - affectionate
+    - amiable
+    - amicable
+    - beneficial
+    - chummy
+    - cordial
+    - familiar
+    - helpful
+    - neighborly
+    - peaceful
+    - receptive
+    - sympathetic
+    - welcoming
+    - kind
+    - sociable
+    - tender
+    - benevolent
+    - benign
+    - civil
+    - comradely
+    - fond
+    - genial
+    - kindly
+    - peaceable
+    - solicitous
+    - approachable
+    - courteous
+    - gentle
+    - pleasant
+    - polite
+    - considerate
+    - diplomatic
+    - gracious
+    - respectful
+    - thoughtful
+    - attentive
+    - tactful
+    - gallant
+    - indulgent
+  AdjectiveLarge:
+    en:
+    - large
+    - massive
+    - colossal
+    - enormous
+    - extensive
+    - gargantuan
+    - gigantic
+    - grand
+    - huge
+    - immense
+    - imposing
+    - mammoth
+    - impressive
+    - monumental
+    - substantial
+    - towering
+    - tremendous
+    - vast
+    - hulking
+    - mighty
+    - monstrous
+    - titanic
+  AdjectiveNatural:
+    en:
+    - big
+    - rough
+    - harsh
+    - tall
+    - sharp
+    - craggy
+    - free
+    - prime
+    - small
+    - old
+    - round
+    - strange
+    - wise
+    - icy
+    - bad
+    - good
+    - far
+    - dead
+    - hardy
+  VerbFriendly:
+    en:
+    - laughing
+    - smiling
+    - chuckling
+    - grinning
+    - beaming
+    - resting
+    - looking amused
+    - looking happy
+    - looking pleased
+  RomanNumeral:
+    en:
+    - I
+    - II
+    - III
+    - IV
+    - V
+    - VI
+    - VII
+    - VIII
+    - IX
+    - X
+    - XI
+    - XII
+    - XIII
+    - XIV
+    - XV

@@ -1,0 +1,385 @@
+---
+rulepacks:
+  NamerArtCommon:
+    id: NamerArtCommon
+    package: core
+    category: namer
+    keywords:
+    - Artwork
+    - r_art_name
+    - art_name_numeric
+    - maybe_letter
+    - maybe_a
+    - maybe_adjective
+    rulesByKeyword:
+      Artwork:
+      - keyword: Artwork
+        weight:
+        en: Words/Nouns/Artworks
+      - keyword: Artwork
+        weight:
+        en: Words/Nouns/Artworks
+      r_art_name:
+      - keyword: r_art_name
+        weight: 4.0
+        en: "[Artwork] [Trans] [ConceptAny]"
+      - keyword: r_art_name
+        weight: 4.0
+        en: "[maybe_a] [maybe_adjective] [Artwork]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [ConceptAny]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [TerrainFeature]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [Vegetable]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [Game]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [Animal]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [Gore]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [NaturalObject]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [PersonFamily]"
+      - keyword: r_art_name
+        weight:
+        en: "[maybe_a] [maybe_adjective] [Enemy]"
+      - keyword: r_art_name
+        weight: 2.0
+        en: "[Artwork] No. [art_name_numeric]"
+      - keyword: r_art_name
+        weight:
+        en: No. [art_name_numeric]
+      - keyword: r_art_name
+        weight:
+        en: "[art_name_numeric]"
+      - keyword: r_art_name
+        weight:
+        en: "[Artwork] [art_name_numeric]"
+      - keyword: r_art_name
+        weight:
+        en: "[ConceptAny] No. [art_name_numeric]"
+      - keyword: r_art_name
+        weight:
+        en: "[art_name_numeric] [Trans] [ANYPAWN_nameIndef]"
+      - keyword: r_art_name
+        weight: 6.0
+        en: "[ANYPAWN_nameIndef]'s [Artwork]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[maybe_a] [ANYPAWN_nameIndef] [Trans] [Color]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ANYPAWN_nameIndef]'s [PersonalCharacteristic]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[PersonalCharacteristic] of [ANYPAWN_nameIndef]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ConceptAny] [Trans] [ANYPAWN_nameIndef]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[maybe_a] [Artwork] [Trans] [ANYPAWN_nameIndef]"
+      art_name_numeric:
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][Digit][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][Digit][Digit][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][Digit][Digit][Digit][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][RomanNumeral][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][RomanNumeral][Digit][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][Digit][RomanNumeral][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][Digit][RomanNumeral][Digit][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][RomanNumeral][Digit][RomanNumeral][maybe_letter]"
+      - keyword: art_name_numeric
+        weight:
+        en: "[maybe_letter][RomanNumeral][Digit][Digit][RomanNumeral][maybe_letter]"
+      maybe_letter:
+      - keyword: maybe_letter
+        weight: 8.0
+        en: ''
+      - keyword: maybe_letter
+        weight:
+        en: "[Letter]"
+      - keyword: maybe_letter
+        weight:
+        en: "[Letter][Letter]"
+      maybe_a:
+      - keyword: maybe_a
+        weight: 3.0
+        en: ''
+      - keyword: maybe_a
+        weight:
+        en: a
+      maybe_adjective:
+      - keyword: maybe_adjective
+        weight: 5.0
+        en: ''
+      - keyword: maybe_adjective
+        weight: 2.0
+        en: "[AdjectiveAngsty]"
+      - keyword: maybe_adjective
+        weight:
+        en: "[AdjectiveBadass]"
+      - keyword: maybe_adjective
+        weight:
+        en: "[Color]"
+    ruleCount: 43
+  NamerArtWeapon:
+    id: NamerArtWeapon
+    package: core
+    category: namer
+    keywords:
+    - r_art_name
+    rulesByKeyword:
+      r_art_name:
+      - keyword: r_art_name
+        weight:
+        en: "[ConceptBadass]"
+      - keyword: r_art_name
+        weight:
+        en: The [AnimalBadass]
+      - keyword: r_art_name
+        weight:
+        en: "[AdjectiveBadass] [AnimalBadass]"
+      - keyword: r_art_name
+        weight:
+        en: "[ColorBadass] [AnimalBadass]"
+      - keyword: r_art_name
+        weight:
+        en: "[ConceptBadass] [ColorBadass]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ANYPAWN_nameIndef]'s [ConceptBadass]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ANYPAWN_nameIndef]'s [AnimalBadass]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ANYPAWN_nameIndef]'s [PersonBadass]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ANYPAWN_nameIndef]'s [PersonAlly]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ANYPAWN_nameIndef]'s [PersonFamily]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ConceptBadass] of [ANYPAWN_nameIndef]"
+      - keyword: r_art_name
+        weight: 3.0
+        en: "[ColorBadass] [ANYPAWN_nameIndef]"
+    ruleCount: 12
+  NamerArtCubeSculpture:
+    id: NamerArtCubeSculpture
+    package: anomaly
+    category: namer
+    keywords:
+    - r_art_name
+    - adjectiveCube
+    rulesByKeyword:
+      r_art_name:
+      - keyword: r_art_name
+        weight:
+        en: "[AdjectiveAny] Cube"
+      - keyword: r_art_name
+        weight:
+        en: "[adjectiveCube] Cube"
+      - keyword: r_art_name
+        weight:
+        en: Cube of [ConceptAny]
+      adjectiveCube:
+      - keyword: adjectiveCube
+        weight:
+        en: saggy
+      - keyword: adjectiveCube
+        weight:
+        en: misshapen
+      - keyword: adjectiveCube
+        weight:
+        en: lumpy
+      - keyword: adjectiveCube
+        weight:
+        en: ugly
+      - keyword: adjectiveCube
+        weight:
+        en: lumpen
+      - keyword: adjectiveCube
+        weight:
+        en: multi
+      - keyword: adjectiveCube
+        weight:
+        en: lovely
+      - keyword: adjectiveCube
+        weight:
+        en: perfect
+      - keyword: adjectiveCube
+        weight:
+        en: edged
+      - keyword: adjectiveCube
+        weight:
+        en: universal
+      - keyword: adjectiveCube
+        weight:
+        en: sane
+      - keyword: adjectiveCube
+        weight:
+        en: thoughtful
+      - keyword: adjectiveCube
+        weight:
+        en: heavenly
+      - keyword: adjectiveCube
+        weight:
+        en: twisted
+      - keyword: adjectiveCube
+        weight:
+        en: wobbly
+      - keyword: adjectiveCube
+        weight:
+        en: deflated
+      - keyword: adjectiveCube
+        weight:
+        en: wonky
+      - keyword: adjectiveCube
+        weight:
+        en: distorted
+      - keyword: adjectiveCube
+        weight:
+        en: asymmetrical
+      - keyword: adjectiveCube
+        weight:
+        en: unhinged
+      - keyword: adjectiveCube
+        weight:
+        en: bizarre
+      - keyword: adjectiveCube
+        weight:
+        en: melted
+      - keyword: adjectiveCube
+        weight:
+        en: erratic
+      - keyword: adjectiveCube
+        weight:
+        en: dreamlike
+      - keyword: adjectiveCube
+        weight:
+        en: chaotic
+      - keyword: adjectiveCube
+        weight:
+        en: non-cubic
+      - keyword: adjectiveCube
+        weight:
+        en: phantasmagoric
+      - keyword: adjectiveCube
+        weight:
+        en: warped
+      - keyword: adjectiveCube
+        weight:
+        en: mystical
+      - keyword: adjectiveCube
+        weight:
+        en: absurd
+      - keyword: adjectiveCube
+        weight:
+        en: blurry
+    ruleCount: 34
+  NamerArtVoidSculpture:
+    id: NamerArtVoidSculpture
+    package: anomaly
+    category: namer
+    keywords:
+    - r_art_name
+    - adjectiveUnsettling
+    rulesByKeyword:
+      r_art_name:
+      - keyword: r_art_name
+        weight:
+        en: "[AdjectiveAngsty] Sculpture"
+      - keyword: r_art_name
+        weight:
+        en: "[adjectiveUnsettling] Sculpture"
+      adjectiveUnsettling:
+      - keyword: adjectiveUnsettling
+        weight:
+        en: unsettling
+      - keyword: adjectiveUnsettling
+        weight:
+        en: disturbing
+      - keyword: adjectiveUnsettling
+        weight:
+        en: eerie
+      - keyword: adjectiveUnsettling
+        weight:
+        en: creepy
+      - keyword: adjectiveUnsettling
+        weight:
+        en: haunting
+      - keyword: adjectiveUnsettling
+        weight:
+        en: spine-chilling
+      - keyword: adjectiveUnsettling
+        weight:
+        en: sinister
+      - keyword: adjectiveUnsettling
+        weight:
+        en: macabre
+      - keyword: adjectiveUnsettling
+        weight:
+        en: unnerving
+      - keyword: adjectiveUnsettling
+        weight:
+        en: terrifying
+      - keyword: adjectiveUnsettling
+        weight:
+        en: ghastly
+      - keyword: adjectiveUnsettling
+        weight:
+        en: horrifying
+      - keyword: adjectiveUnsettling
+        weight:
+        en: frightening
+      - keyword: adjectiveUnsettling
+        weight:
+        en: shocking
+      - keyword: adjectiveUnsettling
+        weight:
+        en: bizarre
+      - keyword: adjectiveUnsettling
+        weight:
+        en: abnormal
+      - keyword: adjectiveUnsettling
+        weight:
+        en: weird
+      - keyword: adjectiveUnsettling
+        weight:
+        en: uncanny
+      - keyword: adjectiveUnsettling
+        weight:
+        en: strange
+      - keyword: adjectiveUnsettling
+        weight:
+        en: otherworldly
+    ruleCount: 22

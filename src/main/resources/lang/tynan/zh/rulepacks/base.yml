@@ -1,0 +1,917 @@
+---
+rulepacks:
+  ArtDescriptionRoot_HasTale:
+    id: ArtDescriptionRoot_HasTale
+    package: core
+    category: root
+    keywords:
+    - r_art_description
+    - circumstance_group
+    - desc_sentence_group
+    - context_sentence
+    rulesByKeyword:
+      r_art_description:
+      - keyword: r_art_description
+        weight:
+        zh: "[physical_description_root][context_sentence]"
+      circumstance_group:
+      - keyword: circumstance_group
+        weight:
+        zh: "[circumstance_phrase]"
+      desc_sentence_group:
+      - keyword: desc_sentence_group
+        weight:
+        zh: "[desc_sentence][style_group]"
+      context_sentence:
+      - keyword: context_sentence
+        weight:
+        zh: "[depiction]中所引述的故事是发生在[DATE]的[tale_noun]。"
+      - keyword: context_sentence
+        weight:
+        zh: 这件[depiction]描述了发生在[DATE]的[tale_noun]的故事。
+      - keyword: context_sentence
+        weight:
+        zh: "[depiction]记述了发生在[DATE]的关于[tale_noun]的往事。"
+    ruleCount: 6
+  ArtDescriptionRoot_Taleless:
+    id: ArtDescriptionRoot_Taleless
+    package: core
+    category: root
+    keywords:
+    - r_art_description
+    - desc_sentence_group
+    rulesByKeyword:
+      r_art_description:
+      - keyword: r_art_description
+        weight:
+        zh: "[physical_description_root]"
+      desc_sentence_group:
+      - keyword: desc_sentence_group
+        weight:
+        zh: "[style_group]"
+    ruleCount: 2
+  ArtDescriptionUtility_Global:
+    id: ArtDescriptionUtility_Global
+    package: core
+    category: style
+    keywords:
+    - style_group
+    - artconjunction
+    - artextra_clause
+    - subimageany
+    - subimagesingle
+    - subimageplural
+    - pawn_adj
+    - emotional_expression
+    - idles
+    - side_position
+    - style_clause
+    - symbolizes
+    - depicts
+    - depiction
+    - composition
+    - artstyle_adj
+    rulesByKeyword:
+      style_group:
+      - keyword: style_group
+        weight:
+        zh: "[artextra_clause]，[style_clause]。"
+      - keyword: style_group
+        weight:
+        zh: "[style_clause]，[artconjunction][artextra_clause]。"
+      - keyword: style_group
+        weight:
+        zh: "[style_clause]。"
+      - keyword: style_group
+        weight:
+        zh: "[artextra_clause]。"
+      - keyword: style_group
+        weight:
+        zh: ''
+      artconjunction:
+      - keyword: artconjunction
+        weight: 6.0
+        zh: ''
+      - keyword: artconjunction
+        weight:
+        zh: 作为有趣的对比，
+      - keyword: artconjunction
+        weight:
+        zh: 作为对作品的补充，
+      - keyword: artconjunction
+        weight:
+        zh: 顺带一提，
+      - keyword: artconjunction
+        weight:
+        zh: 惊人的是，
+      - keyword: artconjunction
+        weight:
+        zh: 极具挑衅意味的是，
+      - keyword: artconjunction
+        weight:
+        zh: 不寻常的是，
+      - keyword: artconjunction
+        weight:
+        zh: 虽然很少有人会期待，
+      - keyword: artconjunction
+        weight:
+        zh: 除此之外，
+      artextra_clause:
+      - keyword: artextra_clause
+        weight:
+        zh: 画面边缘由[subimageplural]组成
+      - keyword: artextra_clause
+        weight:
+        zh: 画面的边缘是[subimageplural]
+      - keyword: artextra_clause
+        weight:
+        zh: "[side_position]有[subimagesingle]"
+      - keyword: artextra_clause
+        weight:
+        zh: 主体身后是[subimageany]
+      - keyword: artextra_clause
+        weight:
+        zh: 图像的下半部分被[subimageany]支配
+      - keyword: artextra_clause
+        weight:
+        zh: 这一幕发生在[Community]里
+      - keyword: artextra_clause
+        weight:
+        zh: 这一幕发生在[Community]附近
+      - keyword: artextra_clause
+        weight:
+        zh: 这一幕发生在[TerrainFeature]境内的[Community]里
+      - keyword: artextra_clause
+        weight:
+        zh: 一个[Character][idles][side_position]
+      - keyword: artextra_clause
+        weight:
+        zh: 一个[pawn_adj][Character][idles][side_position]
+      - keyword: artextra_clause
+        weight:
+        zh: "[Quantity_adjphrase][Character]出现[side_position]"
+      - keyword: artextra_clause
+        weight:
+        zh: "[Quantity_adjphrase][pawn_adj][Character]出现[side_position]"
+      - keyword: artextra_clause
+        weight:
+        zh: 一只[Animal][idles][side_position]
+      - keyword: artextra_clause
+        weight:
+        zh: 当你眯着眼看，画面[composition]构图会呈现出[subimageany]的轮廓
+      - keyword: artextra_clause
+        weight:
+        zh: 一位[pawn_adj][PersonJob][emotional_expression]，注视着一切
+      - keyword: artextra_clause
+        weight:
+        zh: 一位[pawn_adj][PersonJob]望着一切，[emotional_expression]
+      - keyword: artextra_clause
+        weight:
+        zh: 一位[pawn_adj][PersonJob]注视着一切
+      - keyword: artextra_clause
+        weight:
+        zh: 整幅画面由精心布置的[subimageplural]组成
+      - keyword: artextra_clause
+        weight:
+        zh: "[side_position]的[subimagesingle][symbolizes][ConceptAny]"
+      subimageany:
+      - keyword: subimageany
+        weight:
+        zh: "[subimagesingle]"
+      - keyword: subimageany
+        weight:
+        zh: "[subimageplural]"
+      subimagesingle:
+      - keyword: subimagesingle
+        weight: 4.0
+        zh: 一个[Character]
+      - keyword: subimagesingle
+        weight:
+        zh: 一片[TerrainFeature]
+      - keyword: subimagesingle
+        weight:
+        zh: 一个[Community]
+      - keyword: subimagesingle
+        weight:
+        zh: 一棵[TreeType]
+      - keyword: subimagesingle
+        weight:
+        zh: 一株[Vegetable]
+      - keyword: subimagesingle
+        weight:
+        zh: 一[AnimalGroup][Animal]
+      subimageplural:
+      - keyword: subimageplural
+        weight: 3.0
+        zh: "[Quantity_adjphrase][Character]"
+      - keyword: subimageplural
+        weight:
+        zh: "[Quantity_adjphrase][Vegetable]"
+      - keyword: subimageplural
+        weight:
+        zh: "[Quantity_adjphrase][Shape]"
+      pawn_adj:
+      - keyword: pawn_adj
+        weight:
+        zh: 死掉的
+      - keyword: pawn_adj
+        weight:
+        zh: 濒死的
+      - keyword: pawn_adj
+        weight:
+        zh: 受伤的
+      - keyword: pawn_adj
+        weight:
+        zh: 睡着的
+      - keyword: pawn_adj
+        weight:
+        zh: 站立的
+      - keyword: pawn_adj
+        weight:
+        zh: 坐着的
+      - keyword: pawn_adj
+        weight:
+        zh: 疯了的
+      - keyword: pawn_adj
+        weight:
+        zh: 年轻的
+      - keyword: pawn_adj
+        weight:
+        zh: 年老的
+      - keyword: pawn_adj
+        weight:
+        zh: 浑身是[Gore]的
+      - keyword: pawn_adj
+        weight:
+        zh: 肮脏的
+      - keyword: pawn_adj
+        weight:
+        zh: 身穿[Apparel]的
+      - keyword: pawn_adj
+        weight:
+        zh: 手持[Weapon]的
+      - keyword: pawn_adj
+        weight:
+        zh: 吃着[Vegetable]的
+      emotional_expression:
+      - keyword: emotional_expression
+        weight:
+        zh: 微笑着
+      - keyword: emotional_expression
+        weight:
+        zh: 皱着眉头
+      - keyword: emotional_expression
+        weight:
+        zh: 紧绷着脸
+      - keyword: emotional_expression
+        weight:
+        zh: 放声大笑
+      - keyword: emotional_expression
+        weight:
+        zh: 瞪着眼睛
+      - keyword: emotional_expression
+        weight:
+        zh: 哭泣着
+      - keyword: emotional_expression
+        weight:
+        zh: 尖叫着
+      - keyword: emotional_expression
+        weight:
+        zh: 欣喜若狂
+      idles:
+      - keyword: idles
+        weight:
+        zh: 坐
+      - keyword: idles
+        weight:
+        zh: 站
+      - keyword: idles
+        weight:
+        zh: 等候
+      - keyword: idles
+        weight:
+        zh: 微笑着待
+      - keyword: idles
+        weight:
+        zh: 躺
+      - keyword: idles
+        weight:
+        zh: 摆着造型
+      - keyword: idles
+        weight:
+        zh: 出现
+      - keyword: idles
+        weight:
+        zh: 显现
+      - keyword: idles
+        weight:
+        zh: 逐渐显现
+      - keyword: idles
+        weight:
+        zh: 飘浮
+      side_position:
+      - keyword: side_position
+        weight:
+        zh: 在一边
+      - keyword: side_position
+        weight:
+        zh: 在背景中
+      - keyword: side_position
+        weight:
+        zh: 在远处
+      - keyword: side_position
+        weight:
+        zh: 在画面下方
+      - keyword: side_position
+        weight:
+        zh: 在画面上方
+      - keyword: side_position
+        weight:
+        zh: 在主场景左边
+      - keyword: side_position
+        weight:
+        zh: 在主场景右边
+      - keyword: side_position
+        weight:
+        zh: 在画面边缘
+      - keyword: side_position
+        weight:
+        zh: 在主体附近
+      - keyword: side_position
+        weight:
+        zh: 在距离主体很远的地方
+      - keyword: side_position
+        weight:
+        zh: 在主体下方
+      - keyword: side_position
+        weight:
+        zh: 聚焦点之后
+      style_clause:
+      - keyword: style_clause
+        weight: 4.0
+        zh: 作品[symbolizes][ConceptAny]
+      - keyword: style_clause
+        weight:
+        zh: 作品受到了[ConceptAny]的启发，并用[artstyle_adj]风格呈现
+      - keyword: style_clause
+        weight:
+        zh: 作品充满了浓烈的[artstyle_adj]气息
+      - keyword: style_clause
+        weight:
+        zh: 画面中央的[artstyle_adj]风格与背景部分的[artstyle_adj]风格形成了强烈的对比
+      - keyword: style_clause
+        weight:
+        zh: 作品给人一种[artstyle_adj]气息并使用了[composition]布局
+      - keyword: style_clause
+        weight:
+        zh: 作品整体采用了[composition]构图方法
+      - keyword: style_clause
+        weight:
+        zh: 作品中采用融合了[artstyle_adj]元素的[artstyle_adj]风格
+      - keyword: style_clause
+        weight:
+        zh: 画面似乎通过某种形式表现[ConceptAny]和[ConceptAny]
+      - keyword: style_clause
+        weight:
+        zh: 画面中的[ConceptAny]和[ConceptAny]形成反差
+      - keyword: style_clause
+        weight:
+        zh: 画面采用的[composition]布局与其采用的[artstyle_adj]风格显得格格不入
+      - keyword: style_clause
+        weight:
+        zh: 作品的主色调是[Color]与[Color]
+      - keyword: style_clause
+        weight:
+        zh: 画面中的每个形状看上去都采用了[composition]构图
+      symbolizes:
+      - keyword: symbolizes
+        weight:
+        zh: 象征着
+      - keyword: symbolizes
+        weight:
+        zh: 似乎象征着
+      - keyword: symbolizes
+        weight:
+        zh: 描述了
+      - keyword: symbolizes
+        weight:
+        zh: 似乎描述了
+      - keyword: symbolizes
+        weight:
+        zh: 似乎表达着
+      - keyword: symbolizes
+        weight:
+        zh: 令观众回忆起
+      - keyword: symbolizes
+        weight:
+        zh: 传达着情感——
+      - keyword: symbolizes
+        weight:
+        zh: 让观众想到
+      - keyword: symbolizes
+        weight:
+        zh: 象征着艺术家的
+      - keyword: symbolizes
+        weight:
+        zh: 暗示着
+      depicts:
+      - keyword: depicts
+        weight:
+        zh: 描绘
+      - keyword: depicts
+        weight:
+        zh: 展示
+      - keyword: depicts
+        weight:
+        zh: 刻画
+      - keyword: depicts
+        weight:
+        zh: 呈现
+      - keyword: depicts
+        weight:
+        zh: 表现
+      - keyword: depicts
+        weight:
+        zh: 描述
+      - keyword: depicts
+        weight:
+        zh: 塑造
+      depiction:
+      - keyword: depiction
+        weight:
+        zh: 描绘
+      - keyword: depiction
+        weight:
+        zh: 展示
+      - keyword: depiction
+        weight:
+        zh: 刻画
+      - keyword: depiction
+        weight:
+        zh: 表现
+      - keyword: depiction
+        weight:
+        zh: 描述
+      - keyword: depiction
+        weight:
+        zh: 塑造
+      composition:
+      - keyword: composition
+        weight:
+        zh: 三角形
+      - keyword: composition
+        weight:
+        zh: 矩形
+      - keyword: composition
+        weight:
+        zh: 正方形
+      - keyword: composition
+        weight:
+        zh: 非平衡
+      - keyword: composition
+        weight:
+        zh: 平衡
+      - keyword: composition
+        weight:
+        zh: 动态
+      - keyword: composition
+        weight:
+        zh: 静态
+      - keyword: composition
+        weight:
+        zh: 垂直
+      - keyword: composition
+        weight:
+        zh: 水平
+      - keyword: composition
+        weight:
+        zh: 聚焦
+      artstyle_adj:
+      - keyword: artstyle_adj
+        weight:
+        zh: 非独创性
+        id: unoriginal
+      - keyword: artstyle_adj
+        weight:
+        zh: 简约
+        id: simple
+      - keyword: artstyle_adj
+        weight:
+        zh: 复杂而写实的
+        id: complex and realistic
+      - keyword: artstyle_adj
+        weight:
+        zh: 超现实主义
+        id: surrealistic
+      - keyword: artstyle_adj
+        weight:
+        zh: 古典主义
+        id: classical
+      - keyword: artstyle_adj
+        weight:
+        zh: 现代主义
+        id: modern
+      - keyword: artstyle_adj
+        weight:
+        zh: 象征主义
+        id: symbolic
+      - keyword: artstyle_adj
+        weight:
+        zh: 稚嫩但充满魅力的
+        id: amateurish yet attractive
+      - keyword: artstyle_adj
+        weight:
+        zh: 注重细节的
+        id: detail-oriented
+      - keyword: artstyle_adj
+        weight:
+        zh: 浓淡不均的
+        id: blocky
+      - keyword: artstyle_adj
+        weight:
+        zh: 立体派
+        id: cubist
+      - keyword: artstyle_adj
+        weight:
+        zh: 印象派
+        id: impressionistic
+      - keyword: artstyle_adj
+        weight:
+        zh: 表现主义
+        id: expressionistic
+      - keyword: artstyle_adj
+        weight:
+        zh: 照片式的
+        id: photographic
+      - keyword: artstyle_adj
+        weight:
+        zh: 巴洛克式
+        id: baroque
+      - keyword: artstyle_adj
+        weight:
+        zh: 达达主义
+        id: dadaist
+      - keyword: artstyle_adj
+        weight:
+        zh: 故障艺术
+        id: glitch-art
+      - keyword: artstyle_adj
+        weight:
+        zh: 像素化
+        id: pixelated
+      - keyword: artstyle_adj
+        weight:
+        zh: 野兽派
+        id: fauvist
+      - keyword: artstyle_adj
+        weight:
+        zh: 田园派
+        id: folksy
+      - keyword: artstyle_adj
+        weight:
+        zh: 隐喻派
+        id: figurative
+      - keyword: artstyle_adj
+        weight:
+        zh: 蜿蜒曲折的
+        id: sinuous
+      - keyword: artstyle_adj
+        weight:
+        zh: 几何风
+        id: geometric
+      - keyword: artstyle_adj
+        weight:
+        zh: 抽象派
+        id: abstract
+      - keyword: artstyle_adj
+        weight:
+        zh: 超写实主义
+        id: hyper-realistic
+      - keyword: artstyle_adj
+        weight:
+        zh: 流行艺术
+        id: pop art
+      - keyword: artstyle_adj
+        weight:
+        zh: 极简主义
+        id: minimalistic
+      - keyword: artstyle_adj
+        weight:
+        zh: 新古典主义
+        id: neoclassical
+      - keyword: artstyle_adj
+        weight:
+        zh: 朦胧派
+        id: cel-shaded
+      - keyword: artstyle_adj
+        weight:
+        zh: 后印象派
+        id: post-impressionistic
+      - keyword: artstyle_adj
+        weight:
+        zh: 纯粹主义
+        id: purist
+      - keyword: artstyle_adj
+        weight:
+        zh: 洛可可式
+        id: rococo
+      - keyword: artstyle_adj
+        weight:
+        zh: 罗马式
+        id: romanesque
+      - keyword: artstyle_adj
+        weight:
+        zh: 浪漫主义
+        id: romantic
+      - keyword: artstyle_adj
+        weight:
+        zh: 涂鸦式
+        id: graffiti-like
+      - keyword: artstyle_adj
+        weight:
+        zh: 性爱艺术
+        id: erotic
+      - keyword: artstyle_adj
+        weight:
+        zh: 感性
+        id: sensual
+      - keyword: artstyle_adj
+        weight:
+        zh: 独创
+        id: heartfelt
+    ruleCount: 171
+  TalelessImages:
+    id: TalelessImages
+    package: core
+    category: taleless
+    keywords:
+    - image
+    - desc_pawn
+    rulesByKeyword:
+      image:
+      - keyword: image
+        weight:
+        zh: 一位孤独的[Character][desc_pawn]
+      - keyword: image
+        weight:
+        zh: "[TerrainFeature]附近一个孤独的[Character][desc_pawn]"
+      - keyword: image
+        weight:
+        zh: "[Community]附近一个孤独的[Character][desc_pawn]"
+      - keyword: image
+        weight:
+        zh: 被一群[Character]团团包围的[Character][desc_pawn]
+      - keyword: image
+        weight:
+        zh: "[Character]们正在玩[Game]"
+      - keyword: image
+        weight:
+        zh: 一个[Character][desc_pawn]，正在和[Quantity_adjphrase][Character]玩[Game]
+      - keyword: image
+        weight:
+        zh: 一个[Character][desc_pawn]，手持[Weapon]
+      - keyword: image
+        weight:
+        zh: 一个[Character][desc_pawn]，正在吃[Vegetable]
+      - keyword: image
+        weight:
+        zh: "[Quantity_adjphrase][PersonJob]和[PersonJob]在吃[Vegetable]"
+      - keyword: image
+        weight:
+        zh: 小有名气的[NamePerson][desc_pawn]
+      - keyword: image
+        weight:
+        zh: 一位身着[Apparel]的[Character][desc_pawn]
+      - keyword: image
+        weight:
+        zh: 一个[Community]
+      - keyword: image
+        weight:
+        zh: 一处[TerrainFeature]
+      - keyword: image
+        weight:
+        zh: 一把[Weapon]
+      - keyword: image
+        weight:
+        zh: 一棵[TreeType]
+      - keyword: image
+        weight:
+        zh: 一个[NaturalObject]
+      - keyword: image
+        weight:
+        zh: "[Quantity_adjphrase][Weapon]"
+      - keyword: image
+        weight:
+        zh: "[Quantity_adjphrase][Vegetable]"
+      - keyword: image
+        weight:
+        zh: 一件空荡荡的[Apparel]
+      - keyword: image
+        weight:
+        zh: "[Shape]"
+      - keyword: image
+        weight:
+        zh: 被众多[Shape]环绕的[Shape]
+      - keyword: image
+        weight:
+        zh: "[ConceptAny]的一种抽象呈现"
+      - keyword: image
+        weight:
+        zh: "[AdjectiveAny]抽象形状"
+      desc_pawn:
+      - keyword: desc_pawn
+        weight: 12.0
+        zh: ''
+      - keyword: desc_pawn
+        weight:
+        zh: 飞过天空
+      - keyword: desc_pawn
+        weight:
+        zh: 悬浮在空中
+      - keyword: desc_pawn
+        weight:
+        zh: 向左移动
+      - keyword: desc_pawn
+        weight:
+        zh: 向右移动
+      - keyword: desc_pawn
+        weight:
+        zh: 坐在桌子上
+      - keyword: desc_pawn
+        weight:
+        zh: 在镜子中
+      - keyword: desc_pawn
+        weight:
+        zh: 的轮廓
+      - keyword: desc_pawn
+        weight:
+        zh: 穿着[Apparel]骑在[Animal]上
+      - keyword: desc_pawn
+        weight:
+        zh: 看起来很[AdjectiveAny]
+      - keyword: desc_pawn
+        weight:
+        zh: 浑身是[Gore]
+    ruleCount: 34
+  GlobalUtility:
+    id: GlobalUtility
+    package: core
+    category: global_utility
+    keywords:
+    - Trans
+    - Character
+    - Quantity_adjphrase
+    - Shape
+    - AdjectiveAny
+    - ConceptAny
+    - PersonalCharacteristic
+    rulesByKeyword:
+      Trans:
+      - keyword: Trans
+        weight:
+        zh: 的
+      - keyword: Trans
+        weight:
+        zh: 之
+      - keyword: Trans
+        weight:
+        zh: 同
+      - keyword: Trans
+        weight:
+        zh: 与
+      Character:
+      - keyword: Character
+        weight: 6.0
+        zh: "[PersonJob]"
+      - keyword: Character
+        weight: 4.0
+        zh: "[Animal]"
+      - keyword: Character
+        weight: 3.0
+        zh: "[Enemy]"
+      - keyword: Character
+        weight:
+        zh: "[Mechanoid]"
+      Quantity_adjphrase:
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 两个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 三个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 四个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 五个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 六个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 七个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 八个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 九个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 十个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 一些
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 一群
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 一大群
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 数十个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 数百个
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 上千
+      - keyword: Quantity_adjphrase
+        weight:
+        zh: 数不清的
+      Shape:
+      - keyword: Shape
+        weight:
+        zh: 三角形
+      - keyword: Shape
+        weight:
+        zh: 正方形
+      - keyword: Shape
+        weight:
+        zh: 矩形
+      - keyword: Shape
+        weight:
+        zh: 圆锥形
+      - keyword: Shape
+        weight:
+        zh: 直线
+      - keyword: Shape
+        weight:
+        zh: 心形
+      - keyword: Shape
+        weight:
+        zh: 星形
+      - keyword: Shape
+        weight:
+        zh: 圆形
+      - keyword: Shape
+        weight:
+        zh: 椭圆形
+      AdjectiveAny:
+      - keyword: AdjectiveAny
+        weight:
+        zh: "[AdjectiveBadass]"
+      - keyword: AdjectiveAny
+        weight:
+        zh: "[AdjectiveAngsty]"
+      - keyword: AdjectiveAny
+        weight:
+        zh: "[AdjectiveFriendly]"
+      - keyword: AdjectiveAny
+        weight:
+        zh: "[AdjectiveNatural]"
+      ConceptAny:
+      - keyword: ConceptAny
+        weight:
+        zh: "[ConceptPositive]"
+      - keyword: ConceptAny
+        weight:
+        zh: "[ConceptBadass]"
+      - keyword: ConceptAny
+        weight:
+        zh: "[ConceptAngsty]"
+      PersonalCharacteristic:
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        zh: 生殖器
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        zh: 阴毛
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        zh: 体毛
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        zh: 如厕习惯
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        zh: 性能力
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        zh: 性取向
+      - keyword: PersonalCharacteristic
+        weight: 0.15
+        zh: 性经验
+    ruleCount: 47

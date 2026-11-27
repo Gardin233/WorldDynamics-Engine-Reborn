@@ -4,6 +4,7 @@ import com.thatguycy.worlddynamicsengine.manager.organization.WarManager;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.TownyUniverse;
 import com.thatguycy.worlddynamicsengine.command.CommandPermissions;
+import com.thatguycy.worlddynamicsengine.manager.event.EventManager;
 import com.thatguycy.worlddynamicsengine.manager.organization.OrgManager;
 import com.thatguycy.worlddynamicsengine.model.background.RoleBackgroundStage;
 import com.thatguycy.worlddynamicsengine.model.organization.SovereignSubjectState;
@@ -17,6 +18,7 @@ import com.thatguycy.worlddynamicsengine.WorldDynamicsEngine;
 import java.util.*;
 import com.thatguycy.worlddynamicsengine.util.TextColors;
 import org.bukkit.command.*;
+import org.bukkit.entity.Player;
 
 /**
  * 统一处理管理员模块指令，执行动作权限、参数和确认校验，并记录操作结果。
@@ -80,9 +82,12 @@ public final class AdminCommand implements CommandExecutor {
             new Entry("ideology", "memes", "<ideology> <meme1> [meme2] [meme3] [meme4]"),
             new Entry("ideology", "doctrine", "<ideology> <doctrine> <attitude>"),
             new Entry("background", "info", "<player>"),
-            new Entry("background", "set", "<player> <childhood|adulthood> <id> confirm"),
-            new Entry("background", "reset", "<player> <childhood|adulthood|all> confirm"),
-            new Entry("economy", "orgbalance", "<org> <amount>")
+            new Entry("background", "edit", "<communityId> confirm"),
+            new Entry("background", "set", "<player> <role|childhood|adulthood> <id> confirm"),
+            new Entry("background", "reset", "<player> <role|childhood|adulthood|all> confirm"),
+            new Entry("economy", "orgbalance", "<org> <amount>"),
+            new Entry("event", "trigger", "<eventId> <town> [onlinePlayer]"),
+            new Entry("event", "close", "<eventIdOrAll> <town> confirm")
     );
 
     private static final Map<String, String> CHINESE_HELP_PARAMETERS = Map.ofEntries(
@@ -108,6 +113,9 @@ public final class AdminCommand implements CommandExecutor {
             Map.entry("<days>", "<天数>"),
             Map.entry("<hours|0>", "<时长小时数|0>"),
             Map.entry("<id>", "<背景ID>"),
+            Map.entry("<communityId>", "<已发布背景ID>"),
+            Map.entry("<eventId>", "<事件ID>"),
+            Map.entry("<eventIdOrAll>", "<事件ID|all>"),
             Map.entry("<ideology>", "<文化>"),
             Map.entry("<doctrine>", "<戒律ID>"),
             Map.entry("<attitude>", "<态度ID>"),
@@ -118,6 +126,7 @@ public final class AdminCommand implements CommandExecutor {
             Map.entry("<meme3>", "<模因3>"),
             Map.entry("<meme4>", "<模因4>"),
             Map.entry("[candidate]", "[候选人]"),
+            Map.entry("[onlinePlayer]", "[在线玩家]"),
             Map.entry("[meme2]", "[模因2]"),
             Map.entry("[meme3]", "[模因3]"),
             Map.entry("[meme4]", "[模因4]"),
@@ -196,9 +205,12 @@ public final class AdminCommand implements CommandExecutor {
             Map.entry("ideology.memes", "修改文化模因"),
             Map.entry("ideology.doctrine", "设置戒律态度"),
             Map.entry("background.info", "查看玩家背景"),
+            Map.entry("background.edit", "编辑已发布的共享背景"),
             Map.entry("background.set", "设置玩家背景"),
             Map.entry("background.reset", "重置玩家背景"),
-            Map.entry("economy.orgbalance", "设置集团余额"));
+            Map.entry("economy.orgbalance", "设置集团余额"),
+            Map.entry("event.trigger", "强制触发随机事件，包括文本事件 mislead_enemies"),
+            Map.entry("event.close", "强制关闭城镇内指定类型或全部正在进行的事件"));
 
     private final WorldDynamicsEngine plugin;
     private final AdminAuditLogger audit;
@@ -242,13 +254,17 @@ public final class AdminCommand implements CommandExecutor {
                 case "war" -> war(action, args);
                 case "ideology" -> ideology(action, args);
                 case "background" -> background(sender, action, args);
+                case "event" -> event(sender, action, args);
                 case "economy" -> {
                     size(args, 5);
                     plugin.getOrgManager().setBalance(org(args[3]), number(args[4], Double.MAX_VALUE));
                 }
                 default -> throw new AdminFailure("admin_invalid_argument");
             }
-            if (!action.equals("info")) send(sender, "admin_success");
+            if (!action.equals("info") && !(module.equals("background") && action.equals("edit"))
+                    && !module.equals("event")) {
+                send(sender, "admin_success");
+            }
             audit.record(sender, args, "SUCCESS");
         } catch (AdminFailure ex) {
             send(sender, ex.getMessage());
@@ -337,6 +353,49 @@ public final class AdminCommand implements CommandExecutor {
                 plugin.getNationManager().importExistingTownyNations();
                 plugin.getResidentManager().syncWithTowny();
                 saveAll();
+            }
+            default -> throw new AdminFailure("admin_invalid_argument");
+        }
+    }
+
+    private void event(CommandSender sender, String action, String[] a) {
+        switch (action) {
+            case "trigger" -> {
+                require(a.length == 5 || a.length == 6, "admin_invalid_argument");
+                Player target = null;
+                if (a.length == 6) {
+                    target = plugin.getServer().getOnlinePlayers().stream()
+                            .filter(player -> player.getName().equalsIgnoreCase(a[5]))
+                            .findFirst().orElse(null);
+                    require(target != null, "admin_event_invalid_target");
+                }
+                EventManager.ForceEventResult result = plugin.getEventManager().forceEvent(
+                        a[3], a[4], target);
+                switch (result) {
+                    case STARTED -> send(sender, "admin_event_started", a[3], a[4]);
+                    case UNKNOWN_EVENT -> throw new AdminFailure("admin_event_unknown");
+                    case INVALID_TOWN -> throw new AdminFailure("admin_event_invalid_town");
+                    case TOWN_NOT_REGISTERED -> throw new AdminFailure("admin_event_town_not_registered");
+                    case NO_ONLINE_PLAYERS -> throw new AdminFailure("admin_event_no_online_players");
+                    case INVALID_TARGET -> throw new AdminFailure("admin_event_invalid_target");
+                    case NO_ONLINE_MAYOR -> throw new AdminFailure("admin_event_no_online_mayor");
+                    case INVALID_STRENGTH_FORMULA -> throw new AdminFailure("admin_event_invalid_strength_formula");
+                    case START_FAILED -> throw new AdminFailure("admin_event_start_failed");
+                    case FAILED -> throw new AdminFailure("admin_failed");
+                }
+            }
+            case "close" -> {
+                require(a.length == 6, "admin_invalid_argument");
+                confirm(a[5]);
+                EventManager.CloseEventsResult result = plugin.getEventManager().closeEvents(
+                        a[3], a[4]);
+                switch (result.status()) {
+                    case CLOSED -> send(sender, "admin_event_closed", a[3], a[4], result.closedCount());
+                    case UNKNOWN_EVENT -> throw new AdminFailure("admin_event_unknown");
+                    case INVALID_TOWN -> throw new AdminFailure("admin_event_invalid_town");
+                    case NO_ACTIVE_EVENTS -> throw new AdminFailure("admin_event_not_active");
+                    case FAILED -> throw new AdminFailure("admin_failed");
+                }
             }
             default -> throw new AdminFailure("admin_invalid_argument");
         }
@@ -742,30 +801,94 @@ public final class AdminCommand implements CommandExecutor {
     }
 
     private void background(CommandSender sender, String action, String[] a) {
+        if (action.equals("edit")) {
+            size(a, 5);
+            confirm(a[4]);
+            require(sender instanceof Player, "admin_background_edit_player_only");
+            Player player = (Player) sender;
+            require(plugin.getPlayerMenuManager() != null
+                            && plugin.getPlayerMenuManager().openCommunityBackgroundAdminEditor(player, a[3]),
+                    "admin_not_found");
+            return;
+        }
         require(a.length >= 4, "admin_invalid_argument"); WDEresident r = playerData(a[3]);
         if (action.equals("info")) {
-            size(a, 4); send(sender, "admin_background_info", r.getUsername(), r.getChildhoodBackgroundId(), r.getAdulthoodBackgroundId()); return;
+            size(a, 4);
+            plugin.getBackgroundManager().hasCompletedSelection(r);
+            String childhood = backgroundSummary(r, RoleBackgroundStage.CHILDHOOD);
+            String adulthood = backgroundSummary(r, RoleBackgroundStage.ADULTHOOD);
+            send(sender, "admin_background_info", r.getUsername(), childhood, adulthood);
+            return;
         }
         if (action.equals("reset")) {
             size(a, 6); confirm(a[5]);
             switch (a[4].toLowerCase(Locale.ROOT)) {
-                case "childhood", "all" -> { r.setChildhoodBackgroundId(""); r.setAdulthoodBackgroundId(""); }
-                case "adulthood" -> r.setAdulthoodBackgroundId("");
+                case "childhood" -> clearStageBackground(r, RoleBackgroundStage.CHILDHOOD);
+                case "adulthood" -> clearStageBackground(r, RoleBackgroundStage.ADULTHOOD);
+                case "role" -> clearRoleBackground(r);
+                case "all" -> {
+                    clearStageBackground(r, RoleBackgroundStage.CHILDHOOD);
+                    clearStageBackground(r, RoleBackgroundStage.ADULTHOOD);
+                    clearRoleBackground(r);
+                }
                 default -> throw new AdminFailure("admin_invalid_argument");
             }
         } else {
             size(a, 7); confirm(a[6]);
-            RoleBackgroundStage stage = RoleBackgroundStage.fromString(a[4]);
-            require(stage != null && plugin.getBackgroundManager().getDefinition(stage, a[5]) != null, "admin_not_found");
-            if (stage == RoleBackgroundStage.CHILDHOOD) r.setChildhoodBackgroundId(a[5]);
-            else {
-                require(r.hasSelectedChildhoodBackground(), "admin_operation_blocked");
-                r.setAdulthoodBackgroundId(a[5]);
+            if (a[4].equalsIgnoreCase("role")) {
+                var definition = plugin.getBackgroundManager().getRoleDefinition(a[5]);
+                require(definition != null, "admin_not_found");
+                r.setRoleBackgroundId(definition.getId());
+                r.setRoleBackgroundTitle(definition.getTitle());
+                r.setRoleBackgroundStory(String.join("\n", definition.getLore()));
+                r.setRoleBackgroundSkillPoints(definition.getSkillPoints());
+                r.markBackgroundBonusApplied("role-background:" + definition.getId());
+            } else {
+                RoleBackgroundStage stage = RoleBackgroundStage.fromString(a[4]);
+                var definition = stage == null ? null : plugin.getBackgroundManager().getDefinition(stage, a[5]);
+                require(stage != null && definition != null, "admin_not_found");
+                if (stage == RoleBackgroundStage.ADULTHOOD) {
+                    require(r.hasSelectedChildhoodBackground(), "admin_operation_blocked");
+                }
+                clearRoleBackground(r);
+                if (stage == RoleBackgroundStage.CHILDHOOD) r.setChildhoodBackgroundId(a[5]);
+                else r.setAdulthoodBackgroundId(a[5]);
+                r.setBackgroundTitle(stage, definition.getTitle());
+                r.setBackgroundStory(stage, String.join("\n", definition.getLore()));
+                r.setBackgroundSkillPoints(stage, definition.getSkillPoints());
+                // Administrative corrections do not award skills; preserve prior award history.
+                r.markBackgroundBonusApplied("background-stage:" + stage.getConfigKey() + ":" + a[5]);
             }
-            // Administrative corrections do not award skills; preserve prior award history.
-            r.markBackgroundBonusApplied(a[5]);
         }
         plugin.getResidentManager().saveResidents();
+    }
+
+    private String backgroundSummary(WDEresident resident, RoleBackgroundStage stage) {
+        String id = stage == RoleBackgroundStage.CHILDHOOD
+                ? resident.getChildhoodBackgroundId() : resident.getAdulthoodBackgroundId();
+        if (id.isBlank()) return "none";
+        String title = resident.getBackgroundTitle(stage);
+        StringBuilder summary = new StringBuilder(title.isBlank() ? id : title + " (" + id + ")");
+        resident.getBackgroundSkillPoints(stage).forEach((skill, points) -> summary
+                .append(" [").append(plugin.getBackgroundManager().getAuraSkillDisplayName(skill))
+                .append(": ").append(points).append(']'));
+        return summary.toString();
+    }
+
+    private void clearStageBackground(WDEresident resident, RoleBackgroundStage stage) {
+        if (stage == RoleBackgroundStage.CHILDHOOD) resident.setChildhoodBackgroundId("");
+        else resident.setAdulthoodBackgroundId("");
+        resident.setBackgroundTitle(stage, "");
+        resident.setBackgroundStory(stage, "");
+        resident.setBackgroundSkillPoints(stage, Map.of());
+    }
+
+    private void clearRoleBackground(WDEresident resident) {
+        resident.setRoleBackgroundId("");
+        resident.setRoleBackgroundTitle("");
+        resident.setRoleBackgroundStory("");
+        resident.setRoleBackgroundSkillPoints(Map.of());
+        resident.getAppliedBackgroundBonusIds().removeIf(id -> id.startsWith("role-background:"));
     }
 
     private void saveAll() {

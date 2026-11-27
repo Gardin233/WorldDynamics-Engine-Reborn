@@ -22,6 +22,16 @@ townElectionDurationDays: 2
 # 城镇征召兵人数上限占城镇人口的比例。0.5 代表最多为人口的 50%。
 townConscriptLimitRatio: 0.5
 
+# 城镇财富值：人口估值 + 地块估值 + 每位镇民持有的Vault货币余额，余额折算为默认货币。
+wealth:
+  enabled: true
+  # 每位镇民计入城镇财富的固定估值。
+  population-value: "1000.00"
+  # 每块城镇地块折算的财富值。
+  plot-value: "100.00"
+  # 财富值刷新间隔（20 ticks = 1 秒），默认每 5 分钟刷新。
+  refresh-interval-ticks: 6000
+
 # 是否允许城镇参与常规战争。
 # false 时，城镇不能通过 Towny 的常规战争逻辑切换为非中立状态。
 # 该限制只用于屏蔽“城镇 vs 城镇 / 城镇 vs 国家”的常规战争，不影响独立战争类机制。

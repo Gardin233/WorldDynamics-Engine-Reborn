@@ -1,6 +1,7 @@
 package com.thatguycy.worlddynamicsengine;
 
 import com.thatguycy.worlddynamicsengine.command.CommandRegistration;
+import com.thatguycy.worlddynamicsengine.api.event.RandomEventRegistry;
 import com.thatguycy.worlddynamicsengine.integration.craftengine.CraftEngineIntegration;
 import com.thatguycy.worlddynamicsengine.integration.papi.MoodPlaceholderIntegration;
 import com.thatguycy.worlddynamicsengine.listener.background.PlayerBackgroundListener;
@@ -15,6 +16,8 @@ import com.thatguycy.worlddynamicsengine.manager.background.BackgroundManager;
 import com.thatguycy.worlddynamicsengine.manager.drop.PlayerDropManager;
 import com.thatguycy.worlddynamicsengine.manager.economy.EconomyBridge;
 import com.thatguycy.worlddynamicsengine.manager.economy.PlayerGiftManager;
+import com.thatguycy.worlddynamicsengine.manager.economy.TownWealthManager;
+import com.thatguycy.worlddynamicsengine.manager.event.EventManager;
 import com.thatguycy.worlddynamicsengine.manager.governance.NationManager;
 import com.thatguycy.worlddynamicsengine.manager.governance.ResidentManager;
 import com.thatguycy.worlddynamicsengine.manager.governance.TownManager;
@@ -40,6 +43,7 @@ import com.thatguycy.worlddynamicsengine.manager.history.IdeologyHistoryManager;
 import com.thatguycy.worlddynamicsengine.manager.menu.PlayerMenuManager;
 import com.thatguycy.worlddynamicsengine.manager.organization.OrgManager;
 import com.thatguycy.worlddynamicsengine.manager.storage.DataStorageManager;
+import com.thatguycy.worlddynamicsengine.manager.text.TynanTextCompositionManager;
 import com.thatguycy.worlddynamicsengine.manager.war.WarTruceClock;
 import com.thatguycy.worlddynamicsengine.manager.war.WarScoreboardManager;
 import com.thatguycy.worlddynamicsengine.model.InnBed;
@@ -71,6 +75,7 @@ import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -86,6 +91,9 @@ public class WorldDynamicsEngine extends JavaPlugin {
     private EconomyBridge economyBridge;
     private DataStorageManager dataStorageManager;
     private TownManager townManager;
+    private TownWealthManager townWealthManager;
+    private EventManager eventManager;
+    private TynanTextCompositionManager tynanTextCompositionManager;
     private WarTruceClock warTruceClock;
     private NationManager nationManager;
     private ResidentManager residentManager;
@@ -122,6 +130,7 @@ public class WorldDynamicsEngine extends JavaPlugin {
         reloadConfig();
         configuration.loadAndMigrate();
         loadLocales();
+        tynanTextCompositionManager = new TynanTextCompositionManager(this);
         readConfigSettings();
         initializeDataStorage();
 
@@ -143,6 +152,10 @@ public class WorldDynamicsEngine extends JavaPlugin {
         cultureModule.initializeDefinitions();
         warTruceClock = new WarTruceClock(this);
         townManager = new TownManager(this);
+        townWealthManager = new TownWealthManager(this, townManager);
+        eventManager = new EventManager(this);
+        getServer().getServicesManager().register(
+                RandomEventRegistry.class, eventManager, this, ServicePriority.Normal);
         nationManager = new NationManager(this, townManager);
         residentManager = new ResidentManager(this);
         contractManager = new ContractManager(this);
@@ -179,6 +192,10 @@ public class WorldDynamicsEngine extends JavaPlugin {
             moodPlaceholderIntegration = null;
         }
         cultureModule.stop();
+        if (eventManager != null) {
+            eventManager.stop();
+            getServer().getServicesManager().unregister(RandomEventRegistry.class, eventManager);
+        }
         if (warScoreboardManager != null) warScoreboardManager.clearAll();
         if (playerMenuManager != null) playerMenuManager.closeMenus();
         if (innManager != null) innManager.refundPending();
@@ -218,6 +235,22 @@ public class WorldDynamicsEngine extends JavaPlugin {
 
     public TownManager getTownManager() {
         return townManager;
+    }
+
+    public TownWealthManager getTownWealthManager() {
+        return townWealthManager;
+    }
+
+    public EventManager getEventManager() {
+        return eventManager;
+    }
+
+    public TynanTextCompositionManager getTynanTextCompositionManager() {
+        return tynanTextCompositionManager;
+    }
+
+    public RandomEventRegistry getRandomEventRegistry() {
+        return eventManager;
     }
 
     public NationManager getNationManager() {
@@ -392,6 +425,10 @@ public class WorldDynamicsEngine extends JavaPlugin {
         return configuration.getBackgroundConfig();
     }
 
+    public boolean saveBackgroundConfig() {
+        return configuration.saveBackgroundConfig();
+    }
+
     public FileConfiguration getDropsConfig() {
         return configuration.getDropsConfig();
     }
@@ -540,6 +577,9 @@ public class WorldDynamicsEngine extends JavaPlugin {
     }
 
     private void registerListeners() {
+        if (eventManager != null) {
+            getServer().getPluginManager().registerEvents(eventManager, this);
+        }
         if (playerMenuManager != null) {
             getServer().getPluginManager().registerEvents(playerMenuManager, this);
         }
@@ -588,6 +628,8 @@ public class WorldDynamicsEngine extends JavaPlugin {
         cultureModule.startResidentTasks();
         orgManager.enforceNeutralityOnStartup();
         townManager.enableAutoSave();
+        if (townWealthManager != null) townWealthManager.start();
+        if (eventManager != null) eventManager.start();
         nationManager.enableAutoSave();
         residentManager.enableAutoSave();
         orgManager.enableAutoSave();
@@ -622,12 +664,16 @@ public class WorldDynamicsEngine extends JavaPlugin {
         String storageSignatureBeforeReload = configuration.buildStorageSignature();
 
         cultureModule.prepareReload();
+        if (eventManager != null) eventManager.stop();
         if (warScoreboardManager != null) warScoreboardManager.clearAll();
         if (innManager != null) innManager.refundPending();
         saveRuntimeState();
         reloadConfig();
         configuration.loadAndMigrate();
         loadLocales();
+        if (tynanTextCompositionManager != null) {
+            tynanTextCompositionManager.reload();
+        }
         readConfigSettings();
         if (warTruceClock != null) warTruceClock.reload();
         if (nationHistoryManager != null) {
@@ -641,6 +687,9 @@ public class WorldDynamicsEngine extends JavaPlugin {
         cultureModule.reloadHistory();
         if (playerDropManager != null) {
             playerDropManager.reloadDefinitions();
+        }
+        if (eventManager != null) {
+            eventManager.reload();
         }
         cultureModule.reloadDefinitions();
         if (backgroundManager == null && residentManager != null) {

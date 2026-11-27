@@ -1,0 +1,39 @@
+---
+# Quest-style event narration is kept separate from the art-tale corpus.
+eventQuests:
+  mislead_enemies:
+    opening:
+      - weight: 1.0
+        zh: "[DATE]：来访者 [PERSON] 把一张折皱的路线图铺在桌上，几条新画的记号正朝 [TOWN] 附近收拢。"
+      - weight: 1.0
+        zh: "[DATE]：[PERSON] 抵达时仍不时回头张望；他说有一队追兵已经循着他的行踪逼近 [TOWN]。"
+      - weight: 1.0
+        zh: "[DATE]：来访者 [PERSON] 没有寒暄，先确认 [TOWN] 最近是否接待过陌生人。"
+    problem:
+      - weight: 1.0
+        zh: "追兵正搜索他留下的踪迹；若继续追查，镇外道路很快就会变成他们的行军路线。"
+      - weight: 1.0
+        zh: "他担心追兵会把附近聚落卷进冲突，但手头没有力量正面对抗。"
+      - weight: 1.0
+        zh: "他需要把追兵从真正目标处引开，却缺少一个足够可信的假线索。"
+    proposal:
+      - weight: 1.0
+        zh: "他请求你们布置一条误导路线，让敌人相信目标已转移到 [TOWN] 附近。"
+      - weight: 1.0
+        zh: "他的计划是以假的行踪和补给作诱饵，把追兵引向城镇外围。"
+      - weight: 1.0
+        zh: "他提议制造一处显眼的假营地，让追兵误判目标并朝 [TOWN] 发起袭击。"
+    risk:
+      - weight: 1.0
+        zh: "如果接受，追兵会立刻按这条线索逼近；这座城镇将面对一场真正的袭击。"
+      - weight: 1.0
+        zh: "这不是无害的骗局：追击者会把 [TOWN] 当成目标，袭击随即开始。"
+      - weight: 1.0
+        zh: "计划启动后就无法悄悄撤回，居民必须立即准备迎战。"
+    terms:
+      - weight: 1.0
+        zh: "作为交换，[PERSON] 承诺在委托开始时支付 [REWARD]。"
+      - weight: 1.0
+        zh: "若你们答应，他会交出 [REWARD]，随后诱饵计划立即开始。"
+      - weight: 1.0
+        zh: "他不要求你们相信他的故事，只要求当场给出答复；报酬为 [REWARD]。"

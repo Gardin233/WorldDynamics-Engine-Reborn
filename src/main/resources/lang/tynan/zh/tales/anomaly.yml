@@ -1,0 +1,1060 @@
+---
+tales:
+- id: PerformedPsychicRitual
+  package: anomaly
+  label:
+    zh: 举行心灵仪式
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]正主持心灵仪式"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull][circumstance_group]，引导在自身周围跳动的能量，同时编织着这一强大的心灵仪式"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull][circumstance_group]，念诵暗黑咒语，借助神秘力量举行心灵仪式"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull][circumstance_group]，聚精会神地进行心灵仪式"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull][circumstance_group]，在空气中描画着复杂的符号，利用潜在的心灵能量来展现心灵仪式"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 集中于面前的咒术书
+    - keyword: circumstance_phrase
+      weight:
+      zh: 以专注的决心，展示[PAWN_pronoun]对心灵之术的精通
+    - keyword: circumstance_phrase
+      weight:
+      zh: 面上带着一丝残忍的笑意
+    - keyword: circumstance_phrase
+      weight:
+      zh: 的声音透过能量的轰鸣声奋力呐喊
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: 可以看见[side_position]边的一些吟诵者也参与其中，给予支持
+    - keyword: desc_sentence
+      weight:
+      zh: 当[PAWN_nameDef]完成心灵仪式时，空气中闪烁着光芒。
+    - keyword: desc_sentence
+      weight:
+      zh: 背景中的巨石闪闪发光。
+    - keyword: desc_sentence
+      weight:
+      zh: 周围的蜡烛在心灵漩涡中忽明忽暗。
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_objective
+    - PAWN_possessive
+    - PAWN_pronoun
+    - circumstance_group
+    - side_position
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 13
+- id: ClosedTheVoid
+  package: anomaly
+  label:
+    zh: 已关闭虚空节点
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]正在关闭虚空节点。"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull][circumstance_group]，正在关闭与虚空的链接，以确保殖民地的安全"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull][circumstance_group]，不屑地站在虚空节点前，决心保护殖民地"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 伴随着心灵能量噼啪作响
+    - keyword: circumstance_phrase
+      weight:
+      zh: 虚空节点散发出一阵强烈的光芒
+    - keyword: circumstance_phrase
+      weight:
+      zh: 身后似有虚空在低语
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: 灰暗的金属从四面八方压迫而来。
+    - keyword: desc_sentence
+      weight:
+      zh: 其他殖民者在[side_position]的方向。焦急地等待[PAWN_nameDef]的归来。
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]的表情暴露了[PAWN_pronoun]正在为眼前的选择而苦恼。"
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_objective
+    - PAWN_pronoun
+    - circumstance_group
+    - side_position
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 9
+- id: UnnaturalDarkness
+  package: anomaly
+  label:
+    zh: 异常黑暗
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]直面异常黑暗现象。"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]看到世界被无法穿透的黑暗吞噬，惊愕地待在原地，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]被从天而降的黑色柱子所包围，大地笼罩在一片黑暗之中，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]在令人窒息的黑暗中寻找着前进方向，而夜魇紧随[PAWN_possessive]身后，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]目睹着世界被黑暗的深渊所侵蚀，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_possessive]朋友们拼命地想要回到光明的安全地带"
+    - keyword: circumstance_phrase
+      weight:
+      zh: 四周回荡着刺耳的尖叫声
+    - keyword: circumstance_phrase
+      weight:
+      zh: 光明似乎无法将其阻挡
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_pronoun]请求得到救赎"
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: 甚至连远处微弱的灯光闪烁都看不到。
+    - keyword: desc_sentence
+      weight:
+      zh: 局势似乎已经完全无望了。
+    - keyword: desc_sentence
+      weight:
+      zh: 在黑暗的边缘可以瞄见影影绰绰的成群生物。
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]试图在黑暗中寻找一线希望。"
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - PAWN_pronoun
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 13
+- id: EmbracedTheVoid
+  package: anomaly
+  label:
+    zh: 拥抱虚空
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]正拥抱虚空"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]利用虚空的禁忌知识，超脱凡人的局限性，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]在虚空的诱惑下沉沦，[circumstance_group]"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]屈服于虚空的邪恶低语，[circumstance_group]"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_possessive]四肢被暗黑能量的卷须缠绕着"
+    - keyword: circumstance_phrase
+      weight:
+      zh: 深陷于心灵漩涡之中
+    - keyword: circumstance_phrase
+      weight:
+      zh: 面上还带着诡异的微笑
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]浑身散发出一种不祥的力量，正是虚空与[PAWN_possessive]契约。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[PAWN_nameDef]的眼睛开始闪烁着超凡的光芒。"
+    - keyword: desc_sentence
+      weight:
+      zh: 其他殖民者正在[side_position]的方向，质疑[PAWN_nameDef]的选择是否明智。
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_possessive
+    - circumstance_group
+    - side_position
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 10
+- id: DeathPall
+  package: anomaly
+  label:
+    zh: 死灵迷雾
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[PAWN_nameDef]正在面对步步逼近的死灵迷雾"
+    image:
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]惊恐地注视着死灵迷雾的阴霾笼罩大地，[circumstance_group]，死者再次苏醒"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]紧紧攥住[PAWN_possessive]武器，[circumstance_group]，死灵迷雾步步紧逼，唤醒所到之处的死者"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]不安地颤抖着，[circumstance_group]，[PAWN_pronoun]眼睁睁看着死灵迷雾迫近，它赋予了已死之人再次往生的权能"
+    - keyword: image
+      weight:
+      zh: "[PAWN_nameFull]惊恐地看着死亡的阴霾笼罩着[PAWN_pronoun]宁静的家园，[circumstance_group]，家园成了与亡者对抗的战场"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 在[PAWN_pronoun]绝望的祈祷中
+    - keyword: circumstance_phrase
+      weight:
+      zh: 空气中弥漫着腐朽和绝望的气息
+    - keyword: circumstance_phrase
+      weight:
+      zh: "[PAWN_pronoun]被一群蹒跚怪团团围困"
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: 在死灵迷雾的中心。[PAWN_nameDef]做好了战斗准备。
+    - keyword: desc_sentence
+      weight:
+      zh: 死灵迷雾的不断侵袭让[PAWN_nameDef]的朋友们心生恐惧。
+    - keyword: desc_sentence
+      weight:
+      zh: 随着死亡阴霾的影响不断扩散，[PAWN_nameDef]的脊背也在颤抖。
+    - keyword: desc_sentence
+      weight:
+      zh: 绝望的重担压迫着[PAWN_nameDef]，考验着[PAWN_pronoun]对抗惊惧之物的决心。
+  slots:
+    tokens:
+    - PAWN_nameDef
+    - PAWN_nameFull
+    - PAWN_objective
+    - PAWN_possessive
+    - PAWN_pronoun
+    - circumstance_group
+    roles:
+    - prefix: PAWN
+      label:
+        zh: 角色
+      fields:
+      - token: PAWN_nameFull
+        kind: person
+        prefix: PAWN
+        field: nameFull
+        label:
+          zh: 角色·全名
+        required: true
+      - token: PAWN_nameDef
+        kind: person
+        prefix: PAWN
+        field: nameDef
+        label:
+          zh: 角色·简称
+        required: true
+      - token: PAWN_title
+        kind: person
+        prefix: PAWN
+        field: title
+        label:
+          zh: 角色·头衔
+        required: false
+      - token: PAWN_pronoun
+        kind: person
+        prefix: PAWN
+        field: pronoun
+        label:
+          zh: 角色·代词(主)
+        required: true
+      - token: PAWN_possessive
+        kind: person
+        prefix: PAWN
+        field: possessive
+        label:
+          zh: 角色·代词(属)
+        required: true
+      - token: PAWN_objective
+        kind: person
+        prefix: PAWN
+        field: objective
+        label:
+          zh: 角色·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: PAWN_nameFull
+      kind: person
+      prefix: PAWN
+      field: nameFull
+      label:
+        zh: 角色·全名
+      required: true
+    - token: PAWN_nameDef
+      kind: person
+      prefix: PAWN
+      field: nameDef
+      label:
+        zh: 角色·简称
+      required: true
+    - token: PAWN_title
+      kind: person
+      prefix: PAWN
+      field: title
+      label:
+        zh: 角色·头衔
+      required: false
+    - token: PAWN_pronoun
+      kind: person
+      prefix: PAWN
+      field: pronoun
+      label:
+        zh: 角色·代词(主)
+      required: true
+    - token: PAWN_possessive
+      kind: person
+      prefix: PAWN
+      field: possessive
+      label:
+        zh: 角色·代词(属)
+      required: true
+    - token: PAWN_objective
+      kind: person
+      prefix: PAWN
+      field: objective
+      label:
+        zh: 角色·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 12
+- id: StudiedEntity
+  package: anomaly
+  label:
+    zh: 调查了实体
+  keywords:
+  - tale_noun
+  - image
+  - circumstance_phrase
+  - desc_sentence
+  rulesByKeyword:
+    tale_noun:
+    - keyword: tale_noun
+      weight:
+      zh: "[STUDIER_nameDef]正在调查[ENTITY_nameIndef]"
+    image:
+    - keyword: image
+      weight:
+      zh: "[STUDIER_nameFull][circumstance_group]，正在细细检查[ENTITY_nameDef]"
+    - keyword: image
+      weight:
+      zh: "[STUDIER_nameFull][circumstance_group]，正在做实验，希望能够理解[ENTITY_nameDef]的奥秘"
+    - keyword: image
+      weight:
+      zh: "[STUDIER_nameFull][circumstance_group]，力求理解[ENTITY_nameDef]的本质"
+    circumstance_phrase:
+    - keyword: circumstance_phrase
+      weight:
+      zh: 眼神中几乎掩饰不住厌恶
+    - keyword: circumstance_phrase
+      weight:
+      zh: 在笔记本上涂涂写写
+    - keyword: circumstance_phrase
+      weight:
+      zh: 不时参阅古籍
+    desc_sentence:
+    - keyword: desc_sentence
+      weight:
+      zh: 背景中可以看到活铁采集器正在稳定工作。
+    - keyword: desc_sentence
+      weight:
+      zh: 殖民者对[ENTITY_nameDef]的深深迷恋简直显而易见。
+    - keyword: desc_sentence
+      weight:
+      zh: "[STUDIER_nameDef]完全沉浸于手头的调查。努力揭开[ENTITY_nameDef]的秘密。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[ENTITY_nameDef]仅仅只是在电子阻滞器的不懈运转下才得以勉强维生。"
+    - keyword: desc_sentence
+      weight:
+      zh: "[ENTITY_nameDef]似乎对[STUDIER_nameDef]的努力毫无反应。"
+  slots:
+    tokens:
+    - ENTITY_nameDef
+    - ENTITY_nameIndef
+    - STUDIER_nameDef
+    - STUDIER_nameFull
+    - STUDIER_possessive
+    - circumstance_group
+    roles:
+    - prefix: ENTITY
+      label:
+        zh: ENTITY
+      fields:
+      - token: ENTITY_nameFull
+        kind: person
+        prefix: ENTITY
+        field: nameFull
+        label:
+          zh: ENTITY·全名
+        required: true
+      - token: ENTITY_nameDef
+        kind: person
+        prefix: ENTITY
+        field: nameDef
+        label:
+          zh: ENTITY·简称
+        required: true
+      - token: ENTITY_title
+        kind: person
+        prefix: ENTITY
+        field: title
+        label:
+          zh: ENTITY·头衔
+        required: false
+      - token: ENTITY_pronoun
+        kind: person
+        prefix: ENTITY
+        field: pronoun
+        label:
+          zh: ENTITY·代词(主)
+        required: true
+      - token: ENTITY_possessive
+        kind: person
+        prefix: ENTITY
+        field: possessive
+        label:
+          zh: ENTITY·代词(属)
+        required: true
+      - token: ENTITY_objective
+        kind: person
+        prefix: ENTITY
+        field: objective
+        label:
+          zh: ENTITY·代词(宾)
+        required: false
+      - token: ENTITY_nameIndef
+        kind: person
+        prefix: ENTITY
+        field: nameIndef
+        label:
+          zh: ENTITY·nameIndef
+        required: false
+    - prefix: STUDIER
+      label:
+        zh: STUDIER
+      fields:
+      - token: STUDIER_nameFull
+        kind: person
+        prefix: STUDIER
+        field: nameFull
+        label:
+          zh: STUDIER·全名
+        required: true
+      - token: STUDIER_nameDef
+        kind: person
+        prefix: STUDIER
+        field: nameDef
+        label:
+          zh: STUDIER·简称
+        required: true
+      - token: STUDIER_title
+        kind: person
+        prefix: STUDIER
+        field: title
+        label:
+          zh: STUDIER·头衔
+        required: false
+      - token: STUDIER_pronoun
+        kind: person
+        prefix: STUDIER
+        field: pronoun
+        label:
+          zh: STUDIER·代词(主)
+        required: true
+      - token: STUDIER_possessive
+        kind: person
+        prefix: STUDIER
+        field: possessive
+        label:
+          zh: STUDIER·代词(属)
+        required: true
+      - token: STUDIER_objective
+        kind: person
+        prefix: STUDIER
+        field: objective
+        label:
+          zh: STUDIER·代词(宾)
+        required: false
+    things: []
+    metas: []
+    extras: []
+    flat:
+    - token: ENTITY_nameFull
+      kind: person
+      prefix: ENTITY
+      field: nameFull
+      label:
+        zh: ENTITY·全名
+      required: true
+    - token: ENTITY_nameDef
+      kind: person
+      prefix: ENTITY
+      field: nameDef
+      label:
+        zh: ENTITY·简称
+      required: true
+    - token: ENTITY_title
+      kind: person
+      prefix: ENTITY
+      field: title
+      label:
+        zh: ENTITY·头衔
+      required: false
+    - token: ENTITY_pronoun
+      kind: person
+      prefix: ENTITY
+      field: pronoun
+      label:
+        zh: ENTITY·代词(主)
+      required: true
+    - token: ENTITY_possessive
+      kind: person
+      prefix: ENTITY
+      field: possessive
+      label:
+        zh: ENTITY·代词(属)
+      required: true
+    - token: ENTITY_objective
+      kind: person
+      prefix: ENTITY
+      field: objective
+      label:
+        zh: ENTITY·代词(宾)
+      required: false
+    - token: ENTITY_nameIndef
+      kind: person
+      prefix: ENTITY
+      field: nameIndef
+      label:
+        zh: ENTITY·nameIndef
+      required: false
+    - token: STUDIER_nameFull
+      kind: person
+      prefix: STUDIER
+      field: nameFull
+      label:
+        zh: STUDIER·全名
+      required: true
+    - token: STUDIER_nameDef
+      kind: person
+      prefix: STUDIER
+      field: nameDef
+      label:
+        zh: STUDIER·简称
+      required: true
+    - token: STUDIER_title
+      kind: person
+      prefix: STUDIER
+      field: title
+      label:
+        zh: STUDIER·头衔
+      required: false
+    - token: STUDIER_pronoun
+      kind: person
+      prefix: STUDIER
+      field: pronoun
+      label:
+        zh: STUDIER·代词(主)
+      required: true
+    - token: STUDIER_possessive
+      kind: person
+      prefix: STUDIER
+      field: possessive
+      label:
+        zh: STUDIER·代词(属)
+      required: true
+    - token: STUDIER_objective
+      kind: person
+      prefix: STUDIER
+      field: objective
+      label:
+        zh: STUDIER·代词(宾)
+      required: false
+  carrierIds:
+  - sculpture
+  - furniture
+  - weapon_melee
+  - weapon_gun
+  - sarcophagus
+  - statue
+  - cube_sculpture
+  - void_sculpture
+  ruleCount: 12
